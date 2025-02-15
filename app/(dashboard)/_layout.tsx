@@ -8,23 +8,26 @@ import Header from "@/container/dashboard/common/header";
 import BottomHeader from "@/container/dashboard/common/bottom-header";
 import AudioProvider from "@/providers/AudioProvider";
 import AudioPlayer from "@/container/dashboard/common/audio-player";
+import GlobalProvider from "@/providers/GlobalProvider";
 
 const DashboardLayout = () => {
   return (
     <BackgroundImageProvider>
       <BackgroundImageWrapper>
         <AudioProvider>
-          <View
-            style={{
-              flex: 1,
-              backgroundColor: "rgba(0,0,0,.7)",
-            }}
-          >
-            <Header />
-            <Slot />
-            <AudioPlayer />
-            <BottomHeader />
-          </View>
+          <GlobalProvider>
+            <View
+              style={{
+                flex: 1,
+                backgroundColor: "rgba(0,0,0,.7)",
+              }}
+            >
+              <Header />
+              <Slot />
+              <AudioPlayer />
+              <BottomHeader />
+            </View>
+          </GlobalProvider>
         </AudioProvider>
       </BackgroundImageWrapper>
     </BackgroundImageProvider>

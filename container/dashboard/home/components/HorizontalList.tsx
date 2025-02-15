@@ -2,6 +2,7 @@ import { View, Text, Pressable, ScrollView } from "react-native";
 import React from "react";
 import SongBigCard from "../../common/song-card/SongBigCard";
 import { useAudioContext } from "@/providers/AudioProvider";
+import { useRouter } from "expo-router";
 
 const HorizontalList = ({
   data,
@@ -11,6 +12,7 @@ const HorizontalList = ({
   type?: string;
 }) => {
   const { setCurrentSong, setCurrentSongList } = useAudioContext();
+  const router = useRouter();
   return (
     <>
       <ScrollView
@@ -33,6 +35,7 @@ const HorizontalList = ({
                   if (type === "song") {
                     setCurrentSong(item);
                     setCurrentSongList(data);
+                    router.push("/(dashboard)/home/songs-details");
                   }
                 }}
                 key={item.id + idx}

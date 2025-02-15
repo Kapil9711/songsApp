@@ -33,7 +33,7 @@ const PlayerUi = () => {
         <View
           style={{
             width: width,
-            backgroundColor: "rgba(0,0,0,.5)",
+            backgroundColor: "rgba(0,0,0,.9)",
             height: 80,
             position: "absolute",
             bottom: 50,
