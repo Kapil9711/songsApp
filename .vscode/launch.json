@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Attach to Packager",
+      "request": "attach",
+      "type": "reactnative",
+      "platform": "android", // or "android" depending on your target platform
+      "sourceMaps": true,
+      "skipFiles": [
+        "<node_internals>/**",
+        "node_modules/**",
+        "packages/expo/**" // Skip Expo internal files if you're using Expo
+      ]
+    }
+  ]
+}
