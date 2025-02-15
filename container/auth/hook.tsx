@@ -18,7 +18,7 @@ const useAuth = () => {
     const checkIsLogin = async () => {
       const value = await getValueInAsync("token");
       if (value) {
-        router.replace("/(dashboard)/Home");
+        router.replace("/(dashboard)/home");
       }
       setIsCheckingUserLogin(false);
     };
@@ -34,7 +34,7 @@ const useAuth = () => {
         if (data.success) {
           await setValueInAsync("token", data.token);
           Toast.showWithGravity("Login successFull", Toast.LONG, Toast.TOP);
-          router.replace("/(dashboard)/Home");
+          router.replace("/(dashboard)/home");
         }
       },
       onError: (data) => {
