@@ -1,25 +1,20 @@
-import {
-  View,
-  Text,
-  Animated,
-  Easing,
-  Pressable,
-  TouchableNativeFeedback,
-} from "react-native";
-import React, { useEffect, useState } from "react";
+import { View, Text } from "react-native";
+import React from "react";
 import { Avatar } from "tamagui";
-import { LinearGradient } from "expo-linear-gradient";
-import { useAudioContext } from "@/providers/AudioProvider";
+import { IconButton } from "react-native-paper";
+import { handleDownload } from "@/utilities/helpers";
 
 const SongsSmollCard = ({
   image,
   title,
   isActive,
+  number,
   song,
 }: {
   image: string;
   title: string;
   isActive: boolean;
+  number: Number;
   song?: any;
 }) => {
   return (
@@ -36,12 +31,39 @@ const SongsSmollCard = ({
           borderWidth: 1,
           alignItems: "center",
           elevation: 100,
+          position: "relative",
         }}
       >
         <Avatar size={57}>
           <Avatar.Image src={image} />
         </Avatar>
-        <Text style={{ color: "white", flex: 1 }}>{title}</Text>
+        <Text style={{ color: "white", flex: 1 }}>
+          {String(number)} - {title.slice(0, 30)}
+        </Text>
+
+        <View
+          style={{
+            position: "absolute",
+            right: 8,
+            flexDirection: "row",
+            gap: 1,
+          }}
+        >
+          <IconButton
+            icon="heart" // Standard download icon
+            size={24}
+            iconColor="white"
+            onPress={() => console.log("Download pressed")}
+          />
+          <IconButton
+            icon="download" // Standard download icon
+            size={24}
+            iconColor="white"
+            onPress={() =>
+              handleDownload(song?.downloadUrl[4]?.url, song?.name)
+            }
+          />
+        </View>
       </View>
     </>
   );

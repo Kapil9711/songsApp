@@ -4,6 +4,7 @@ import { defaultConfig } from "@tamagui/config/v4";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { QueryClient } from "@tanstack/react-query";
 import { StatusBar } from "react-native";
+import Toast from "react-native-toast-message";
 
 const queryClient = new QueryClient();
 const config = createTamagui(defaultConfig);
@@ -14,6 +15,7 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <Stack screenOptions={{ headerShown: false }} />
         <StatusBar backgroundColor="black" />
+        <Toast />
       </QueryClientProvider>
     </TamaguiProvider>
   );

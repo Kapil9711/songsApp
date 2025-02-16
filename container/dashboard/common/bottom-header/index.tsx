@@ -39,7 +39,7 @@ const BottomHeader = () => {
         <Avatar.Icon
           size={45}
           style={{ backgroundColor: "black" }}
-          icon={"explore"}
+          icon={icons.explore}
         />
       </Pressable>
     </View>
@@ -52,7 +52,7 @@ const useBottomHeader = () => {
   let icons = {
     home: "home-outline",
     heart: "heart-outline",
-    unknown: "unknown",
+    explore: "account-group-outline",
   };
   console.log(currentPath);
   if (currentPath.includes("home")) {
@@ -60,6 +60,9 @@ const useBottomHeader = () => {
   }
   if (currentPath.includes("favorites")) {
     icons.heart = "heart";
+  }
+  if (currentPath.includes("friends")) {
+    icons.explore = "account-group";
   }
 
   return { router, icons };

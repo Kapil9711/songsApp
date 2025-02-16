@@ -46,18 +46,16 @@ const AudioPlayer = () => {
 };
 
 const PlayerUi = () => {
-  const { imageUrl, songUrl, sound, title, currentSong } = usePlayerConext();
-  const [position, setPosition] = useState(0); // Current playback time (ms)
-  const [duration, setDuration] = useState(1);
+  const {
+    imageUrl,
+    sound,
+    title,
+    currentSong,
+    position,
+    setPosition,
+    duration,
+  } = usePlayerConext();
 
-  if (sound) {
-    sound.setOnPlaybackStatusUpdate((status: any) => {
-      if (status.isLoaded) {
-        setPosition(status.positionMillis); // Update current time
-        setDuration(status.durationMillis || 1); // Set duration (prevent divide by zero)
-      }
-    });
-  }
   return (
     <>
       {currentSong && (
@@ -100,7 +98,7 @@ const PlayerUi = () => {
             </View>
           </View>
 
-          <View style={{ flex: 1, alignItems: "center", marginTop: 13 }}>
+          <View style={{ flex: 1, marginLeft: 15, marginTop: 9 }}>
             <ShowTime duration={duration} position={position} />
             {/* <TouchableOpacity
               onPress={() => {
@@ -232,6 +230,9 @@ const usePlayer = () => {
     useAudioContext();
   const [isPlaying, setIsPlaying] = useState(false);
   const { setImage } = useBackgroudImage();
+  const [position, setPosition] = useState(0); // Current playback time (ms)
+  const [duration, setDuration] = useState(1);
+
   let imageUrl = "";
   let songUrl = "";
   let title = "";
@@ -244,6 +245,20 @@ const usePlayer = () => {
   useEffect(() => {
     (async () => await setupAudio())();
   }, []);
+
+  useEffect(() => {
+    if (sound) {
+      sound.setOnPlaybackStatusUpdate((status: any) => {
+        if (status.isLoaded) {
+          setPosition(status.positionMillis); // Update current time
+          setDuration(status.durationMillis || 1); // Set duration (prevent divide by zero)
+        }
+        if (status.didJustFinish) {
+          handleNext(); // Play next song when current ends
+        }
+      });
+    }
+  }, [sound]);
 
   useEffect(() => {
     (async () => {
@@ -328,6 +343,10 @@ const usePlayer = () => {
     handleNext,
     handlePrev,
     currentSong,
+    position,
+    setPosition,
+    duration,
+    setDuration,
   };
 };
 

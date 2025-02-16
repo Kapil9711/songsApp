@@ -9,29 +9,33 @@ import BottomHeader from "@/container/dashboard/common/bottom-header";
 import AudioProvider from "@/providers/AudioProvider";
 import AudioPlayer from "@/container/dashboard/common/audio-player";
 import GlobalProvider from "@/providers/GlobalProvider";
+import Toast from "react-native-toast-message";
 
 const DashboardLayout = () => {
   return (
-    <BackgroundImageProvider>
-      <BackgroundImageWrapper>
-        <AudioProvider>
-          <GlobalProvider>
-            <RightDrawer />
-            <View
-              style={{
-                flex: 1,
-                backgroundColor: "rgba(0,0,0,.7)",
-              }}
-            >
-              <Header />
-              <Slot />
-              <AudioPlayer />
-              <BottomHeader />
-            </View>
-          </GlobalProvider>
-        </AudioProvider>
-      </BackgroundImageWrapper>
-    </BackgroundImageProvider>
+    <>
+      <BackgroundImageProvider>
+        <BackgroundImageWrapper>
+          <AudioProvider>
+            <GlobalProvider>
+              <Toast />
+              <RightDrawer />
+              <View
+                style={{
+                  flex: 1,
+                  backgroundColor: "rgba(0,0,0,.7)",
+                }}
+              >
+                <Header />
+                <Slot />
+                <AudioPlayer />
+                <BottomHeader />
+              </View>
+            </GlobalProvider>
+          </AudioProvider>
+        </BackgroundImageWrapper>
+      </BackgroundImageProvider>
+    </>
   );
 };
 

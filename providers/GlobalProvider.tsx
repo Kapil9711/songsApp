@@ -33,42 +33,49 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
         // if (songs) {
         //   setSongListToRender(JSON.parse(songs));
         // } else {
-        const songPromise = axios.get(
-          "https://saavn.dev/api/search/songs?query=" + text
-        );
 
-        const albumPromise = axios.get(
-          "https://saavn.dev/api/search/albums?query=" + text
-        );
-        const playlistPromise = axios.get(
-          "https://saavn.dev/api/search/playlists?query=" + text
-        );
+        try {
+          setIsLoadingSongListToRender(true);
+          const songPromise = axios.get(
+            "https://saavn.dev/api/search/songs?query=" + text
+          );
 
-        const [songsData, albumData, playlistData] = await Promise.allSettled([
-          songPromise,
-          albumPromise,
-          playlistPromise,
-        ]);
-        if (songsData.status === "fulfilled") {
-          const { data: song } = songsData.value;
-          if (song) {
-            setSongListToRender(song?.data?.results);
-            setSearchedSongList(song?.data?.results);
+          const albumPromise = axios.get(
+            "https://saavn.dev/api/search/albums?query=" + text
+          );
+          const playlistPromise = axios.get(
+            "https://saavn.dev/api/search/playlists?query=" + text
+          );
+
+          const [songsData, albumData, playlistData] = await Promise.allSettled(
+            [songPromise, albumPromise, playlistPromise]
+          );
+          if (songsData.status === "fulfilled") {
+            const { data: song } = songsData.value;
+            if (song) {
+              setSongListToRender(song?.data?.results);
+              setSearchedSongList(song?.data?.results);
+            }
           }
-        }
-        if (albumData.status === "fulfilled") {
-          const { data: album } = albumData.value;
-          if (album) {
-            setAlbumListToRender(album?.data?.results);
+          if (albumData.status === "fulfilled") {
+            const { data: album } = albumData.value;
+            if (album) {
+              setAlbumListToRender(album?.data?.results);
+            }
           }
+
+          if (playlistData.status === "fulfilled") {
+            const { data: playlist } = playlistData.value;
+            if (playlist) {
+              setPlaListToRender(playlist?.data?.results);
+            }
+          }
+
+          setIsLoadingSongListToRender(false);
+        } catch (error) {
+          setIsLoadingSongListToRender(false);
         }
 
-        if (playlistData.status === "fulfilled") {
-          const { data: playlist } = playlistData.value;
-          if (playlist) {
-            setPlaListToRender(playlist?.data?.results);
-          }
-        }
         // const { data: song }: any = await axios.get(
         //   "https://saavn.dev/api/search/songs?query=" + text
         // );
@@ -91,7 +98,7 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
         // }
         // }
       })();
-    }, 250),
+    }, 150),
     []
   );
   useEffect(() => {

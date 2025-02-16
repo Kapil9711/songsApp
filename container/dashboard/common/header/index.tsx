@@ -86,7 +86,7 @@ export const RightDrawer = () => {
       {/* Button to Open Drawer */}
       <Pressable onPress={openDrawer}>
         <Avatar.Icon
-          icon={"hamburger"}
+          icon={"menu"}
           color="black"
           style={{ backgroundColor: "white", marginTop: 9 }}
           size={50}

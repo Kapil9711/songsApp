@@ -64,6 +64,7 @@ const Songs = () => {
                     isActive={currentSong?.id === item.id}
                     title={item.name}
                     image={item?.image[2]?.url}
+                    number={idx + 1}
                     song={item}
                   />
                 </Pressable>

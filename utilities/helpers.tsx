@@ -3,6 +3,7 @@ import * as fileSystem from "expo-file-system";
 
 import * as MediaLibrary from "expo-media-library";
 import { Alert, Platform } from "react-native";
+import Toast from "react-native-toast-message";
 
 export const setValueInAsync = async (key: string, value: string) => {
   try {
@@ -33,54 +34,6 @@ export const downloadSong = async (url: string, fileName: any) => {
   }
 };
 
-// export const convertToMp3 = async (m4aUri: string, fileName: string) => {
-//   if (!ffmpeg.isLoaded()) {
-//     await ffmpeg.load();
-//   }
-
-//   const inputFileName = "input.m4a";
-//   const outputFileName = "output.mp3";
-
-//   // Read the file as binary
-//   const fileData = await fetchFile(m4aUri);
-//   ffmpeg.FS("writeFile", inputFileName, fileData);
-
-//   // Run FFmpeg command
-//   await ffmpeg.run("-i", inputFileName, "-q:a", "2", outputFileName);
-
-//   // Get the output file
-//   const data = ffmpeg.FS("readFile", outputFileName);
-
-//   // Write the MP3 file to the local filesystem
-//   const mp3Uri = fileSystem.documentDirectory + fileName + ".mp3";
-//   await fileSystem.writeAsStringAsync(mp3Uri, data, {
-//     encoding: fileSystem.EncodingType.Base64,
-//   });
-
-//   return mp3Uri;
-// };
-
-// export const convertToMp3 = async (m4aUri: any, fileName: string) => {
-//   const mp3Uri = fileSystem.documentDirectory + fileName + ".mp3";
-//   const command = `-i ${m4aUri} -q:a 2 ${mp3Uri}`;
-//   const result = await RNFFmpeg.execute(command);
-//   if (result === 0) {
-//     return mp3Uri;
-//   } else return null;
-// };
-
-// export const saveToDevice = async (fileUri: any) => {
-//   const { status } = await MediaLibrary.requestPermissionsAsync();
-//   console.log(status, "status");
-//   if (status === "granted") {
-//     const asset = await MediaLibrary.createAssetAsync(fileUri);
-//     await MediaLibrary.createAlbumAsync("Music Downloads", asset, false);
-//     alert("Song saved to your Device");
-//   } else {
-//     alert("Storage permision is required");
-//   }
-// };
-
 export const saveToDevice = async (fileUri: string) => {
   try {
     // Request permissions
@@ -105,7 +58,6 @@ export const saveToDevice = async (fileUri: string) => {
         from: fileUri,
         to: newFileUri,
       });
-      Alert.alert("Saved!", "Song saved in app storage (Expo Go sandbox).");
     } else {
       // 🚀 Standalone App: Save to Media Library (Music Folder)
       let newFileUri =
@@ -121,23 +73,42 @@ export const saveToDevice = async (fileUri: string) => {
       // Save to Media Library
       const asset = await MediaLibrary.createAssetAsync(newFileUri);
       await MediaLibrary.createAlbumAsync("Music Downloads", asset, false);
-      Alert.alert("Success", "Song saved to Music Downloads!");
     }
   } catch (error) {
     console.error("Error saving file:", error);
-    Alert.alert("Error", "Could not save the file.");
+    throw new Error("Not");
   }
 };
 
 export const handleDownload = async (url: string, fileName: string) => {
   try {
-    console.log("starting");
+    Toast.show({
+      type: "success", // success | error | info
+      text1: "Starting Download",
+      text2: "File Will Download in Backgroun",
+      visibilityTime: 2500,
+      autoHide: true,
+    });
     const uri = await downloadSong(url, fileName);
     console.log(uri, "uri");
     if (uri) {
       await saveToDevice(uri);
+      Toast.show({
+        type: "success", // success | error | info
+        text1: "Downloaded Successfully",
+        text2: "Your file has been saved!",
+        visibilityTime: 2500,
+        autoHide: true,
+      });
     }
   } catch (error) {
     console.log(error);
+    Toast.show({
+      type: "error", // success | error | info
+      text1: "Song not downloaded!",
+      text2: "Some Error has Occured ",
+      visibilityTime: 2500,
+      autoHide: true,
+    });
   }
 };
