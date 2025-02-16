@@ -13,7 +13,7 @@ const HorizontalList = ({
   type?: string;
 }) => {
   const { setCurrentSong, setCurrentSongList } = useAudioContext();
-  const { handleSingleAlbumOrPlalist } = useGlobalContext();
+  const { handleSingleAlbumOrPlalist, setPage } = useGlobalContext();
   const router = useRouter();
   return (
     <>
@@ -40,6 +40,7 @@ const HorizontalList = ({
                   }
                   if (type === "album" || type === "playlist") {
                     handleSingleAlbumOrPlalist(item.id, type);
+                    setPage(8);
                     router.push("/(dashboard)/home/songs");
                   }
                 }}

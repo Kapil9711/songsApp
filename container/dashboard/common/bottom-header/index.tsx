@@ -31,7 +31,7 @@ const BottomHeader = () => {
       <Pressable onPress={() => router.push("/(dashboard)/favorites")}>
         <Avatar.Icon
           size={45}
-          style={{ backgroundColor: "black", marginLeft: 15 }}
+          style={{ backgroundColor: "black", marginLeft: 5 }}
           icon={icons.heart}
         />
       </Pressable>
@@ -52,7 +52,7 @@ const useBottomHeader = () => {
   let icons = {
     home: "home-outline",
     heart: "heart-outline",
-    explore: "account-group-outline",
+    explore: "download-outline", // "account-group-outline",
   };
   console.log(currentPath);
   if (currentPath.includes("home")) {
@@ -62,7 +62,7 @@ const useBottomHeader = () => {
     icons.heart = "heart";
   }
   if (currentPath.includes("friends")) {
-    icons.explore = "account-group";
+    icons.explore = "download"; //  "account-group";
   }
 
   return { router, icons };

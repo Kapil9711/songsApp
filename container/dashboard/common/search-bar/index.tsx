@@ -1,20 +1,36 @@
 import { useGlobalContext } from "@/providers/GlobalProvider";
-import React, { useState } from "react";
+import { usePathname } from "expo-router";
+import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import { Input } from "tamagui";
 
 export const SearchBar = () => {
-  const [searchQuery, setSearchQuery] = useState("arijit singh");
-  const { handleSearch } = useGlobalContext();
+  // const [searchQuery, setSearchQuery] = useState("arijit singh");
+  const {
+    handleSearch,
+    handleLocalSearch,
+    searchQuery,
+    setSearchQuery,
+    setPage,
+  } = useGlobalContext();
+  const pathname = usePathname();
+
+  // useEffect(() => {
+  //   setSearchQuery("");
+  // }, [pathname]);
   return (
     <View
       style={{ flex: 1 }}
-      className=" flex-1 flex-row    justify-center items-center mr-10 "
+      className=" flex-1 flex-row  justify-center items-center mr-10"
     >
       <Input
         onChangeText={(value: string) => {
+          if (pathname.includes("home")) {
+            handleSearch(value);
+            setPage(1);
+          }
+          if (pathname.includes("friends")) handleLocalSearch(value);
           setSearchQuery(value);
-          handleSearch(value);
         }}
         placeholder="Search songs..."
         value={searchQuery}

@@ -1,8 +1,28 @@
-import { View, Text } from "react-native";
-import React from "react";
+import { View, Text, Alert } from "react-native";
+import React, { useEffect } from "react";
 import { Avatar } from "tamagui";
 import { IconButton } from "react-native-paper";
-import { handleDownload } from "@/utilities/helpers";
+
+import { useGlobalContext } from "@/providers/GlobalProvider";
+
+const showAlert = (deleteFile: any, fileName: string) => {
+  Alert.alert(
+    "Delete File",
+    "Are you sure you want to delete this file?",
+    [
+      {
+        text: "Cancel",
+        onPress: () => console.log("User cancelled"),
+        style: "cancel",
+      },
+      {
+        text: "OK",
+        onPress: () => deleteFile(fileName),
+      },
+    ],
+    { cancelable: false }
+  );
+};
 
 const SongsSmollCard = ({
   image,
@@ -10,13 +30,16 @@ const SongsSmollCard = ({
   isActive,
   number,
   song,
+  isShowButton = true,
 }: {
   image: string;
   title: string;
   isActive: boolean;
   number: Number;
   song?: any;
+  isShowButton?: boolean;
 }) => {
+  const { deleteFile, handleDownload } = useGlobalContext();
   return (
     <>
       <View
@@ -25,20 +48,23 @@ const SongsSmollCard = ({
           gap: 20,
           flexDirection: "row",
           padding: 2,
-          borderRadius: 3,
+          borderRadius: 14,
           backgroundColor: isActive ? "#fa0c5c" : "rgba(0,0,0,.6)",
           borderColor: isActive ? "white" : "#FF69B4",
-          borderWidth: 1,
+          borderLeftWidth: 4,
+          borderRightWidth: 4,
+          borderTopWidth: 1,
+          borderBottomWidth: 1,
           alignItems: "center",
           elevation: 100,
           position: "relative",
         }}
       >
-        <Avatar size={57}>
+        <Avatar style={{ borderRadius: 10 }} size={56}>
           <Avatar.Image src={image} />
         </Avatar>
         <Text style={{ color: "white", flex: 1 }}>
-          {String(number)} - {title.slice(0, 30)}
+          {String(number)} - {title?.slice(0, 20)}
         </Text>
 
         <View
@@ -49,21 +75,38 @@ const SongsSmollCard = ({
             gap: 1,
           }}
         >
-          <IconButton
-            icon="heart" // Standard download icon
-            size={24}
-            iconColor="white"
-            onPress={() => console.log("Download pressed")}
-          />
-          <IconButton
-            icon="download" // Standard download icon
-            size={24}
-            iconColor="white"
-            onPress={() =>
-              handleDownload(song?.downloadUrl[4]?.url, song?.name)
-            }
-          />
+          {!isShowButton ? (
+            <IconButton
+              icon="delete" // Standard download icon
+              size={24}
+              iconColor={isActive ? "white" : "red"}
+              onPress={() => showAlert(deleteFile, title)}
+            />
+          ) : (
+            <>
+              <IconButton
+                icon="heart" // Standard download icon
+                size={24}
+                iconColor="white"
+                onPress={() => console.log("Download pressed")}
+              />
+              <IconButton
+                icon="download" // Standard download icon
+                size={24}
+                iconColor="white"
+                onPress={() =>
+                  handleDownload(
+                    song?.downloadUrl[4]?.url,
+                    song?.image[2]?.url,
+                    song?.name
+                  )
+                }
+              />
+            </>
+          )}
         </View>
+
+        {/* deleteFile */}
       </View>
     </>
   );

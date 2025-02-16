@@ -1,16 +1,23 @@
 import { View, Text } from "react-native";
+import * as fileSystem from "expo-file-system";
 import React, {
   createContext,
   useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import { getValueInAsync } from "@/utilities/helpers";
-import { debounce } from "lodash";
+import {
+  downloadSong,
+  getDownloadedSongs,
+  getValueInAsync,
+} from "@/utilities/helpers";
+import { debounce, rangeRight } from "lodash";
+import Toast from "react-native-toast-message";
 
 const GlobalContext = createContext(null as any);
 
@@ -21,6 +28,11 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
   const [searchedSongList, setSearchedSongList] = useState([]);
   const [albumListToRender, setAlbumListToRender] = useState([]);
   const [playListToRender, setPlaListToRender] = useState([]);
+  const [localFiles, setLocalFiles] = useState([]);
+  const [localFilesAfterSearch, setLocalFilesAfterSearch] = useState([]);
+  const [page, setPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("arijit singh");
+  const [isLoading, setIsLoading] = useState(false);
 
   const [isLoadingSongListToRender, setIsLoadingSongListToRender] =
     useState(false);
@@ -41,10 +53,10 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
           );
 
           const albumPromise = axios.get(
-            "https://saavn.dev/api/search/albums?query=" + text
+            "https://saavn.dev/api/search/albums?limit=20&&query=" + text
           );
           const playlistPromise = axios.get(
-            "https://saavn.dev/api/search/playlists?query=" + text
+            "https://saavn.dev/api/search/playlists?limit=20&&query=" + text
           );
 
           const [songsData, albumData, playlistData] = await Promise.allSettled(
@@ -107,7 +119,14 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
       // console.log(songs);
       // if (songs) {
       //   setSongListToRender(JSON.parse(songs));
-      // } else {
+      // } else {\
+      try {
+        const s: any = await getDownloadedSongs();
+        setLocalFiles(s);
+        setLocalFilesAfterSearch(s);
+      } catch (error) {
+        console.log(error, "localFilesError");
+      }
 
       try {
         setIsLoadingSongListToRender(true);
@@ -116,10 +135,10 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
         );
 
         const albumPromise = axios.get(
-          "https://saavn.dev/api/search/albums?query=" + "arijit"
+          "https://saavn.dev/api/search/albums?limit=20&&query=" + "arijit"
         );
         const playlistPromise = axios.get(
-          "https://saavn.dev/api/search/playlists?query=" + "arijit"
+          "https://saavn.dev/api/search/playlists?limit=20&&query=" + "arijit"
         );
 
         const [songsData, albumData, playlistData] = await Promise.allSettled([
@@ -179,21 +198,127 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
   const handleSingleAlbumOrPlalist = useCallback(
     async (id: string, type: string) => {
       try {
-        setIsLoadingSongListToRender(true);
+        setIsLoading(true);
         let url = "";
         if (type === "album") {
-          url = "https://saavn.dev/api/albums?id=" + id;
+          url = "https://saavn.dev/api/albums?limit=50&&id=" + id;
         }
         if (type === "playlist") {
-          url = "https://saavn.dev/api/playlists?id=" + id;
+          url = "https://saavn.dev/api/playlists?limit=50&&id=" + id;
         }
         const { data } = await axios.get(url);
         if (data.success === true) {
           setSongListToRender(data?.data?.songs);
         }
-        setIsLoadingSongListToRender(false);
+        setIsLoading(false);
       } catch (error) {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  const handleLocalSearch = useCallback((text: string) => {
+    const regex = new RegExp(text, "i");
+
+    const filtered = localFiles?.filter((item: any) => regex.test(item?.name));
+    setLocalFilesAfterSearch(filtered);
+  }, []);
+
+  const deleteFile = useCallback(async (fileName: string) => {
+    try {
+      const songUri = fileSystem.documentDirectory + fileName + ".m4a";
+      const imageUri = fileSystem.documentDirectory + fileName + ".jpg";
+      const songInfo = await fileSystem.getInfoAsync(songUri);
+      const imageInfo = await fileSystem.getInfoAsync(imageUri);
+      if (songInfo.exists) {
+        await fileSystem.deleteAsync(songUri);
+      }
+      if (imageInfo.exists) {
+        await fileSystem.deleteAsync(imageUri);
+      }
+
+      Toast.show({
+        type: "success", // success | error | info
+        text1: "Deleted",
+        text2: "File is Deleted Successfully",
+        visibilityTime: 1500,
+        autoHide: true,
+      });
+
+      try {
+        const s: any = await getDownloadedSongs();
+        setLocalFiles(s);
+        setLocalFilesAfterSearch(s);
+      } catch (error) {
+        console.log(error, "localFilesError");
+      }
+    } catch (error) {
+      console.error("Error deleting file:", error);
+    }
+  }, []);
+
+  const fetchData = useCallback(async () => {
+    if (page >= 4) return;
+    if (isLoadingSongListToRender) return;
+    setIsLoadingSongListToRender(true);
+    try {
+      const { data }: any = await axios.get(
+        `https://saavn.dev/api/search/songs?query=${searchQuery}&&page=${
+          page + 1
+        }`
+      );
+      setPage(page + 1);
+      if (data?.data?.results) {
+        const r: any = data.data.results;
+        // console.log(r, "data");
+        // songListToRender.concat(r);
+        // console.log(songListToRender, "list");
+        setSongListToRender((prev: any) => [...prev, ...r] as any);
         setIsLoadingSongListToRender(false);
+      }
+    } catch (error) {
+      setIsLoadingSongListToRender(false);
+      setPage(8);
+    }
+  }, [page, isLoadingSongListToRender, searchQuery]);
+
+  const handleDownload = useCallback(
+    async (url: string, image: string, fileName: string) => {
+      try {
+        Toast.show({
+          type: "success", // success | error | info
+          text1: "Starting Download",
+          text2: "File Will Download in Backgroun",
+          visibilityTime: 2500,
+          autoHide: true,
+        });
+        const uri = await downloadSong(url, image, fileName);
+        try {
+          const s: any = await getDownloadedSongs();
+          setLocalFiles(s);
+          setLocalFilesAfterSearch(s);
+        } catch (error) {
+          console.log(error, "localFilesError");
+        }
+
+        // await saveToDevice(uri, fileName);
+        Toast.show({
+          type: "success", // success | error | info
+          text1: "Downloaded Successfully",
+          text2: "Your file has been saved!",
+          visibilityTime: 2500,
+          autoHide: true,
+        });
+      } catch (error) {
+        console.log(error);
+        Toast.show({
+          type: "error", // success | error | info
+          text1: "Song not downloaded!",
+          text2: "Some Error has Occured ",
+          visibilityTime: 2500,
+          autoHide: true,
+        });
       }
     },
     []
@@ -212,6 +337,15 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
       isLoadingSongListToRender,
       setIsLoadingSongListToRender,
       handleSearch,
+      handleLocalSearch,
+      localFilesAfterSearch,
+      deleteFile,
+      handleDownload,
+      fetchData,
+      searchQuery,
+      setSearchQuery,
+      setPage,
+      isLoading,
     };
   }, [
     songListToRender,
@@ -219,6 +353,10 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
     playListToRender,
     searchedSongList,
     isLoadingSongListToRender,
+    localFilesAfterSearch,
+    searchQuery,
+    page,
+    isLoading,
   ]);
   return (
     <GlobalContext.Provider value={value}>{children}</GlobalContext.Provider>

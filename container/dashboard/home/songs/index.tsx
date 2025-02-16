@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   Pressable,
   Touchable,
+  FlatList,
 } from "react-native";
 import React from "react";
 import { useGlobalContext } from "@/providers/GlobalProvider";
@@ -13,7 +14,8 @@ import { useAudioContext } from "@/providers/AudioProvider";
 import { Spinner } from "tamagui";
 
 const Songs = () => {
-  const { songListToRender, isLoadingSongListToRender } = useGlobalContext();
+  const { songListToRender, isLoadingSongListToRender, fetchData, isLoading } =
+    useGlobalContext();
   const { currentSong, setCurrentSong, setCurrentSongList } = useAudioContext();
 
   return (
@@ -22,39 +24,40 @@ const Songs = () => {
         flex: 1,
       }}
     >
-      <ScrollView
+      <View
         style={{
           flex: 1,
+          gap: 11,
+          // paddingBottom: 134,
+          paddingTop: 0,
+          paddingHorizontal: 3,
         }}
       >
-        <View
-          style={{
-            flex: 1,
-            gap: 10,
-            paddingBottom: 160,
-            paddingTop: 10,
-            paddingHorizontal: 5,
-          }}
-        >
-          {isLoadingSongListToRender ? (
-            <View
-              style={{
-                paddingTop: 150,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <Spinner
-                style={{ height: 40, width: 40, scale: 1.6 }}
-                size="large"
-                color="#f5075e"
-              />
-            </View>
-          ) : (
-            songListToRender.map((item: any, idx: number) => {
+        {isLoading ? (
+          <View
+            style={{
+              paddingTop: 150,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Spinner
+              style={{ height: 40, width: 40, scale: 1.6 }}
+              size="large"
+              color="#f5075e"
+            />
+          </View>
+        ) : (
+          <FlatList
+            contentContainerStyle={{ paddingBottom: 160 }}
+            // style={{ flex: 1, paddingBottom: 200 }}
+            data={songListToRender}
+            keyExtractor={(item, idex) => item.id + idex}
+            renderItem={({ item, index }) => {
               return (
                 <Pressable
-                  key={item.id}
+                  style={{ marginTop: 10 }}
+                  key={item.id + index}
                   onPress={() => {
                     setCurrentSong(item);
                     setCurrentSongList(songListToRender);
@@ -64,15 +67,54 @@ const Songs = () => {
                     isActive={currentSong?.id === item.id}
                     title={item.name}
                     image={item?.image[2]?.url}
-                    number={idx + 1}
+                    number={index + 1}
                     song={item}
                   />
                 </Pressable>
               );
-            })
-          )}
-        </View>
-      </ScrollView>
+            }}
+            onEndReached={fetchData}
+            onEndReachedThreshold={0.1}
+            ListFooterComponent={() =>
+              isLoadingSongListToRender && (
+                <View
+                  style={{
+                    paddingTop: 40,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Spinner
+                    style={{ height: 40, width: 40, scale: 1.6 }}
+                    size="large"
+                    color="#f5075e"
+                  />
+                </View>
+              )
+            }
+          />
+
+          // songListToRender.map((item: any, idx: number) => {
+          //   return (
+          //     <Pressable
+          //       key={item.id}
+          //       onPress={() => {
+          //         setCurrentSong(item);
+          //         setCurrentSongList(songListToRender);
+          //       }}
+          //     >
+          //       <SongsSmollCard
+          //         isActive={currentSong?.id === item.id}
+          //         title={item.name}
+          //         image={item?.image[2]?.url}
+          //         number={idx + 1}
+          //         song={item}
+          //       />
+          //     </Pressable>
+          //   );
+          // })
+        )}
+      </View>
     </View>
   );
 };

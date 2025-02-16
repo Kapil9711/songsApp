@@ -1,4 +1,4 @@
-import { View, Text, ImageBackground, StyleSheet } from "react-native";
+import { View, ImageBackground } from "react-native";
 import React from "react";
 import { Slot } from "expo-router";
 import BackgroundImageProvider, {
@@ -9,7 +9,6 @@ import BottomHeader from "@/container/dashboard/common/bottom-header";
 import AudioProvider from "@/providers/AudioProvider";
 import AudioPlayer from "@/container/dashboard/common/audio-player";
 import GlobalProvider from "@/providers/GlobalProvider";
-import Toast from "react-native-toast-message";
 
 const DashboardLayout = () => {
   return (
@@ -18,7 +17,7 @@ const DashboardLayout = () => {
         <BackgroundImageWrapper>
           <AudioProvider>
             <GlobalProvider>
-              <Toast />
+              {/* <Toast /> */}
               <RightDrawer />
               <View
                 style={{

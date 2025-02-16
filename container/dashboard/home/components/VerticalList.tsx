@@ -28,7 +28,7 @@ const VerticalList = ({
             flexWrap: "wrap",
             gap: 14,
             paddingTop: 14,
-            paddingBottom: 160,
+            paddingBottom: 230,
             paddingHorizontal: 10,
           }}
         >

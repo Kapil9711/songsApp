@@ -17,7 +17,7 @@ const ShowData = ({
   type: string;
 }) => {
   const router = useRouter();
-  const { searchedSongList, setSongListToRender } = useGlobalContext();
+  const { searchedSongList, setSongListToRender, setPage } = useGlobalContext();
   const length = data?.length;
   return (
     <View style={{ gap: 9 }}>
@@ -34,6 +34,7 @@ const ShowData = ({
             if (type === "song") {
               setSongListToRender(searchedSongList);
               router.push("/(dashboard)/home/songs");
+              setPage(1);
             }
             if (type === "album") router.push("/(dashboard)/home/album");
             if (type === "playlist") router.push("/(dashboard)/home/playlist");
