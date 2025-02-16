@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Touchable } from "react-native";
+import { View, Text, StyleSheet, Touchable, Easing } from "react-native";
 import React, { useState } from "react";
 import { Avatar } from "react-native-paper";
 import { Avatar as AvatarTamagui } from "tamagui";
@@ -35,7 +35,7 @@ const Header = () => {
           <AvatarTamagui.Fallback backgroundColor="$blue10" />
         </AvatarTamagui>
         <SearchBar />
-        <RightDrawer />
+        <View style={{ width: 40, height: 20 }}></View>
       </View>
     </View>
   );
@@ -47,24 +47,34 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   runOnJS,
+  withTiming,
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons"; // Close Icon
 
 const { height, width } = Dimensions.get("window"); // Get screen size
 
-const RightDrawer = () => {
+export const RightDrawer = () => {
   const [open, setOpen] = useState(false);
   const translateX = useSharedValue(width); // Start fully hidden
 
   const openDrawer = () => {
     setOpen(true);
-    translateX.value = withSpring(0); // Move drawer in
+    translateX.value = withTiming(0, {
+      duration: 100,
+    });
   };
 
-  const closeDrawer = () => {
-    translateX.value = withSpring(width, {}, () => {
-      runOnJS(setOpen)(false); // Update state AFTER animation completes
-    });
+  const closeDrawer = (type?: any) => {
+    if (type === "cross") setOpen(false);
+    translateX.value = withTiming(
+      width,
+      {
+        duration: 100,
+      },
+      () => {
+        runOnJS(setOpen)(false); // Hide overlay AFTER animation
+      }
+    );
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -72,16 +82,16 @@ const RightDrawer = () => {
   }));
 
   return (
-    <View>
+    <View style={{ zIndex: 1000, position: "absolute", right: 8, top: 0 }}>
       {/* Button to Open Drawer */}
-      <TouchableOpacity onPress={openDrawer}>
+      <Pressable onPress={openDrawer}>
         <Avatar.Icon
           icon={"hamburger"}
           color="black"
-          style={{ backgroundColor: "white" }}
+          style={{ backgroundColor: "white", marginTop: 9 }}
           size={50}
         />
-      </TouchableOpacity>
+      </Pressable>
 
       {/* Only show overlay when `open` is true */}
       {open && (
@@ -94,10 +104,14 @@ const RightDrawer = () => {
 
       {/* Right-Side Drawer */}
       <Animated.View style={[styles.drawer, animatedStyle]}>
-        {/* Close Icon */}
-        <TouchableOpacity onPress={closeDrawer} style={styles.closeButton}>
-          <Ionicons name="close" size={45} color="black" />
-        </TouchableOpacity>
+        {/* <View>
+          <TouchableOpacity
+            onPress={() => closeDrawer("cross")}
+            style={styles.closeButton}
+          >
+            <Ionicons name="close" size={45} color="black" />
+          </TouchableOpacity>
+        </View> */}
 
         {/* Drawer Content */}
         <Text style={styles.drawerText}>Right Drawer Content</Text>
@@ -115,27 +129,27 @@ const styles = StyleSheet.create({
   overlay: {
     position: "absolute",
     top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    backgroundColor: "rgba(0,0,0,0.4)", // Semi-transparent overlay
+    right: 0,
+    width: width,
+    height: height,
+    backgroundColor: "rgba(0,0,0,0.7)", // Semi-transparent overlay
     zIndex: 10, // Ensure it’s above everything except the drawer
   },
 
   /* Drawer Styling */
   drawer: {
     position: "absolute",
-    right: 0,
+    right: -20,
     top: 0,
     height: height, // Full height
-    width: 250, // Drawer width
+    width: (width / 100) * 70, // Drawer width
     backgroundColor: "white",
     shadowColor: "#000",
     shadowOffset: { width: -2, height: 0 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
     padding: 20,
-    zIndex: 20, // Ensure drawer is on top of overlay
+    zIndex: 50, // Ensure drawer is on top of overlay
   },
 
   /* Close Icon Button */

@@ -7,7 +7,8 @@ import ShowData from "./components/ShowData";
 import { useGlobalContext } from "@/providers/GlobalProvider";
 
 const Home = () => {
-  const { songListToRender } = useGlobalContext();
+  const { searchedSongList, albumListToRender, playListToRender } =
+    useGlobalContext();
   return (
     <View style={{ flex: 1 }}>
       <ScrollView>
@@ -62,10 +63,10 @@ const Home = () => {
               );
             }
           )} */}
-          <ShowData data={songListToRender} heading="Songs" type="song" />
-          <ShowData data={songListToRender} heading="Ablum" type="album" />
+          <ShowData data={searchedSongList} heading="Songs" type="song" />
+          <ShowData data={albumListToRender} heading="Ablum" type="album" />
           <ShowData
-            data={songListToRender}
+            data={playListToRender}
             heading="Playlist"
             type="playlist"
           />

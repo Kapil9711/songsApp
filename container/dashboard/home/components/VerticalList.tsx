@@ -5,7 +5,7 @@ import { useAudioContext } from "@/providers/AudioProvider";
 import { useGlobalContext } from "@/providers/GlobalProvider";
 import { useRouter } from "expo-router";
 
-const HorizontalList = ({
+const VerticalList = ({
   data,
   type = "song",
 }: {
@@ -16,17 +16,19 @@ const HorizontalList = ({
   const { handleSingleAlbumOrPlalist } = useGlobalContext();
   const router = useRouter();
   return (
-    <>
+    <View>
       <ScrollView
         showsVerticalScrollIndicator={false}
         showsHorizontalScrollIndicator={false}
-        horizontal
       >
         <View
           style={{
             flex: 1,
             flexDirection: "row",
-            gap: 10,
+            flexWrap: "wrap",
+            gap: 14,
+            paddingTop: 14,
+            paddingBottom: 160,
             paddingHorizontal: 10,
           }}
         >
@@ -56,8 +58,8 @@ const HorizontalList = ({
           })}
         </View>
       </ScrollView>
-    </>
+    </View>
   );
 };
 
-export default HorizontalList;
+export default VerticalList;

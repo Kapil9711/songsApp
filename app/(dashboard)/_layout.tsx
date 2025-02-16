@@ -4,7 +4,7 @@ import { Slot } from "expo-router";
 import BackgroundImageProvider, {
   useBackgroudImage,
 } from "@/providers/BackgroundImage";
-import Header from "@/container/dashboard/common/header";
+import Header, { RightDrawer } from "@/container/dashboard/common/header";
 import BottomHeader from "@/container/dashboard/common/bottom-header";
 import AudioProvider from "@/providers/AudioProvider";
 import AudioPlayer from "@/container/dashboard/common/audio-player";
@@ -16,6 +16,7 @@ const DashboardLayout = () => {
       <BackgroundImageWrapper>
         <AudioProvider>
           <GlobalProvider>
+            <RightDrawer />
             <View
               style={{
                 flex: 1,

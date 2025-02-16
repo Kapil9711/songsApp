@@ -31,7 +31,7 @@ const BottomHeader = () => {
       <Pressable onPress={() => router.push("/(dashboard)/favorites")}>
         <Avatar.Icon
           size={45}
-          style={{ backgroundColor: "black" }}
+          style={{ backgroundColor: "black", marginLeft: 15 }}
           icon={icons.heart}
         />
       </Pressable>

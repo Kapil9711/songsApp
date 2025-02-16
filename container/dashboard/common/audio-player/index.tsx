@@ -1,4 +1,10 @@
-import { View, Text, Dimensions, ImageBackground } from "react-native";
+import {
+  View,
+  Text,
+  Dimensions,
+  ImageBackground,
+  TouchableOpacity,
+} from "react-native";
 import React, {
   createContext,
   useContext,
@@ -9,11 +15,26 @@ import React, {
 import { useAudioContext } from "@/providers/AudioProvider";
 import { Audio } from "expo-av";
 import { useBackgroudImage } from "@/providers/BackgroundImage";
-import { Avatar, Progress } from "tamagui";
+import { Avatar, Button, Progress } from "tamagui";
 import { IconButton, MD3Colors, ProgressBar } from "react-native-paper";
+import { downloadAsync } from "expo-file-system";
+import { handleDownload, saveToDevice } from "@/utilities/helpers";
 const { width } = Dimensions.get("window");
 const PlayerContext = createContext(null as any);
 const usePlayerConext = () => useContext(PlayerContext);
+
+async function setupAudio() {
+  await Audio.setAudioModeAsync({
+    allowsRecordingIOS: false,
+    staysActiveInBackground: true,
+    playsInSilentModeIOS: true,
+    shouldDuckAndroid: true,
+    playThroughEarpieceAndroid: false,
+    // interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
+    // interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
+  });
+  console.log("✅ Audio Mode Set!");
+}
 
 const AudioPlayer = () => {
   const audioData = usePlayer();
@@ -25,8 +46,18 @@ const AudioPlayer = () => {
 };
 
 const PlayerUi = () => {
-  const { imageUrl, songUrl, title, currentSong } = usePlayerConext();
+  const { imageUrl, songUrl, sound, title, currentSong } = usePlayerConext();
+  const [position, setPosition] = useState(0); // Current playback time (ms)
+  const [duration, setDuration] = useState(1);
 
+  if (sound) {
+    sound.setOnPlaybackStatusUpdate((status: any) => {
+      if (status.isLoaded) {
+        setPosition(status.positionMillis); // Update current time
+        setDuration(status.durationMillis || 1); // Set duration (prevent divide by zero)
+      }
+    });
+  }
   return (
     <>
       {currentSong && (
@@ -34,43 +65,113 @@ const PlayerUi = () => {
           style={{
             width: width,
             backgroundColor: "rgba(0,0,0,.9)",
-            height: 80,
+            height: 85,
             position: "absolute",
             bottom: 50,
-
             flexDirection: "row",
           }}
         >
-          <Avatar size={80}>
+          <Avatar size={85}>
             <Avatar.Image src={imageUrl} />
           </Avatar>
 
           <View
             style={{
               flex: 3,
+
               paddingHorizontal: 20,
-              paddingVertical: 7,
+              paddingVertical: 4,
+              alignItems: "center",
             }}
           >
-            <View style={{ gap: 3 }}>
+            <View style={{ gap: 5 }}>
               <Text
                 style={{ color: "white", fontSize: 12, textAlign: "center" }}
               >
-                {title}
+                {title?.slice(0, 16)}
               </Text>
-              <ProgressBar
-                style={{ height: 9, borderRadius: 5 }}
-                progress={0.5}
-                color={MD3Colors.error50}
+              <ProgressBarComponent
+                sound={sound}
+                setPosition={setPosition}
+                duration={duration}
+                position={position}
               />
               <MediaControls />
             </View>
           </View>
 
-          <View style={{ flex: 1 }}></View>
+          <View style={{ flex: 1, alignItems: "center", marginTop: 13 }}>
+            <ShowTime duration={duration} position={position} />
+            {/* <TouchableOpacity
+              onPress={() => {
+                handleDownload(currentSong.downloadUrl[4]?.url, title);
+              }}
+            >
+              <Button
+                onPress={() => {
+                  handleDownload(currentSong.downloadUrl[4]?.url, title);
+                }}
+              >
+                Download
+              </Button>
+            </TouchableOpacity> */}
+          </View>
         </View>
       )}
     </>
+  );
+};
+
+const ShowTime = ({ duration, position }: any) => {
+  const remainingTime = Math.max(0, duration - position);
+
+  return (
+    <View>
+      {/* 🕒 Display Remaining Time (e.g., 1:33) */}
+      <Text
+        style={{
+          fontSize: 16,
+          fontWeight: "bold",
+          marginVertical: 10,
+          color: "white",
+        }}
+      >
+        {formatTime(remainingTime)}
+      </Text>
+    </View>
+  );
+};
+const formatTime = (ms: number) => {
+  const minutes = Math.floor(ms / 60000);
+  const seconds = Math.floor((ms % 60000) / 1000);
+  return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+};
+const ProgressBarComponent = ({
+  sound,
+  setPosition,
+  duration,
+  position,
+}: any) => {
+  const seekAudio = async (event: any) => {
+    if (!sound || duration <= 1) return;
+
+    const touchX = event.nativeEvent.locationX; // Get touch position
+    const progressWidth = 230; // Subtract padding/margins
+    const seekTo = (touchX / progressWidth) * duration;
+
+    await sound.setPositionAsync(seekTo); // Seek to new position
+    setPosition(seekTo); // Update UI immediately
+  };
+  console.log("progress", position, duration, position / duration);
+
+  return (
+    <TouchableOpacity onPress={seekAudio} activeOpacity={0.7}>
+      <ProgressBar
+        style={{ height: 12, width: 218, borderRadius: 3 }}
+        progress={Math.min(1, Math.max(0, position / duration))}
+        color={"#f5075e"}
+      />
+    </TouchableOpacity>
   );
 };
 
@@ -79,34 +180,49 @@ const MediaControls = () => {
     usePlayerConext();
   return (
     <View
-      style={{ flexDirection: "row", marginTop: -9, justifyContent: "center" }}
+      style={{
+        flexDirection: "row",
+        marginTop: -2,
+        justifyContent: "center",
+        gap: 5,
+      }}
     >
       {/* Previous Button */}
-      <IconButton
-        iconColor="white"
-        icon="skip-previous"
-        size={32}
-        onPress={handlePrev}
-      />
+
+      <TouchableOpacity activeOpacity={0.5} onPress={handlePrev}>
+        <IconButton
+          style={{ backgroundColor: "white", padding: 0 }}
+          iconColor="black"
+          icon="skip-previous"
+          size={20}
+        />
+      </TouchableOpacity>
 
       {/* Play/Pause Button */}
-      <IconButton
-        iconColor="white"
-        icon={isPlaying ? "pause" : "play"}
-        size={36}
+      <TouchableOpacity
+        activeOpacity={0.5}
         onPress={() => {
           if (isPlaying) handlePause();
           else handlePlay();
         }}
-      />
+      >
+        <IconButton
+          style={{ backgroundColor: "white", padding: 0 }}
+          iconColor="black"
+          icon={isPlaying ? "pause" : "play"}
+          size={24}
+        />
+      </TouchableOpacity>
+      <TouchableOpacity activeOpacity={0.5} onPress={handleNext}>
+        <IconButton
+          style={{ backgroundColor: "white", padding: 0 }}
+          iconColor="black"
+          icon="skip-next"
+          size={20}
+        />
+      </TouchableOpacity>
 
       {/* Next Button */}
-      <IconButton
-        iconColor="white"
-        icon="skip-next"
-        size={32}
-        onPress={handleNext}
-      />
     </View>
   );
 };
@@ -126,8 +242,15 @@ const usePlayer = () => {
   }
 
   useEffect(() => {
+    (async () => await setupAudio())();
+  }, []);
+
+  useEffect(() => {
     (async () => {
       if (setImage) setImage(currentSong?.image[2]?.url);
+      if (sound) {
+        await sound.unloadAsync();
+      }
       if (Audio) {
         const { sound } = await Audio.Sound.createAsync(
           {

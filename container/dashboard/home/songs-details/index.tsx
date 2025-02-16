@@ -1,4 +1,11 @@
-import { View, Text, Pressable, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Pressable,
+  Touchable,
+} from "react-native";
 import React from "react";
 import { useGlobalContext } from "@/providers/GlobalProvider";
 import SongsSmollCard from "../../common/song-card/SongsSmollCard";
@@ -6,33 +13,49 @@ import { useAudioContext } from "@/providers/AudioProvider";
 
 const SongsDetails = () => {
   const { songListToRender } = useGlobalContext();
-  const { currentSong } = useAudioContext();
-  console.log(songListToRender, "list");
+  const { currentSong, setCurrentSong } = useAudioContext();
+
   return (
-    <ScrollView>
-      <View
+    <View
+      style={{
+        flex: 1,
+      }}
+    >
+      <ScrollView
         style={{
           flex: 1,
-          gap: 10,
-          paddingBottom: 160,
-          paddingTop: 10,
-          paddingHorizontal: 5,
         }}
       >
-        {songListToRender.map((item: any, idx: number) => {
-          return (
-            <Pressable>
-              <SongsSmollCard
-                isActive={currentSong.id === item.id}
-                title={item.name}
-                image={item?.image[2]?.url}
-                song={item}
-              />
-            </Pressable>
-          );
-        })}
-      </View>
-    </ScrollView>
+        <View
+          style={{
+            flex: 1,
+            gap: 10,
+            paddingBottom: 160,
+            paddingTop: 10,
+            paddingHorizontal: 5,
+          }}
+        >
+          {songListToRender.map((item: any, idx: number) => {
+            return (
+              <Pressable
+                key={item.id}
+                onPress={() => {
+                  console.log("✅ Item Clicked:", item.name);
+                  setCurrentSong(item);
+                }}
+              >
+                <SongsSmollCard
+                  isActive={currentSong.id === item.id}
+                  title={item.name}
+                  image={item?.image[2]?.url}
+                  song={item}
+                />
+              </Pressable>
+            );
+          })}
+        </View>
+      </ScrollView>
+    </View>
   );
 };
 

@@ -1,19 +1,20 @@
-import React from "react";
-import { TextInput, View, StyleSheet } from "react-native";
-// Import your colors for consistency
+import { useGlobalContext } from "@/providers/GlobalProvider";
+import React, { useState } from "react";
+import { View } from "react-native";
 import { Input } from "tamagui";
-import useSearchBar from "./hook";
 
 export const SearchBar = () => {
-  const { searchQuery, setSearchQuery, router } = useSearchBar();
+  const [searchQuery, setSearchQuery] = useState("arijit singh");
+  const { handleSearch } = useGlobalContext();
   return (
     <View
       style={{ flex: 1 }}
       className=" flex-1 flex-row    justify-center items-center mr-10 "
     >
       <Input
-        onChangeText={(value) => {
-          setSearchQuery(value as any);
+        onChangeText={(value: string) => {
+          setSearchQuery(value);
+          handleSearch(value);
         }}
         placeholder="Search songs..."
         value={searchQuery}

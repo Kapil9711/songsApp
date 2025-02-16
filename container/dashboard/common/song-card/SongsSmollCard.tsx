@@ -1,4 +1,11 @@
-import { View, Text, Animated, Easing, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  Animated,
+  Easing,
+  Pressable,
+  TouchableNativeFeedback,
+} from "react-native";
 import React, { useEffect, useState } from "react";
 import { Avatar } from "tamagui";
 import { LinearGradient } from "expo-linear-gradient";
@@ -15,13 +22,8 @@ const SongsSmollCard = ({
   isActive: boolean;
   song?: any;
 }) => {
-  const { setCurrentSong } = useAudioContext();
   return (
-    <Pressable
-      onPress={() => {
-        if (song) setCurrentSong(song);
-      }}
-    >
+    <>
       <View
         style={{
           flex: 1,
@@ -33,7 +35,7 @@ const SongsSmollCard = ({
           borderColor: isActive ? "white" : "#FF69B4",
           borderWidth: 1,
           alignItems: "center",
-          elevation: 20,
+          elevation: 100,
         }}
       >
         <Avatar size={57}>
@@ -41,7 +43,7 @@ const SongsSmollCard = ({
         </Avatar>
         <Text style={{ color: "white", flex: 1 }}>{title}</Text>
       </View>
-    </Pressable>
+    </>
   );
 };
 
