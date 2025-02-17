@@ -1,4 +1,4 @@
-import { View, Text } from "react-native";
+import { View, Text, FlatList } from "react-native";
 import React, { useEffect, useState } from "react";
 import { getDownloadedSongs } from "@/utilities/helpers";
 
@@ -18,28 +18,79 @@ import SongsSmollCard from "@/container/dashboard/common/song-card/SongsSmollCar
 const Friends = () => {
   const { setCurrentSong, setCurrentSongList, currentSong } = useAudioContext();
   const { localFilesAfterSearch } = useGlobalContext();
-  console.log(localFilesAfterSearch, "fielsfsfd");
+  const [page, setPage] = useState(1);
+
+  let [filterData, setFilterData] = useState([]);
+  let limit = 13;
+
+  useEffect(() => {
+    setFilterData(localFilesAfterSearch.slice(0, page * limit));
+  }, [page, localFilesAfterSearch]);
+
   return (
     <View
       style={{
         flex: 1,
       }}
     >
-      <ScrollView
+      <View
         style={{
           flex: 1,
+          gap: 10,
+          // paddingBottom: 160,
+          // paddingTop: 10,
+          paddingHorizontal: 3,
         }}
       >
-        <View
-          style={{
-            flex: 1,
-            gap: 10,
-            paddingBottom: 160,
-            paddingTop: 10,
-            paddingHorizontal: 5,
+        <FlatList
+          contentContainerStyle={{ paddingBottom: 170 }}
+          // style={{ flex: 1, paddingBottom: 200 }}
+          data={filterData}
+          keyExtractor={(item: any, idex: number) => item.id + idex}
+          renderItem={({ item, index }) => {
+            return (
+              <Pressable
+                style={{ marginTop: 10 }}
+                key={item.id + index}
+                onPress={() => {
+                  setCurrentSong(item);
+                  setCurrentSongList(filterData);
+                }}
+              >
+                <SongsSmollCard
+                  isActive={currentSong?.id === item.id}
+                  title={item.name}
+                  image={item?.image[2]?.url}
+                  number={index + 1}
+                  song={item}
+                  isShowButton={false}
+                />
+              </Pressable>
+            );
           }}
-        >
-          {localFilesAfterSearch.map((item: any, idx: number) => {
+          onEndReached={() => {
+            setPage((prev: number) => prev + 1);
+          }}
+          onEndReachedThreshold={0}
+          // ListFooterComponent={() =>
+          //   isLoading && (
+          //     <View
+          //       style={{
+          //         paddingTop: 40,
+          //         justifyContent: "center",
+          //         alignItems: "center",
+          //       }}
+          //     >
+          //       <Spinner
+          //         style={{ height: 40, width: 40, scale: 1.6 }}
+          //         size="large"
+          //         color="#f5075e"
+          //       />
+          //     </View>
+          //   )
+          // }
+        />
+        {/* {localFilesAfterSearch.map((item: any, idx: number) => {
             return (
               <Pressable
                 key={item.id}
@@ -58,9 +109,8 @@ const Friends = () => {
                 />
               </Pressable>
             );
-          })}
-        </View>
-      </ScrollView>
+          })} */}
+      </View>
     </View>
   );
 };

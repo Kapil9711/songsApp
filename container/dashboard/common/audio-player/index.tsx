@@ -17,6 +17,8 @@ import { Audio } from "expo-av";
 import { useBackgroudImage } from "@/providers/BackgroundImage";
 import { Avatar } from "tamagui";
 import { IconButton, ProgressBar } from "react-native-paper";
+import { useGlobalContext } from "@/providers/GlobalProvider";
+import { usePathname } from "expo-router";
 
 const { width } = Dimensions.get("window");
 const PlayerContext = createContext(null as any);
@@ -121,7 +123,9 @@ const PlayerUi = () => {
 
 const ShowTime = ({ duration, position }: any) => {
   const remainingTime = Math.max(0, duration - position);
-
+  const { handleDownload } = useGlobalContext();
+  const { currentSong } = usePlayerConext();
+  const currentPath = usePathname();
   return (
     <View>
       {/* 🕒 Display Remaining Time (e.g., 1:33) */}
@@ -135,6 +139,24 @@ const ShowTime = ({ duration, position }: any) => {
       >
         {formatTime(remainingTime)}
       </Text>
+      {currentPath.includes("home") && (
+        <TouchableOpacity
+          onPress={() => {
+            handleDownload(
+              currentSong?.downloadUrl[4]?.url,
+              currentSong?.image[2]?.url,
+              currentSong?.name
+            );
+          }}
+        >
+          <IconButton
+            icon={"download"}
+            size={22}
+            style={{ marginTop: -10, marginLeft: -8 }}
+            iconColor="white"
+          />
+        </TouchableOpacity>
+      )}
     </View>
   );
 };

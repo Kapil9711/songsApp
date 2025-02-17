@@ -52,7 +52,7 @@ const useBottomHeader = () => {
   let icons = {
     home: "home-outline",
     heart: "heart-outline",
-    explore: "download-outline", // "account-group-outline",
+    explore: "folder-open", // "account-group-outline",
   };
   console.log(currentPath);
   if (currentPath.includes("home")) {
@@ -62,7 +62,7 @@ const useBottomHeader = () => {
     icons.heart = "heart";
   }
   if (currentPath.includes("friends")) {
-    icons.explore = "download"; //  "account-group";
+    icons.explore = "folder"; //  "account-group";
   }
 
   return { router, icons };

@@ -20,7 +20,7 @@ const Home = () => {
           style={{
             paddingHorizontal: 2,
             paddingTop: 20,
-            paddingBottom: 120,
+            paddingBottom: 190,
             gap: 35,
           }}
         >

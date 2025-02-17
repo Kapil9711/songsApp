@@ -33,7 +33,6 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("arijit singh");
   const [isLoading, setIsLoading] = useState(false);
-
   const [isLoadingSongListToRender, setIsLoadingSongListToRender] =
     useState(false);
 
@@ -135,10 +134,10 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
         );
 
         const albumPromise = axios.get(
-          "https://saavn.dev/api/search/albums?limit=20&&query=" + "arijit"
+          "https://saavn.dev/api/search/albums?limit=6&&query=" + "arijit"
         );
         const playlistPromise = axios.get(
-          "https://saavn.dev/api/search/playlists?limit=20&&query=" + "arijit"
+          "https://saavn.dev/api/search/playlists?limit=6&&query=" + "arijit"
         );
 
         const [songsData, albumData, playlistData] = await Promise.allSettled([
@@ -220,7 +219,6 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
 
   const handleLocalSearch = useCallback((text: string) => {
     const regex = new RegExp(text, "i");
-
     const filtered = localFiles?.filter((item: any) => regex.test(item?.name));
     setLocalFilesAfterSearch(filtered);
   }, []);
