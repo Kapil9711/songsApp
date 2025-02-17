@@ -16,7 +16,7 @@ import { useAudioContext } from "@/providers/AudioProvider";
 import { Audio } from "expo-av";
 import { useBackgroudImage } from "@/providers/BackgroundImage";
 import { Avatar } from "tamagui";
-import { IconButton, ProgressBar } from "react-native-paper";
+import { Icon, IconButton, ProgressBar } from "react-native-paper";
 import { useGlobalContext } from "@/providers/GlobalProvider";
 import { usePathname } from "expo-router";
 
@@ -63,14 +63,20 @@ const PlayerUi = () => {
         <View
           style={{
             width: width,
-            backgroundColor: "rgba(0,0,0,.9)",
-            height: 80,
+            backgroundColor: "rgba(0,0,0,1)",
+            borderRightWidth: 5,
+            borderLeftWidth: 5,
+            borderTopWidth: 2,
+            borderBottomWidth: 2,
+            borderRadius: 10,
+            borderColor: "#ff268b",
+            height: 87,
             position: "absolute",
             bottom: 50,
             flexDirection: "row",
           }}
         >
-          <Avatar size={80}>
+          <Avatar style={{ marginTop: 2, marginLeft: 1 }} size={80}>
             <Avatar.Image src={imageUrl} />
           </Avatar>
 
@@ -185,7 +191,7 @@ const ProgressBarComponent = ({
   return (
     <TouchableOpacity onPress={seekAudio} activeOpacity={0.7}>
       <ProgressBar
-        style={{ height: 8, width: 218, borderRadius: 3 }}
+        style={{ height: 10, width: 218, borderRadius: 3 }}
         progress={Math.min(1, Math.max(0, position / duration))}
         color={"#f5075e"}
       />
@@ -200,20 +206,15 @@ const MediaControls = () => {
     <View
       style={{
         flexDirection: "row",
-        marginTop: -3,
+        marginTop: 8,
         justifyContent: "center",
-        gap: 5,
+        gap: 22,
       }}
     >
       {/* Previous Button */}
 
       <TouchableOpacity activeOpacity={0.5} onPress={handlePrev}>
-        <IconButton
-          // style={{ backgroundColor: "white", padding: 0 }}
-          iconColor="white"
-          icon="skip-previous"
-          size={20}
-        />
+        <Icon source="skip-previous" size={26} color="white" />
       </TouchableOpacity>
 
       {/* Play/Pause Button */}
@@ -224,20 +225,10 @@ const MediaControls = () => {
           else handlePlay();
         }}
       >
-        <IconButton
-          // style={{ backgroundColor: "white", padding: 0 }}
-          iconColor="white"
-          icon={isPlaying ? "pause" : "play"}
-          size={24}
-        />
+        <Icon source={isPlaying ? "pause" : "play"} size={28} color="white" />
       </TouchableOpacity>
       <TouchableOpacity activeOpacity={0.5} onPress={handleNext}>
-        <IconButton
-          // style={{ backgroundColor: "white", padding: 0 }}
-          iconColor="white"
-          icon="skip-next"
-          size={20}
-        />
+        <Icon source="skip-next" size={26} color="white" />
       </TouchableOpacity>
 
       {/* Next Button */}

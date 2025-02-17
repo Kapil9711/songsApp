@@ -3,8 +3,9 @@ import { useEffect, useState } from "react";
 import { LoginPayload, loginUser } from "./api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getValueInAsync, setValueInAsync } from "@/utilities/helpers";
-import Toast from "react-native-simple-toast";
+
 import { useRouter } from "expo-router";
+import Toast from "react-native-toast-message";
 
 const useAuth = () => {
   // **********************states section*************************
@@ -14,16 +15,16 @@ const useAuth = () => {
 
   // **********************states section*************************
 
-  useEffect(() => {
-    const checkIsLogin = async () => {
-      const value = await getValueInAsync("token");
-      if (value) {
-        router.replace("/(dashboard)/home");
-      }
-      setIsCheckingUserLogin(false);
-    };
-    checkIsLogin();
-  }, []);
+  // useEffect(() => {
+  //   const checkIsLogin = async () => {
+  //     const value = await getValueInAsync("token");
+  //     if (value) {
+  //       router.replace("/(dashboard)/home");
+  //     } else router.push("/(auth)/sign-in");
+  //     setIsCheckingUserLogin(false);
+  //   };
+  //   checkIsLogin();
+  // }, []);
 
   //   ************************queries*****************************
 
@@ -32,17 +33,25 @@ const useAuth = () => {
       mutationFn: loginUser,
       onSuccess: async ({ data }) => {
         if (data.success) {
+          Toast.show({
+            type: "success", // success | error | info
+            text1: "Login SuccessFull",
+            // text2: "File is Deleted Successfully",
+            visibilityTime: 1500,
+            autoHide: true,
+          });
           await setValueInAsync("token", data.token);
-          Toast.showWithGravity("Login successFull", Toast.LONG, Toast.TOP);
           router.replace("/(dashboard)/home");
         }
       },
       onError: (data) => {
-        Toast.showWithGravity(
-          "Please Fill Details Properly",
-          Toast.LONG,
-          Toast.TOP
-        );
+        Toast.show({
+          type: "error", // success | error | info
+          text1: "Login Failed",
+          // text2: "File is Deleted Successfully",
+          visibilityTime: 1500,
+          autoHide: true,
+        });
       },
     });
 
