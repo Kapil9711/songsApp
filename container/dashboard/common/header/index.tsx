@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, Touchable, Easing } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Avatar } from "react-native-paper";
-import { Avatar as AvatarTamagui } from "tamagui";
+import { Avatar as AvatarTamagui, Button, H3, H6, Paragraph } from "tamagui";
 import { SearchBar } from "../search-bar";
 import { Drawer } from "react-native-paper";
 
@@ -31,6 +31,7 @@ const Header = () => {
           <AvatarTamagui.Image
             accessibilityLabel="Cam"
             src="https://images.unsplash.com/photo-1548142813-c348350df52b?&w=150&h=150&dpr=2&q=80"
+            // src="/assets/images/icon3.png"
           />
           <AvatarTamagui.Fallback backgroundColor="$blue10" />
         </AvatarTamagui>
@@ -50,13 +51,18 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons"; // Close Icon
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
+import { useGlobalContext } from "@/providers/GlobalProvider";
 
 const { height, width } = Dimensions.get("window"); // Get screen size
 
 export const RightDrawer = () => {
   const [open, setOpen] = useState(false);
   const translateX = useSharedValue(width); // Start fully hidden
-
+  const router = useRouter();
+  const { user } = useGlobalContext();
+  // const [user, setUser] = useState({} as any);
   const openDrawer = () => {
     setOpen(true);
     translateX.value = withTiming(0, {
@@ -80,6 +86,15 @@ export const RightDrawer = () => {
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
   }));
+
+  // useEffect(() => {
+  //   (async () => {
+  //     const user = await AsyncStorage.getItem("user");
+  //     if (user) {
+  //       setUser(JSON.parse(user));
+  //     }
+  //   })();
+  // }, []);
 
   return (
     <View style={{ zIndex: 1000, position: "absolute", right: 8, top: 0 }}>
@@ -114,7 +129,22 @@ export const RightDrawer = () => {
         </View> */}
 
         {/* Drawer Content */}
-        <Text style={styles.drawerText}>Right Drawer Content</Text>
+        <H3 style={{ textAlign: "center", marginBottom: 5 }}>{user?.name}</H3>
+        <Button
+          onPress={async () => {
+            console.log("clicked");
+            await AsyncStorage.removeItem("token");
+            router.replace("/");
+          }}
+          size={"large"}
+        >
+          Logout
+        </Button>
+
+        <View style={{ marginTop: 4 }}>
+          <Paragraph style={{ textAlign: "center" }}>Songs Setting</Paragraph>
+        </View>
+        {/* <Text style={styles.drawerText}>Right Drawer Content</Text> */}
       </Animated.View>
     </View>
   );

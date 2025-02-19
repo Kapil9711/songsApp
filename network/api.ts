@@ -1,9 +1,10 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+// "https://songspro.vercel.app/api/v1"
 // Create an Axios instance with a base URL
 const api = axios.create({
-  baseURL: "https://songspro.vercel.app/api/v1", // Your base API URL
+  baseURL: "https://song-backend-n6uo.vercel.app", // Your base API URL
   headers: {
     "Content-Type": "application/json", // Default headers
   },
@@ -12,7 +13,7 @@ const api = axios.create({
 // Function to get the token from AsyncStorage and set the Authorization header
 export const setAuthHeader = async () => {
   try {
-    const token = await AsyncStorage.getItem("authToken"); // Retrieve token from AsyncStorage
+    const token = await AsyncStorage.getItem("token"); // Retrieve token from AsyncStorage
     if (token) {
       api.defaults.headers["Authorization"] = `Bearer ${token}`; // Set the token in the Authorization header
     } else {

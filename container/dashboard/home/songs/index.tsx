@@ -30,7 +30,7 @@ const Songs = () => {
           gap: 11,
           // paddingBottom: 134,
           paddingTop: 0,
-          paddingHorizontal: 3,
+          paddingHorizontal: 5,
         }}
       >
         {isLoading ? (

@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { LoginPayload, loginUser } from "./api";
+import { createUser, LoginPayload, loginUser } from "./api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getValueInAsync, setValueInAsync } from "@/utilities/helpers";
 
@@ -32,6 +32,7 @@ const useAuth = () => {
     useMutation({
       mutationFn: loginUser,
       onSuccess: async ({ data }) => {
+        console.log(data);
         if (data.success) {
           Toast.show({
             type: "success", // success | error | info
@@ -41,6 +42,7 @@ const useAuth = () => {
             autoHide: true,
           });
           await setValueInAsync("token", data.token);
+          await setValueInAsync("user", JSON.stringify(data?.user));
           router.replace("/(dashboard)/home");
         }
       },
@@ -48,6 +50,34 @@ const useAuth = () => {
         Toast.show({
           type: "error", // success | error | info
           text1: "Login Failed",
+          // text2: "File is Deleted Successfully",
+          visibilityTime: 1500,
+          autoHide: true,
+        });
+      },
+    });
+
+  const { mutate: userRegisterMutation, isPending: isUserRegisterPending } =
+    useMutation({
+      mutationFn: createUser,
+      onSuccess: async ({ data }) => {
+        console.log(data, "data");
+        if (data.success) {
+          Toast.show({
+            type: "success", // success | error | info
+            text1: "SignUp  SuccessFull",
+            // text2: "File is Deleted Successfully",
+            visibilityTime: 1500,
+            autoHide: true,
+          });
+          // await setValueInAsync("token", data.token);
+          router.replace("/(auth)/sign-in");
+        }
+      },
+      onError: (data) => {
+        Toast.show({
+          type: "error", // success | error | info
+          text1: "SignUp Failed",
           // text2: "File is Deleted Successfully",
           visibilityTime: 1500,
           autoHide: true,
@@ -65,8 +95,18 @@ const useAuth = () => {
       const isEmail = emailRegex.test(userId);
       const payload: LoginPayload = { password };
       if (isEmail) payload.email = userId;
-      else payload.username = userId;
+      else payload.name = userId;
       userLoginMutation(payload);
+    }
+  };
+
+  const handleRegister = async () => {
+    const { password, name, email } = form;
+    console.log(form);
+    if (password && name && email) {
+      const payload = { password, name, email };
+
+      userRegisterMutation(payload);
     }
   };
 
@@ -78,6 +118,8 @@ const useAuth = () => {
     handleLogin,
     isCheckingUserLogin,
     isUserLoginPending,
+    isUserRegisterPending,
+    handleRegister,
   };
 };
 

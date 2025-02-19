@@ -12,7 +12,6 @@ import {
   ButtonFrame,
   H2,
   H3,
-  H4,
   H5,
   H6,
   Input,
@@ -21,11 +20,11 @@ import {
 } from "tamagui";
 
 import { useAuthContext } from "@/providers/AuthProvider";
-import { useRouter } from "expo-router";
 
-const SignIn = () => {
-  const { form, setForm, handleLogin, isUserLoginPending } = useAuthContext();
-  const router = useRouter();
+const SignUp = () => {
+  const { form, setForm, isUserRegisterPending, handleRegister } =
+    useAuthContext();
+  console.log(form, "fsfd");
   return (
     <View
       style={{
@@ -37,16 +36,28 @@ const SignIn = () => {
     >
       <View>
         <H2 color={"white"} style={{ textAlign: "center" }}>
-          Sign-In
+          Sign-Up
         </H2>
-        <View style={{ gap: 20, marginTop: 20 }}>
+        <View style={{ gap: 12, marginTop: 20 }}>
           <View style={{ gap: 4 }}>
-            <H6 color={"white"}>Email / UserName</H6>
+            <H6 color={"white"}>Email</H6>
             <Input
               style={{ width: 290, fontSize: 18 }}
               onChangeText={(value: string) => {
                 setForm((prev: any) => {
-                  return { ...prev, userId: value };
+                  return { ...prev, email: value };
+                });
+              }}
+            />
+          </View>
+
+          <View style={{ gap: 4 }}>
+            <H6 color={"white"}>Name</H6>
+            <Input
+              style={{ width: 290, fontSize: 18 }}
+              onChangeText={(value: string) => {
+                setForm((prev: any) => {
+                  return { ...prev, name: value };
                 });
               }}
             />
@@ -65,17 +76,6 @@ const SignIn = () => {
             />
           </View>
 
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Paragraph color={"white"}>Do Not Have An Account, </Paragraph>
-            <TouchableOpacity
-              onPress={() => {
-                router.push("/(auth)/sign-up");
-              }}
-            >
-              <H6 color={"orange"}>Sign-Up</H6>
-            </TouchableOpacity>
-          </View>
-
           <View
             style={{
               justifyContent: "center",
@@ -83,14 +83,14 @@ const SignIn = () => {
               marginTop: 8,
             }}
           >
-            {isUserLoginPending ? (
+            {isUserRegisterPending ? (
               <Spinner size="large" color={"white"} />
             ) : (
               <TouchableOpacity>
                 <Button
                   onPress={() => {
                     console.log("clicked");
-                    handleLogin();
+                    handleRegister();
                   }}
                   style={{ width: 100, backgroundColor: "white", fontSize: 20 }}
                 >
@@ -105,4 +105,4 @@ const SignIn = () => {
   );
 };
 
-export default SignIn;
+export default SignUp;

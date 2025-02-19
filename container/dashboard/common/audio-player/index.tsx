@@ -132,6 +132,11 @@ const ShowTime = ({ duration, position }: any) => {
   const { handleDownload } = useGlobalContext();
   const { currentSong } = usePlayerConext();
   const currentPath = usePathname();
+  const { user } = useGlobalContext();
+  let downloadUrl = currentSong?.downloadUrl[4]?.url;
+  if (user) {
+    downloadUrl = currentSong?.downloadUrl[currentSong.downloadUrl]?.url;
+  }
   return (
     <View>
       {/* 🕒 Display Remaining Time (e.g., 1:33) */}
@@ -149,7 +154,7 @@ const ShowTime = ({ duration, position }: any) => {
         <TouchableOpacity
           onPress={() => {
             handleDownload(
-              currentSong?.downloadUrl[4]?.url,
+              currentSong?.downloadUrl[downloadUrl]?.url,
               currentSong?.image[2]?.url,
               currentSong?.name
             );
@@ -200,8 +205,17 @@ const ProgressBarComponent = ({
 };
 
 const MediaControls = () => {
-  const { sound, handlePause, handlePlay, isPlaying, handleNext, handlePrev } =
-    usePlayerConext();
+  const {
+    sound,
+    handlePause,
+    handlePlay,
+    isPlaying,
+    handleNext,
+    handlePrev,
+    isLoop,
+    setIsLoop,
+  } = usePlayerConext();
+
   return (
     <View
       style={{
@@ -212,6 +226,16 @@ const MediaControls = () => {
       }}
     >
       {/* Previous Button */}
+
+      <TouchableOpacity
+        style={{ position: "absolute", left: 4 }}
+        activeOpacity={0.5}
+        onPress={() => {
+          setIsLoop((prev: boolean) => !prev);
+        }}
+      >
+        <Icon source="repeat" size={20} color={isLoop ? "red" : "white"} />
+      </TouchableOpacity>
 
       <TouchableOpacity activeOpacity={0.5} onPress={handlePrev}>
         <Icon source="skip-previous" size={26} color="white" />
@@ -239,18 +263,27 @@ const MediaControls = () => {
 const usePlayer = () => {
   const { sound, setSound, currentSong, setCurrentSong, currentSongList } =
     useAudioContext();
+  const { user } = useGlobalContext();
   const [isPlaying, setIsPlaying] = useState(false);
   const { setImage } = useBackgroudImage();
   const [position, setPosition] = useState(0); // Current playback time (ms)
   const [duration, setDuration] = useState(1);
+  const [isLoop, setIsLoop] = useState(false);
+  // const isLoop = useRef(false);
 
   let imageUrl = "";
   let songUrl = "";
   let title = "";
-  if (currentSong?.id) {
-    imageUrl = currentSong?.image[2]?.url;
-    songUrl = currentSong?.downloadUrl[4]?.url;
-    title = currentSong?.name;
+  if (currentSong) {
+    if (currentSong.id) {
+      imageUrl = currentSong?.image[user?.imageQuality]?.url;
+      songUrl = currentSong?.downloadUrl[user?.songQuality]?.url;
+      title = currentSong?.name;
+    } else {
+      imageUrl = currentSong?.image[2]?.url;
+      songUrl = currentSong?.downloadUrl[4]?.url;
+      title = currentSong?.name;
+    }
   }
 
   useEffect(() => {
@@ -269,18 +302,24 @@ const usePlayer = () => {
         }
       });
     }
-  }, [sound]);
+  }, [sound, isLoop]);
 
   useEffect(() => {
     (async () => {
-      if (setImage) setImage(currentSong?.image[2]?.url);
+      if (setImage) {
+        if (currentSong.id)
+          setImage(currentSong?.image[user?.imageQuality]?.url);
+        else setImage(currentSong?.image[2]?.url);
+      }
       if (sound) {
         await sound.unloadAsync();
       }
       if (Audio) {
         const { sound } = await Audio.Sound.createAsync(
           {
-            uri: currentSong.downloadUrl[4]?.url,
+            uri: currentSong.id
+              ? currentSong.downloadUrl[user?.songQuality]?.url
+              : currentSong.downloadUrl[4],
           },
           { shouldPlay: true }
         );
@@ -299,6 +338,11 @@ const usePlayer = () => {
   const handleNext = () => {
     let currenIndex = null;
 
+    if (isLoop === true) {
+      setCurrentSong((prev: any) => ({ ...prev }));
+      return;
+    }
+
     if (Array.isArray(currentSongList) && currentSongList.length) {
       currentSongList.some((item, idx) => {
         if (item.id === currentSong.id) {
@@ -315,6 +359,10 @@ const usePlayer = () => {
   };
   const handlePrev = () => {
     let currenIndex = null;
+    if (isLoop === true) {
+      setCurrentSong((prev: any) => ({ ...prev }));
+      return;
+    }
     if (Array.isArray(currentSongList) && currentSongList.length) {
       currentSongList.some((item, idx) => {
         if (item.id === currentSong.id) {
@@ -345,6 +393,8 @@ const usePlayer = () => {
   };
 
   return {
+    isLoop,
+    setIsLoop,
     imageUrl,
     songUrl,
     title,

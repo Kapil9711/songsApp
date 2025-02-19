@@ -3,13 +3,29 @@ import axios, { setAuthHeader } from "../../network/api";
 
 export interface LoginPayload {
   email?: string;
-  username?: string;
+  name?: string;
   password: string;
 }
 
 export const loginUser = async (payload: LoginPayload): Promise<any> => {
   await setAuthHeader();
   let response: any;
-  response = await axios.post(endpoint.login, payload);
+  try {
+    response = await axios.post(endpoint.login, payload);
+  } catch (error) {
+    console.log(error, "erer");
+  }
+  return response;
+};
+
+export const createUser = async (payload: any): Promise<any> => {
+  await setAuthHeader();
+  let response: any;
+  try {
+    console.log(payload, "pay");
+    response = await axios.post(endpoint.register, payload);
+  } catch (error) {
+    console.log(error, "erer");
+  }
   return response;
 };

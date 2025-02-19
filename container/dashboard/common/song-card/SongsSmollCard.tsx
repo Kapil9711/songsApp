@@ -1,5 +1,5 @@
-import { View, Text, Alert } from "react-native";
-import React, { useEffect } from "react";
+import { View, Text, Alert, Pressable } from "react-native";
+import React, { useEffect, useMemo } from "react";
 import { Avatar } from "tamagui";
 import { IconButton } from "react-native-paper";
 
@@ -39,7 +39,11 @@ const SongsSmollCard = ({
   song?: any;
   isShowButton?: boolean;
 }) => {
-  const { deleteFile, handleDownload } = useGlobalContext();
+  const { deleteFile, handleDownload, handleFavorite, favorite } =
+    useGlobalContext();
+  const isFav = useMemo(() => {
+    return favorite.some((item: any) => song.id === item.id);
+  }, [favorite, song]);
   return (
     <>
       <View
@@ -87,9 +91,17 @@ const SongsSmollCard = ({
               <IconButton
                 icon="heart" // Standard download icon
                 size={24}
-                iconColor="white"
-                onPress={() => console.log("Download pressed")}
+                style={{
+                  borderWidth: isFav ? 2 : 0,
+                  backgroundColor: isFav ? "white" : "transparent",
+                }}
+                iconColor={isFav ? "red" : "white"}
+                onPress={() => {
+                  console.log("cliked");
+                  handleFavorite(song);
+                }}
               />
+
               <IconButton
                 icon="download" // Standard download icon
                 size={24}

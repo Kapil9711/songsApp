@@ -11,6 +11,7 @@ import React, {
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import axiosInstance, { setAuthHeader } from "@/network/api";
 import {
   downloadSong,
   getDownloadedSongs,
@@ -35,6 +36,8 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingSongListToRender, setIsLoadingSongListToRender] =
     useState(false);
+  const { user, handleFavorite, favorite, saveJsonToFile, readJsonFile } =
+    useFavorite();
 
   const handleSearch = useCallback(
     debounce((text) => {
@@ -129,6 +132,22 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
 
       try {
         setIsLoadingSongListToRender(true);
+
+        try {
+          const song = await readJsonFile("initialSong.json");
+          const album = await readJsonFile("initialAlbum.json");
+          const playlist = await readJsonFile("initialPlaylist.json");
+
+          if (song && album && playlist) {
+            setAlbumListToRender(album);
+            setSongListToRender(song);
+            setSearchedSongList(song);
+            setPlaListToRender(playlist);
+            setIsLoadingSongListToRender(false);
+            return;
+          }
+        } catch (error) {}
+
         const songPromise = axios.get(
           "https://saavn.dev/api/search/songs?query=" + "arijit"
         );
@@ -150,12 +169,22 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
           if (song) {
             setSongListToRender(song?.data?.results);
             setSearchedSongList(song?.data?.results);
+            try {
+              await saveJsonToFile("initialSong.json", song?.data?.results);
+            } catch (error) {
+              console.log(error, "initialSong");
+            }
           }
         }
         if (albumData.status === "fulfilled") {
           const { data: album } = albumData.value;
           if (album) {
             setAlbumListToRender(album?.data?.results);
+            try {
+              await saveJsonToFile("initialAlbum.json", album?.data?.results);
+            } catch (error) {
+              console.log(error, "initialAlbum");
+            }
           }
         }
 
@@ -163,6 +192,14 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
           const { data: playlist } = playlistData.value;
           if (playlist) {
             setPlaListToRender(playlist?.data?.results);
+            try {
+              await saveJsonToFile(
+                "initialPlaylist.json",
+                playlist?.data?.results
+              );
+            } catch (error) {
+              console.log(error, "initialPlaylist");
+            }
           }
         }
 
@@ -324,6 +361,8 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
 
   const value = useMemo(() => {
     return {
+      favorite,
+      handleFavorite,
       songListToRender,
       setSongListToRender,
       albumListToRender,
@@ -344,8 +383,10 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
       setSearchQuery,
       setPage,
       isLoading,
+      user,
     };
   }, [
+    user,
     songListToRender,
     albumListToRender,
     playListToRender,
@@ -355,10 +396,137 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
     searchQuery,
     page,
     isLoading,
+    favorite,
   ]);
   return (
     <GlobalContext.Provider value={value}>{children}</GlobalContext.Provider>
   );
+};
+
+const useFavorite = () => {
+  const [favorite, setFavorite] = useState();
+  const [user, setUser] = useState({});
+
+  const getFavorite = async (islocal = true) => {
+    try {
+      if (islocal) {
+        const data = await readJsonFile("favorite.json");
+        if (data) {
+          console.log("datafrom json", data);
+          setFavorite(data);
+          return;
+        }
+      }
+    } catch (error) {}
+    await setAuthHeader();
+    const { data } = await axiosInstance.get("/favorite");
+    if (data?.success) {
+      setFavorite(data?.favorite);
+      try {
+        await saveJsonToFile("favorite.json", data?.favorite);
+      } catch (error) {
+        console.log(error, "save file");
+      }
+    }
+    console.log(data, "fav");
+  };
+
+  const readJsonFile = useCallback(async (filename: string) => {
+    const fileUri = `${fileSystem.documentDirectory}${filename}`;
+
+    try {
+      // Check if file exists
+      const fileInfo = await fileSystem.getInfoAsync(fileUri);
+
+      if (!fileInfo.exists) {
+        console.log("File does not exist.");
+        return null;
+      }
+
+      // Read file content
+      const fileContent = await fileSystem.readAsStringAsync(fileUri);
+      const jsonData = JSON.parse(fileContent); // Convert string to JSON
+
+      console.log("File content:", jsonData);
+      return jsonData;
+    } catch (error) {
+      console.error("Error reading file:", error);
+    }
+  }, []);
+
+  const saveJsonToFile = useCallback(
+    async (filename: string, jsonData: any) => {
+      try {
+        // Convert JSON data to string
+        const jsonString = JSON.stringify(jsonData, null, 2);
+
+        // Define file path (documents directory)
+        const fileUri = `${fileSystem.documentDirectory}${filename}`;
+
+        // Write file
+        await fileSystem.writeAsStringAsync(fileUri, jsonString, {
+          encoding: fileSystem.EncodingType.UTF8,
+        });
+
+        console.log(`File saved at: ${fileUri}`);
+        return fileUri; // Return file path if needed
+      } catch (error) {
+        console.error("Error saving file:", error);
+      }
+    },
+    []
+  );
+
+  const handleFavorite = useCallback(async (data: any) => {
+    const { name, id, downloadUrl, image } = data;
+    try {
+      Toast.show({
+        type: "success", // success | error | info
+        text1: "Please Wait...",
+        text2: "Adding To Favorite",
+        visibilityTime: 3500,
+        autoHide: true,
+      });
+      await setAuthHeader();
+      const { data } = await axiosInstance.post("/favorite", {
+        name,
+        id,
+        downloadUrl,
+        image,
+      });
+      getFavorite(false);
+      Toast.show({
+        type: "success", // success | error | info
+        text1: "Successfully  done",
+        // text2: "AddinFavoriteg To ",
+        visibilityTime: 1500,
+        autoHide: true,
+      });
+
+      console.log(data, "fav");
+    } catch (error) {
+      console.log(error, "fav");
+      Toast.show({
+        type: "error", // success | error | info
+        text1: "Failed",
+        // text2: "AddinFavoriteg To ",
+        visibilityTime: 1500,
+        autoHide: true,
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    getFavorite();
+    (async () => {
+      const user = await AsyncStorage.getItem("user");
+      if (user) {
+        setUser(JSON.parse(user));
+      }
+    })();
+  }, []);
+
+  return { handleFavorite, favorite, readJsonFile, saveJsonToFile, user };
 };
 
 export default GlobalProvider;
