@@ -36,8 +36,15 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingSongListToRender, setIsLoadingSongListToRender] =
     useState(false);
-  const { user, handleFavorite, favorite, saveJsonToFile, readJsonFile } =
-    useFavorite();
+  const {
+    user,
+    handleFavorite,
+    favorite,
+    saveJsonToFile,
+    readJsonFile,
+    favFilter,
+    setFavFilter,
+  } = useFavorite();
 
   const handleSearch = useCallback(
     debounce((text) => {
@@ -254,10 +261,19 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
     []
   );
 
-  const handleLocalSearch = useCallback((text: string) => {
+  const handleLocalSearch = useCallback((text: string, type = "home") => {
     const regex = new RegExp(text, "i");
-    const filtered = localFiles?.filter((item: any) => regex.test(item?.name));
-    setLocalFilesAfterSearch(filtered);
+    console.log("local", text);
+    if (type === "home") {
+      const filtered = localFiles?.filter((item: any) =>
+        regex.test(item?.name)
+      );
+      setLocalFilesAfterSearch(filtered);
+    }
+    if (type == "favorites") {
+      const filtered = favorite?.filter((item: any) => regex.test(item?.name));
+      setFavFilter(filtered);
+    }
   }, []);
 
   const deleteFile = useCallback(async (fileName: string) => {
@@ -384,8 +400,10 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
       setPage,
       isLoading,
       user,
+      favFilter,
     };
   }, [
+    favFilter,
     user,
     songListToRender,
     albumListToRender,
@@ -404,7 +422,8 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
 };
 
 const useFavorite = () => {
-  const [favorite, setFavorite] = useState();
+  const [favorite, setFavorite] = useState([]);
+  const [favFilter, setFavFilter] = useState([]);
   const [user, setUser] = useState({});
 
   const getFavorite = async (islocal = true) => {
@@ -414,6 +433,7 @@ const useFavorite = () => {
         if (data) {
           console.log("datafrom json", data);
           setFavorite(data);
+          setFavFilter(data);
           return;
         }
       }
@@ -526,7 +546,15 @@ const useFavorite = () => {
     })();
   }, []);
 
-  return { handleFavorite, favorite, readJsonFile, saveJsonToFile, user };
+  return {
+    handleFavorite,
+    favorite,
+    readJsonFile,
+    saveJsonToFile,
+    user,
+    favFilter,
+    setFavFilter,
+  };
 };
 
 export default GlobalProvider;

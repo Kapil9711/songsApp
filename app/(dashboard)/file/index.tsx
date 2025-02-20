@@ -15,17 +15,17 @@ import { useAudioContext } from "@/providers/AudioProvider";
 import { Spinner } from "tamagui";
 import SongsSmollCard from "@/container/dashboard/common/song-card/SongsSmollCard";
 
-const Favorite = () => {
+const Files = () => {
   const { setCurrentSong, setCurrentSongList, currentSong } = useAudioContext();
-  const { localFilesAfterSearch, favorite, favFilter } = useGlobalContext();
+  const { localFilesAfterSearch } = useGlobalContext();
   const [page, setPage] = useState(1);
 
   let [filterData, setFilterData] = useState([]);
   let limit = 13;
 
   useEffect(() => {
-    setFilterData(favFilter.slice(0, page * limit));
-  }, [page, favFilter]);
+    setFilterData(localFilesAfterSearch.slice(0, page * limit));
+  }, [page, localFilesAfterSearch]);
 
   return (
     <View
@@ -63,6 +63,7 @@ const Favorite = () => {
                   image={item?.image[2]?.url}
                   number={index + 1}
                   song={item}
+                  isShowButton={false}
                 />
               </Pressable>
             );
@@ -114,4 +115,4 @@ const Favorite = () => {
   );
 };
 
-export default Favorite;
+export default Files;

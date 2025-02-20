@@ -6,39 +6,44 @@ import { SearchBar } from "../search-bar";
 import { Drawer } from "react-native-paper";
 
 const Header = () => {
+  const currentPath = usePathname();
   return (
-    <View
-      style={{
-        backgroundColor: "white",
-        height: 70,
-        borderRadius: 4,
-        elevation: 1,
-      }}
-      // className="h-[50px] text-white border-2 border-white bg-white"
-    >
-      <View
-        style={{
-          flex: 1,
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 15,
-          paddingHorizontal: 15,
-          paddingVertical: 8,
-        }}
-      >
-        <AvatarTamagui circular size="$5">
-          <AvatarTamagui.Image
-            accessibilityLabel="Cam"
-            src="https://images.unsplash.com/photo-1548142813-c348350df52b?&w=150&h=150&dpr=2&q=80"
-            // src="/assets/images/icon3.png"
-          />
-          <AvatarTamagui.Fallback backgroundColor="$blue10" />
-        </AvatarTamagui>
-        <SearchBar />
-        <View style={{ width: 40, height: 20 }}></View>
-      </View>
-    </View>
+    <>
+      {!currentPath.includes("friends") && (
+        <View
+          style={{
+            backgroundColor: "white",
+            height: 70,
+            borderRadius: 4,
+            elevation: 1,
+          }}
+          // className="h-[50px] text-white border-2 border-white bg-white"
+        >
+          <View
+            style={{
+              flex: 1,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 15,
+              paddingHorizontal: 15,
+              paddingVertical: 8,
+            }}
+          >
+            <AvatarTamagui circular size="$5">
+              <AvatarTamagui.Image
+                accessibilityLabel="Cam"
+                src="https://images.unsplash.com/photo-1548142813-c348350df52b?&w=150&h=150&dpr=2&q=80"
+                // src="/assets/images/icon3.png"
+              />
+              <AvatarTamagui.Fallback backgroundColor="$blue10" />
+            </AvatarTamagui>
+            <SearchBar />
+            <View style={{ width: 40, height: 20 }}></View>
+          </View>
+        </View>
+      )}
+    </>
   );
 };
 
@@ -52,7 +57,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons"; // Close Icon
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import { useGlobalContext } from "@/providers/GlobalProvider";
 
 const { height, width } = Dimensions.get("window"); // Get screen size

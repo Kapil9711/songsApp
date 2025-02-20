@@ -29,7 +29,9 @@ export const SearchBar = () => {
             handleSearch(value);
             setPage(1);
           }
-          if (pathname.includes("friends")) handleLocalSearch(value);
+          if (pathname.includes("file")) handleLocalSearch(value);
+          if (pathname.includes("favorites"))
+            handleLocalSearch(value, "favorites");
           setSearchQuery(value);
         }}
         placeholder="Search songs..."

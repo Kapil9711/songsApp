@@ -39,6 +39,13 @@ const BottomHeader = () => {
         <Avatar.Icon
           size={45}
           style={{ backgroundColor: "black" }}
+          icon={icons.friend}
+        />
+      </Pressable>
+      <Pressable onPress={() => router.push("/(dashboard)/file")}>
+        <Avatar.Icon
+          size={45}
+          style={{ backgroundColor: "black" }}
           icon={icons.explore}
         />
       </Pressable>
@@ -52,7 +59,8 @@ const useBottomHeader = () => {
   let icons = {
     home: "home-outline",
     heart: "heart-outline",
-    explore: "folder-open", // "account-group-outline",
+    friend: "account-group-outline",
+    explore: "folder-open",
   };
   console.log(currentPath);
   if (currentPath.includes("home")) {
@@ -62,9 +70,11 @@ const useBottomHeader = () => {
     icons.heart = "heart";
   }
   if (currentPath.includes("friends")) {
-    icons.explore = "folder"; //  "account-group";
+    icons.friend = "account-group"; //  "account-group";
   }
-
+  if (currentPath.includes("/file")) {
+    icons.explore = "folder";
+  }
   return { router, icons };
 };
 
