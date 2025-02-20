@@ -44,6 +44,8 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
     readJsonFile,
     favFilter,
     setFavFilter,
+    friends,
+    setFriends,
   } = useFavorite();
 
   const handleSearch = useCallback(
@@ -261,20 +263,26 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
     []
   );
 
-  const handleLocalSearch = useCallback((text: string, type = "home") => {
-    const regex = new RegExp(text, "i");
-    console.log("local", text);
-    if (type === "home") {
-      const filtered = localFiles?.filter((item: any) =>
-        regex.test(item?.name)
-      );
-      setLocalFilesAfterSearch(filtered);
-    }
-    if (type == "favorites") {
-      const filtered = favorite?.filter((item: any) => regex.test(item?.name));
-      setFavFilter(filtered);
-    }
-  }, []);
+  const handleLocalSearch = useCallback(
+    (text: string, type = "home") => {
+      const regex = new RegExp(text, "i");
+      console.log("localffjdfjadfdasjfjdasfhsdfhjjhdk", text);
+      if (type === "home") {
+        console.log(regex, "regex");
+        const filtered = localFiles?.filter((item: any) =>
+          regex.test(item?.name)
+        );
+        setLocalFilesAfterSearch(filtered);
+      }
+      if (type == "favorites") {
+        const filtered = favorite?.filter((item: any) =>
+          regex.test(item?.name)
+        );
+        setFavFilter(filtered);
+      }
+    },
+    [searchQuery]
+  );
 
   const deleteFile = useCallback(async (fileName: string) => {
     try {
@@ -401,8 +409,11 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
       isLoading,
       user,
       favFilter,
+      friends,
+      setFriends,
     };
   }, [
+    friends,
     favFilter,
     user,
     songListToRender,
@@ -425,6 +436,22 @@ const useFavorite = () => {
   const [favorite, setFavorite] = useState([]);
   const [favFilter, setFavFilter] = useState([]);
   const [user, setUser] = useState({});
+  const [friends, setFriends] = useState([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        await setAuthHeader();
+        const { data } = await axiosInstance.get("/friend");
+
+        if (data.success) {
+          setFriends(data.friends);
+        }
+      } catch (error) {
+        console.log(error, "requests");
+      }
+    })();
+  }, []);
 
   const getFavorite = async (islocal = true) => {
     try {
@@ -554,6 +581,8 @@ const useFavorite = () => {
     user,
     favFilter,
     setFavFilter,
+    friends,
+    setFriends,
   };
 };
 

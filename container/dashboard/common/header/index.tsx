@@ -1,15 +1,25 @@
 import { View, Text, StyleSheet, Touchable, Easing } from "react-native";
 import React, { useEffect, useState } from "react";
 import { Avatar } from "react-native-paper";
-import { Avatar as AvatarTamagui, Button, H3, H6, Paragraph } from "tamagui";
+import {
+  Avatar as AvatarTamagui,
+  Button,
+  H3,
+  H6,
+  Paragraph,
+  Switch,
+} from "tamagui";
+import axiosInstance from "../../../../network/api";
 import { SearchBar } from "../search-bar";
 import { Drawer } from "react-native-paper";
+const { height, width } = Dimensions.get("window");
 
 const Header = () => {
   const currentPath = usePathname();
+  console.log(currentPath, "cur");
   return (
     <>
-      {!currentPath.includes("friends") && (
+      {(currentPath.includes("home") || currentPath.includes("file")) && (
         <View
           style={{
             backgroundColor: "white",
@@ -30,14 +40,18 @@ const Header = () => {
               paddingVertical: 8,
             }}
           >
-            <AvatarTamagui circular size="$5">
-              <AvatarTamagui.Image
-                accessibilityLabel="Cam"
-                src="https://images.unsplash.com/photo-1548142813-c348350df52b?&w=150&h=150&dpr=2&q=80"
-                // src="/assets/images/icon3.png"
-              />
-              <AvatarTamagui.Fallback backgroundColor="$blue10" />
-            </AvatarTamagui>
+            <Pressable>
+              <AvatarTamagui circular size="$5">
+                <AvatarTamagui.Image
+                  accessibilityLabel="Cam"
+                  src="https://res.cloudinary.com/deyhhkkmr/image/upload/v1739944680/uploads/zxnukungugjvhy3064ma.png"
+                  // src="https://images.unsplash.com/photo-1548142813-c348350df52b?&w=150&h=150&dpr=2&q=80"
+                  // src="/assets/images/icon3.png"
+                />
+                <AvatarTamagui.Fallback backgroundColor="$blue10" />
+              </AvatarTamagui>
+            </Pressable>
+
             <SearchBar />
             <View style={{ width: 40, height: 20 }}></View>
           </View>
@@ -59,19 +73,43 @@ import { Ionicons } from "@expo/vector-icons"; // Close Icon
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { usePathname, useRouter } from "expo-router";
 import { useGlobalContext } from "@/providers/GlobalProvider";
-
-const { height, width } = Dimensions.get("window"); // Get screen size
+import { setValueInAsync } from "@/utilities/helpers";
 
 export const RightDrawer = () => {
   const [open, setOpen] = useState(false);
   const translateX = useSharedValue(width); // Start fully hidden
   const router = useRouter();
   const { user } = useGlobalContext();
+  const [isSwitchOn, setIsSwitchOn] = useState(user?.isFavouritePublic);
+
+  useEffect(() => {
+    setIsSwitchOn(user.isFavouritePublic);
+  }, [user]);
   // const [user, setUser] = useState({} as any);
   const openDrawer = () => {
     setOpen(true);
     translateX.value = withTiming(0, {
       duration: 100,
+    });
+  };
+  console.log(user, "user");
+
+  const updateUser = async (value: boolean) => {
+    try {
+      const { data } = await axiosInstance.put("/user", {
+        isFavouritePublic: value,
+      });
+      if (data.success) {
+        await setValueInAsync("user", JSON.stringify(data?.user));
+      }
+    } catch (error) {}
+  };
+
+  const onToggleSwitch = () => {
+    console.log("clicked");
+    setIsSwitchOn((prev: boolean) => {
+      updateUser(!prev);
+      return !prev;
     });
   };
 
@@ -92,6 +130,7 @@ export const RightDrawer = () => {
     transform: [{ translateX: translateX.value }],
   }));
 
+  console.log(isSwitchOn, "isSwitch");
   // useEffect(() => {
   //   (async () => {
   //     const user = await AsyncStorage.getItem("user");
@@ -147,7 +186,21 @@ export const RightDrawer = () => {
         </Button>
 
         <View style={{ marginTop: 4 }}>
-          <Paragraph style={{ textAlign: "center" }}>Songs Setting</Paragraph>
+          <Paragraph style={{ textAlign: "center" }}>User Setting</Paragraph>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <Paragraph>Show Favorite To Friends</Paragraph>
+            <Switch
+              backgroundColor={isSwitchOn ? "#f5075e" : "white"}
+              checked={isSwitchOn}
+              onCheckedChange={onToggleSwitch}
+              size="$3"
+            >
+              <Switch.Thumb animation="bouncy" />
+            </Switch>
+          </View>
+          {/* <Pressable onPress={onToggleSwitch}>
+            <Switch value={isSwitchOn} onValueChange={onToggleSwitch} />
+          </Pressable> */}
         </View>
         {/* <Text style={styles.drawerText}>Right Drawer Content</Text> */}
       </Animated.View>
@@ -196,5 +249,47 @@ const styles = StyleSheet.create({
 
   drawerText: { fontSize: 18, fontWeight: "bold", marginTop: 40 },
 });
+
+// import { Modal, Portal, PaperProvider } from "react-native-paper";
+
+// const ShowModal = ({ visible, setVisible }: any) => {
+//   const showModal = () => setVisible(true);
+//   const hideModal = () => setVisible(false);
+//   const containerStyle = {
+//     backgroundColor: "white",
+//     padding: 20,
+//   };
+
+//   return (
+//     <View style={{ height, width, position: "absolute", top: 0 }}>
+//       <PaperProvider>
+//         <Portal>
+//           <Modal
+//             visible={visible}
+//             onDismiss={hideModal}
+//             contentContainerStyle={containerStyle}
+//           >
+//             <Text>
+//               Example Modal. Click outside this area to
+//               dismissjfjkdsfadajsfkdsjkfjkdfjkdjksfjkjksajkfdjkfjjksajkfkjdsjkjfaksfjkk.
+//             </Text>
+//             <Text>
+//               Example Modal. Click outside this area to
+//               dismissjfjkdsfadajsfkdsjkfjkdfjkdjksfjkjksajkfdjkfjjksajkfkjdsjkjfaksfjkk.
+//             </Text>
+//             <Text>
+//               Example Modal. Click outside this area to
+//               dismissjfjkdsfadajsfkdsjkfjkdfjkdjksfjkjksajkfdjkfjjksajkfkjdsjkjfaksfjkk.
+//             </Text>
+//             <Text>
+//               Example Modal. Click outside this area to
+//               dismissjfjkdsfadajsfkdsjkfjkdfjkdjksfjkjksajkfdjkfjjksajkfkjdsjkjfaksfjkk.
+//             </Text>
+//           </Modal>
+//         </Portal>
+//       </PaperProvider>
+//     </View>
+//   );
+// };
 
 export default Header;

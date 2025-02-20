@@ -16,7 +16,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/icon3.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.kapil9711.songsProCleint",

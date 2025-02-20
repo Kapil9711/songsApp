@@ -12,20 +12,35 @@ import {
 import { useGlobalContext } from "@/providers/GlobalProvider";
 
 import { useAudioContext } from "@/providers/AudioProvider";
-import { Spinner } from "tamagui";
+import { Button, Spinner } from "tamagui";
 import SongsSmollCard from "@/container/dashboard/common/song-card/SongsSmollCard";
 
 const Favorite = () => {
   const { setCurrentSong, setCurrentSongList, currentSong } = useAudioContext();
-  const { localFilesAfterSearch, favorite, favFilter } = useGlobalContext();
-  const [page, setPage] = useState(1);
+  const { localFilesAfterSearch, favorite, favFilter, friends } =
+    useGlobalContext();
 
+  const [page, setPage] = useState(1);
+  const [active, setActive] = useState("my");
   let [filterData, setFilterData] = useState([]);
   let limit = 13;
+  // useEffect(() => {
+  //   let finaleData = [];
+  //   if (active === "my") finaleData = favorite;
+  //   else {
+  //     let item = friends.find((item: any) => item?.user?.name === active);
+  //     finaleData = item?.user?.favorite;
+  //   }
+  //   setFilterData(finaleData.slice(0, page * limit));
+  // }, [page, friends, favorite, active]);
 
-  useEffect(() => {
-    setFilterData(favFilter.slice(0, page * limit));
-  }, [page, favFilter]);
+  let finaleData = [];
+  if (active === "my") finaleData = favorite;
+  else {
+    let item = friends.find((item: any) => item?.user?.name === active);
+    console.log(item, "item");
+    finaleData = item?.user?.favorite;
+  }
 
   return (
     <View
@@ -33,6 +48,7 @@ const Favorite = () => {
         flex: 1,
       }}
     >
+      <Header active={active} setActive={setActive} />
       <View
         style={{
           flex: 1,
@@ -45,7 +61,7 @@ const Favorite = () => {
         <FlatList
           contentContainerStyle={{ paddingBottom: 170 }}
           // style={{ flex: 1, paddingBottom: 200 }}
-          data={filterData}
+          data={finaleData}
           keyExtractor={(item: any, idex: number) => item.id + idex}
           renderItem={({ item, index }) => {
             return (
@@ -54,7 +70,7 @@ const Favorite = () => {
                 key={item.id + index}
                 onPress={() => {
                   setCurrentSong(item);
-                  setCurrentSongList(filterData);
+                  setCurrentSongList(finaleData);
                 }}
               >
                 <SongsSmollCard
@@ -110,6 +126,85 @@ const Favorite = () => {
             );
           })} */}
       </View>
+    </View>
+  );
+};
+
+const Header = ({
+  active,
+  setActive,
+  getFriends,
+  getRequest,
+  getUsers,
+}: any) => {
+  const { friends } = useGlobalContext();
+  console.log(friends, "sfdsffsdafkj");
+
+  return (
+    <View
+      style={{
+        height: 70,
+        width: "100%",
+        backgroundColor: "rgba(0,0,0,.7)",
+        elevation: 16,
+      }}
+    >
+      <ScrollView horizontal>
+        <View
+          style={{
+            flexDirection: "row",
+            gap: 20,
+            height: "100%",
+            alignItems: "center",
+            position: "relative",
+            left: 40,
+            justifyContent: "center",
+          }}
+        >
+          <Button
+            onPress={() => {
+              setActive("my");
+            }}
+            style={{
+              backgroundColor: active == "my" ? "#f5075e" : "white",
+            }}
+            color={active == "my" ? "white" : "default"}
+          >
+            MY
+          </Button>
+
+          {friends.map((item: any) => {
+            return (
+              <Button
+                key={item._id}
+                onPress={() => {
+                  setActive(item?.user?.name);
+                }}
+                style={{
+                  backgroundColor:
+                    active == item?.user?.name ? "#f5075e" : "white",
+                }}
+                color={active == item?.user?.name ? "white" : "default"}
+              >
+                {item?.user.name}
+              </Button>
+            );
+          })}
+
+          {/* <Button
+            // onPress={() => {
+            //   setActive("requests");
+            //   getRequest();
+            // }}
+            style={{
+              backgroundColor: active == "requests" ? "#f5075e" : "white",
+            }}
+            color={active == "requests" ? "white" : "default"}
+          >
+            Request
+          </Button> */}
+        </View>
+      </ScrollView>
     </View>
   );
 };

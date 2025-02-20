@@ -3,20 +3,88 @@ import { useGlobalContext } from "@/providers/GlobalProvider";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
-import { Button } from "tamagui";
+import { Button, Spinner } from "tamagui";
 import axiosInstance from "../../../network/api";
+import FriendCard from "@/container/dashboard/common/song-card/friendCard";
+import { get } from "lodash";
 
 const Friends = () => {
-  const { active, setActive, user, friends, requests } = useFriend();
+  const {
+    isActionLoading,
+    getFriends,
+    getRequest,
+    getUsers,
+    active,
+    setActive,
+    user,
+    friends,
+    requests,
+    users,
+    sendFriendRequest,
+    confirmFriendRequest,
+    isLoading,
+  } = useFriend();
   return (
     <View>
-      <Header active={active} setActive={setActive} />
-      <ShowFriend data={friends} />
+      <Header
+        active={active}
+        setActive={setActive}
+        {...{ getFriends, getRequest, getUsers }}
+      />
+      {isLoading ? (
+        <View
+          style={{
+            paddingTop: 150,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Spinner
+            style={{ height: 40, width: 40, scale: 1.6 }}
+            size="large"
+            color="#f5075e"
+          />
+        </View>
+      ) : (
+        <>
+          {active === "explore" && (
+            <ShowFriend
+              isActionLoading
+              type={"users"}
+              data={users}
+              sendFriendRequest={sendFriendRequest}
+            />
+          )}
+
+          {active === "requests" && (
+            <ShowFriend
+              isActionLoading
+              confirmFriendRequest={confirmFriendRequest}
+              type={"requests"}
+              data={requests}
+              sendFriendRequest={sendFriendRequest}
+            />
+          )}
+          {active === "friends" && (
+            <ShowFriend
+              type={"friends"}
+              data={friends}
+              sendFriendRequest={sendFriendRequest}
+            />
+          )}
+        </>
+      )}
     </View>
   );
 };
 
-const Header = ({ active, setActive }: { active: string; setActive: any }) => {
+const Header = ({
+  active,
+  setActive,
+  getFriends,
+  getRequest,
+  getUsers,
+}: any) => {
   return (
     <View
       style={{
@@ -39,7 +107,10 @@ const Header = ({ active, setActive }: { active: string; setActive: any }) => {
           }}
         >
           <Button
-            onPress={() => setActive("explore")}
+            onPress={() => {
+              setActive("explore");
+              getUsers();
+            }}
             style={{
               backgroundColor: active == "explore" ? "#f5075e" : "white",
             }}
@@ -48,7 +119,10 @@ const Header = ({ active, setActive }: { active: string; setActive: any }) => {
             Explore
           </Button>
           <Button
-            onPress={() => setActive("friends")}
+            onPress={() => {
+              setActive("friends");
+              getFriends();
+            }}
             style={{
               backgroundColor: active == "friends" ? "#f5075e" : "white",
             }}
@@ -57,7 +131,10 @@ const Header = ({ active, setActive }: { active: string; setActive: any }) => {
             Friends
           </Button>
           <Button
-            onPress={() => setActive("requests")}
+            onPress={() => {
+              setActive("requests");
+              getRequest();
+            }}
             style={{
               backgroundColor: active == "requests" ? "#f5075e" : "white",
             }}
@@ -76,37 +153,201 @@ const useFriend = () => {
   const { user } = useGlobalContext();
   const [friends, setFriends] = useState([]);
   const [requests, setRequests] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isActionLoading, setIsActionLoading] = useState(false);
+  const { setFriends: setGlobalFriend } = useGlobalContext();
 
   useEffect(() => {
     (async () => {
       try {
+        setIsLoading(true);
         await setAuthHeader();
         const { data } = await axiosInstance.get("/friend");
         const { data: request } = await axiosInstance.get("/friend/request");
+        const { data: users } = await axiosInstance.get("/user/all");
+
         if (data.success) {
           setFriends(data.friends);
+          setGlobalFriend(data.friends);
         }
         if (request.success) {
           setRequests(request.friendRequests);
         }
+        if (users.success) {
+          setUsers(users?.users);
+        }
+        setIsLoading(false);
       } catch (error) {
         console.log(error, "requests");
+        setIsLoading(false);
       }
     })();
   }, []);
-  return { user, active, setActive, friends, requests };
+
+  const getFriends = () => {
+    setIsLoading(true);
+    (async () => {
+      try {
+        await setAuthHeader();
+        const { data } = await axiosInstance.get("/friend");
+        if (data.success) {
+          setFriends(data.friends);
+          setGlobalFriend(data.friends);
+        }
+        setIsLoading(false);
+      } catch (error) {
+        setIsLoading(false);
+      }
+    })();
+  };
+  const getUsers = () => {
+    setIsLoading(true);
+    (async () => {
+      try {
+        await setAuthHeader();
+        const { data: users } = await axiosInstance.get("/user/all");
+
+        if (users.success) {
+          setUsers(users?.users);
+        }
+        setIsLoading(false);
+      } catch (error) {
+        setIsLoading(false);
+      }
+    })();
+  };
+
+  const getRequest = () => {
+    setIsLoading(true);
+    (async () => {
+      try {
+        await setAuthHeader();
+        const { data: request } = await axiosInstance.get("/friend/request");
+
+        if (request.success) {
+          setRequests(request.friendRequests);
+        }
+        setIsLoading(false);
+      } catch (error) {
+        setIsLoading(false);
+      }
+    })();
+  };
+  // useEffect(() => {
+  //   (async () => {
+  //     try {
+  //       setIsLoading(true);
+  //       await setAuthHeader();
+  //       const { data } = await axiosInstance.get("/friend");
+  //       if (data.success) {
+  //         setFriends(data.friends);
+  //       }
+  //       setIsLoading(false);
+  //     } catch (error) {
+  //       setIsLoading(false);
+  //     }
+  //   })();
+  // }, [isLoading, friends]);
+
+  // useEffect(() => {
+  //   (async () => {
+  //     try {
+  //       setIsLoading(true);
+  //       await setAuthHeader();
+  //       const { data: request } = await axiosInstance.get("/friend/request");
+
+  //       if (request.success) {
+  //         setRequests(request.friendRequests);
+  //       }
+  //       setIsLoading(false);
+  //     } catch (error) {
+  //       setIsLoading(false);
+  //     }
+  //   })();
+  // }, [isLoading, requests]);
+
+  // useEffect(() => {
+  //   (async () => {
+  //     try {
+  //       setIsLoading(true);
+  //       await setAuthHeader();
+  //       const { data: users } = await axiosInstance.get("/user/all");
+
+  //       if (users.success) {
+  //         setUsers(users?.users);
+  //       }
+  //       setIsLoading(false);
+  //     } catch (error) {
+  //       setIsLoading(false);
+  //     }
+  //   })();
+  // }, [isLoading, users]);
+
+  const sendFriendRequest = async (data: any) => {
+    const payload = { requester: user._id, recipient: data._id };
+    try {
+      const { data } = await axiosInstance.post("friend", payload);
+      console.log(data, "requested");
+      getFriends();
+      getUsers();
+      getRequest();
+    } catch (error) {
+      console.log(error, "fds");
+    }
+  };
+  const confirmFriendRequest = async (id: string) => {
+    try {
+      const { data } = await axiosInstance.put("friend/" + id, {
+        status: "accepted",
+      });
+      getFriends();
+      getUsers();
+      getRequest();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  console.log(isLoading, "sfsaf");
+  return {
+    isActionLoading,
+    user,
+    active,
+    setActive,
+    friends,
+    requests,
+    users,
+    sendFriendRequest,
+    confirmFriendRequest,
+    getFriends,
+    getRequest,
+    getUsers,
+    isLoading,
+  };
 };
 
-const ShowFriend = ({ data }: any) => {
+const ShowFriend = ({
+  data,
+  sendFriendRequest,
+  type,
+  confirmFriendRequest,
+  isActionLoading,
+}: any) => {
   return (
-    <View>
+    <View style={{ paddingBottom: 180 }}>
       <ScrollView>
-        <View style={{ flex: 1 }}>
-          {data.map((item: any) => {
+        <View style={{ flex: 1, gap: 20, paddingTop: 10, paddingBottom: 180 }}>
+          {data.map((item: any, idx: number) => {
             return (
-              <View>
-                <Text>fdsfdjkfdsfjkdfkjdjkf</Text>
-              </View>
+              <FriendCard
+                isActionLoading={isActionLoading}
+                confirmFriendRequest={confirmFriendRequest}
+                type={type}
+                sendFriendRequest={sendFriendRequest}
+                index={idx}
+                key={item._id}
+                data={item}
+              />
             );
           })}
         </View>
