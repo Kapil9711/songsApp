@@ -143,11 +143,23 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
       } catch (error) {}
 
       try {
-        const { data } = await axiosInstance.get("/song/home-page");
-        if (data.success) {
-          setHaryanvi(data.haryanvi);
-          setHindi(data.hindi);
-          setPunjabi(data.punjabi);
+        const haryani = await readJsonFile("haryani.json");
+        const hindi = await readJsonFile("hindi.json");
+        const punjabi = await readJsonFile("punjabi.json");
+        if (haryani && hindi && punjabi) {
+          setHaryanvi(haryani);
+          setHindi(hindi);
+          setPunjabi(punjabi);
+        } else {
+          const { data } = await axiosInstance.get("/song/home-page");
+          if (data.success) {
+            setHaryanvi(data.haryanvi);
+            setHindi(data.hindi);
+            setPunjabi(data.punjabi);
+            await saveJsonToFile("haryani.json", JSON.stringify(data.haryani));
+            await saveJsonToFile("hindi.json", JSON.stringify(data.hindi));
+            await saveJsonToFile("punjabi.json", JSON.stringify(data.punjabi));
+          }
         }
       } catch (error) {}
 

@@ -12,14 +12,14 @@ const Home = () => {
     albumListToRender,
     playListToRender,
     isLoadingSongListToRender,
-    // active,
-    // setActive,
+    active,
+    setActive,
     hindi,
     punjabi,
     haryanvi,
   } = useGlobalContext();
 
-  const [active, setActive] = useState("search");
+  // const [active, setActive] = useState("search");
 
   return (
     <View style={{ flex: 1 }}>
@@ -27,7 +27,7 @@ const Home = () => {
         style={{
           height: 70,
           width: "100%",
-          backgroundColor: "rgba(0,0,0,.6)",
+          backgroundColor: "rgba(0,0,0,0)",
         }}
       >
         <View
@@ -76,7 +76,7 @@ const Home = () => {
           <View
             style={{
               paddingHorizontal: 2,
-              paddingTop: 20,
+              paddingTop: 10,
               paddingBottom: 190,
               gap: 35,
             }}
@@ -117,12 +117,12 @@ const Home = () => {
           <View
             style={{
               paddingHorizontal: 2,
-              paddingTop: 20,
+              paddingTop: 10,
               paddingBottom: 190,
               gap: 35,
             }}
           >
-            {isLoadingSongListToRender ? (
+            {false ? (
               <View
                 style={{
                   paddingTop: 150,
@@ -140,21 +140,21 @@ const Home = () => {
               <>
                 <ShowData
                   isTrending={true}
-                  data={hindi.slice(0, 10)}
+                  data={hindi.slice(0, 6)}
                   renderData={hindi}
                   heading="Hindi"
                   type="song"
                 />
                 <ShowData
                   isTrending={true}
-                  data={haryanvi.slice(0, 10)}
+                  data={haryanvi.slice(0, 6)}
                   renderData={haryanvi}
                   heading="Haryani"
                   type="song"
                 />
                 <ShowData
                   isTrending={true}
-                  data={punjabi.slice(0, 10)}
+                  data={punjabi.slice(0, 6)}
                   renderData={punjabi}
                   heading="punjabi"
                   type="song"
