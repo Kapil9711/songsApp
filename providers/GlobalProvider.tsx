@@ -19,6 +19,7 @@ import {
 } from "@/utilities/helpers";
 import { debounce, rangeRight } from "lodash";
 import Toast from "react-native-toast-message";
+import { usePathname } from "expo-router";
 
 const GlobalContext = createContext(null as any);
 
@@ -262,6 +263,13 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
     },
     []
   );
+  const currentPath = usePathname();
+
+  useEffect(() => {
+    if (currentPath.includes("file")) {
+      setLocalFilesAfterSearch(localFiles);
+    }
+  }, [currentPath]);
 
   const handleLocalSearch = useCallback(
     (text: string, type = "home") => {
