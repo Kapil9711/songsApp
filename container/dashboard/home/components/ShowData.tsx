@@ -11,10 +11,14 @@ const ShowData = ({
   data,
   heading,
   type = "song",
+  isTrending,
+  renderData,
 }: {
   data: any;
   heading: string;
   type: string;
+  isTrending?: boolean;
+  renderData?: any;
 }) => {
   const router = useRouter();
   const { searchedSongList, setSongListToRender, setPage } = useGlobalContext();
@@ -32,9 +36,13 @@ const ShowData = ({
         <TouchableOpacity
           onPress={() => {
             if (type === "song") {
-              setSongListToRender(searchedSongList);
+              if (isTrending) {
+                setSongListToRender(renderData);
+              } else {
+                setSongListToRender(searchedSongList);
+                setPage(1);
+              }
               router.push("/(dashboard)/home/songs");
-              setPage(1);
             }
             if (type === "album") router.push("/(dashboard)/home/album");
             if (type === "playlist") router.push("/(dashboard)/home/playlist");

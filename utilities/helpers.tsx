@@ -197,7 +197,6 @@ export const handleDownload = async (
       });
     }
   } catch (error) {
-    console.log(error);
     Toast.show({
       type: "error", // success | error | info
       text1: "Song not downloaded!",

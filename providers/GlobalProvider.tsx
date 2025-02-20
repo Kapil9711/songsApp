@@ -48,6 +48,10 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
     friends,
     setFriends,
   } = useFavorite();
+  const [hindi, setHindi] = useState([]);
+  const [punjabi, setPunjabi] = useState([]);
+  const [haryanvi, setHaryanvi] = useState([]);
+  const [active, setActive] = useState("search");
 
   const handleSearch = useCallback(
     debounce((text) => {
@@ -136,9 +140,16 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
         const s: any = await getDownloadedSongs();
         setLocalFiles(s);
         setLocalFilesAfterSearch(s);
-      } catch (error) {
-        console.log(error, "localFilesError");
-      }
+      } catch (error) {}
+
+      try {
+        const { data } = await axiosInstance.get("/song/home-page");
+        if (data.success) {
+          setHaryanvi(data.haryanvi);
+          setHindi(data.hindi);
+          setPunjabi(data.punjabi);
+        }
+      } catch (error) {}
 
       try {
         setIsLoadingSongListToRender(true);
@@ -181,9 +192,7 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
             setSearchedSongList(song?.data?.results);
             try {
               await saveJsonToFile("initialSong.json", song?.data?.results);
-            } catch (error) {
-              console.log(error, "initialSong");
-            }
+            } catch (error) {}
           }
         }
         if (albumData.status === "fulfilled") {
@@ -192,9 +201,7 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
             setAlbumListToRender(album?.data?.results);
             try {
               await saveJsonToFile("initialAlbum.json", album?.data?.results);
-            } catch (error) {
-              console.log(error, "initialAlbum");
-            }
+            } catch (error) {}
           }
         }
 
@@ -207,9 +214,7 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
                 "initialPlaylist.json",
                 playlist?.data?.results
               );
-            } catch (error) {
-              console.log(error, "initialPlaylist");
-            }
+            } catch (error) {}
           }
         }
 
@@ -274,9 +279,8 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
   const handleLocalSearch = useCallback(
     (text: string, type = "home") => {
       const regex = new RegExp(text, "i");
-      console.log("localffjdfjadfdasjfjdasfhsdfhjjhdk", text);
+
       if (type === "home") {
-        console.log(regex, "regex");
         const filtered = localFiles?.filter((item: any) =>
           regex.test(item?.name)
         );
@@ -317,9 +321,7 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
         const s: any = await getDownloadedSongs();
         setLocalFiles(s);
         setLocalFilesAfterSearch(s);
-      } catch (error) {
-        console.log(error, "localFilesError");
-      }
+      } catch (error) {}
     } catch (error) {
       console.error("Error deleting file:", error);
     }
@@ -365,9 +367,7 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
           const s: any = await getDownloadedSongs();
           setLocalFiles(s);
           setLocalFilesAfterSearch(s);
-        } catch (error) {
-          console.log(error, "localFilesError");
-        }
+        } catch (error) {}
 
         // await saveToDevice(uri, fileName);
         Toast.show({
@@ -378,7 +378,6 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
           autoHide: true,
         });
       } catch (error) {
-        console.log(error);
         Toast.show({
           type: "error", // success | error | info
           text1: "Song not downloaded!",
@@ -419,8 +418,17 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
       favFilter,
       friends,
       setFriends,
+      hindi,
+      haryanvi,
+      punjabi,
+      active,
+      setActive,
     };
   }, [
+    hindi,
+    haryanvi,
+    punjabi,
+    active,
     friends,
     favFilter,
     user,
@@ -455,9 +463,7 @@ const useFavorite = () => {
         if (data.success) {
           setFriends(data.friends);
         }
-      } catch (error) {
-        console.log(error, "requests");
-      }
+      } catch (error) {}
     })();
   }, []);
 
@@ -466,7 +472,6 @@ const useFavorite = () => {
       if (islocal) {
         const data = await readJsonFile("favorite.json");
         if (data) {
-          console.log("datafrom json", data);
           setFavorite(data);
           setFavFilter(data);
           return;
@@ -479,11 +484,8 @@ const useFavorite = () => {
       setFavorite(data?.favorite);
       try {
         await saveJsonToFile("favorite.json", data?.favorite);
-      } catch (error) {
-        console.log(error, "save file");
-      }
+      } catch (error) {}
     }
-    console.log(data, "fav");
   };
 
   const readJsonFile = useCallback(async (filename: string) => {
@@ -494,7 +496,6 @@ const useFavorite = () => {
       const fileInfo = await fileSystem.getInfoAsync(fileUri);
 
       if (!fileInfo.exists) {
-        console.log("File does not exist.");
         return null;
       }
 
@@ -502,7 +503,6 @@ const useFavorite = () => {
       const fileContent = await fileSystem.readAsStringAsync(fileUri);
       const jsonData = JSON.parse(fileContent); // Convert string to JSON
 
-      console.log("File content:", jsonData);
       return jsonData;
     } catch (error) {
       console.error("Error reading file:", error);
@@ -523,7 +523,6 @@ const useFavorite = () => {
           encoding: fileSystem.EncodingType.UTF8,
         });
 
-        console.log(`File saved at: ${fileUri}`);
         return fileUri; // Return file path if needed
       } catch (error) {
         console.error("Error saving file:", error);
@@ -557,10 +556,7 @@ const useFavorite = () => {
         visibilityTime: 1500,
         autoHide: true,
       });
-
-      console.log(data, "fav");
     } catch (error) {
-      console.log(error, "fav");
       Toast.show({
         type: "error", // success | error | info
         text1: "Failed",

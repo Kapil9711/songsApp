@@ -12,9 +12,7 @@ export const loginUser = async (payload: LoginPayload): Promise<any> => {
   let response: any;
   try {
     response = await axios.post(endpoint.login, payload);
-  } catch (error) {
-    console.log(error, "erer");
-  }
+  } catch (error) {}
   return response;
 };
 
@@ -22,10 +20,7 @@ export const createUser = async (payload: any): Promise<any> => {
   await setAuthHeader();
   let response: any;
   try {
-    console.log(payload, "pay");
     response = await axios.post(endpoint.register, payload);
-  } catch (error) {
-    console.log(error, "erer");
-  }
+  } catch (error) {}
   return response;
 };

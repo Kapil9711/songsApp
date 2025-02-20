@@ -16,7 +16,7 @@ const { height, width } = Dimensions.get("window");
 
 const Header = () => {
   const currentPath = usePathname();
-  console.log(currentPath, "cur");
+
   return (
     <>
       {(currentPath.includes("home") || currentPath.includes("file")) && (
@@ -92,7 +92,6 @@ export const RightDrawer = () => {
       duration: 100,
     });
   };
-  console.log(user, "user");
 
   const updateUser = async (value: boolean) => {
     try {
@@ -106,7 +105,6 @@ export const RightDrawer = () => {
   };
 
   const onToggleSwitch = () => {
-    console.log("clicked");
     setIsSwitchOn((prev: boolean) => {
       updateUser(!prev);
       return !prev;
@@ -130,7 +128,6 @@ export const RightDrawer = () => {
     transform: [{ translateX: translateX.value }],
   }));
 
-  console.log(isSwitchOn, "isSwitch");
   // useEffect(() => {
   //   (async () => {
   //     const user = await AsyncStorage.getItem("user");
@@ -176,7 +173,6 @@ export const RightDrawer = () => {
         <H3 style={{ textAlign: "center", marginBottom: 5 }}>{user?.name}</H3>
         <Button
           onPress={async () => {
-            console.log("clicked");
             await AsyncStorage.removeItem("token");
             router.replace("/");
           }}

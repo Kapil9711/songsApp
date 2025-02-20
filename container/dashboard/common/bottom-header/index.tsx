@@ -62,7 +62,7 @@ const useBottomHeader = () => {
     friend: "account-group-outline",
     explore: "folder-open",
   };
-  console.log(currentPath);
+
   if (currentPath.includes("home")) {
     icons.home = "home";
   }

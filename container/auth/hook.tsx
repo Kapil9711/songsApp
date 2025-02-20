@@ -32,7 +32,6 @@ const useAuth = () => {
     useMutation({
       mutationFn: loginUser,
       onSuccess: async ({ data }) => {
-        console.log(data);
         if (data.success) {
           Toast.show({
             type: "success", // success | error | info
@@ -61,7 +60,6 @@ const useAuth = () => {
     useMutation({
       mutationFn: createUser,
       onSuccess: async ({ data }) => {
-        console.log(data, "data");
         if (data.success) {
           Toast.show({
             type: "success", // success | error | info
@@ -90,7 +88,7 @@ const useAuth = () => {
   const handleLogin = async () => {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     const { password, userId } = form;
-    console.log(form);
+
     if (password && userId) {
       const isEmail = emailRegex.test(userId);
       const payload: LoginPayload = { password };
@@ -102,7 +100,7 @@ const useAuth = () => {
 
   const handleRegister = async () => {
     const { password, name, email } = form;
-    console.log(form);
+
     if (password && name && email) {
       const payload = { password, name, email };
 

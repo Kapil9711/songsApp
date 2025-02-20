@@ -38,7 +38,7 @@ const Favorite = () => {
   if (active === "my") finaleData = favorite;
   else {
     let item = friends.find((item: any) => item?.user?.name === active);
-    console.log(item, "item");
+
     finaleData = item?.user?.favorite;
   }
 
@@ -138,7 +138,6 @@ const Header = ({
   getUsers,
 }: any) => {
   const { friends } = useGlobalContext();
-  console.log(friends, "sfdsffsdafkj");
 
   return (
     <View

@@ -89,7 +89,6 @@ const SignIn = () => {
               <TouchableOpacity>
                 <Button
                   onPress={() => {
-                    console.log("clicked");
                     handleLogin();
                   }}
                   style={{ width: 100, backgroundColor: "white", fontSize: 20 }}

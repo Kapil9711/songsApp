@@ -24,7 +24,7 @@ import { useAuthContext } from "@/providers/AuthProvider";
 const SignUp = () => {
   const { form, setForm, isUserRegisterPending, handleRegister } =
     useAuthContext();
-  console.log(form, "fsfd");
+
   return (
     <View
       style={{
@@ -89,7 +89,6 @@ const SignUp = () => {
               <TouchableOpacity>
                 <Button
                   onPress={() => {
-                    console.log("clicked");
                     handleRegister();
                   }}
                   style={{ width: 100, backgroundColor: "white", fontSize: 20 }}

@@ -34,7 +34,6 @@ async function setupAudio() {
     // interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
     // interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
   });
-  console.log("✅ Audio Mode Set!");
 }
 
 const AudioPlayer = () => {

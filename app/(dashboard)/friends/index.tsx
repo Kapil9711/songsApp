@@ -179,7 +179,6 @@ const useFriend = () => {
         }
         setIsLoading(false);
       } catch (error) {
-        console.log(error, "requests");
         setIsLoading(false);
       }
     })();
@@ -288,13 +287,11 @@ const useFriend = () => {
     const payload = { requester: user._id, recipient: data._id };
     try {
       const { data } = await axiosInstance.post("friend", payload);
-      console.log(data, "requested");
+
       getFriends();
       getUsers();
       getRequest();
-    } catch (error) {
-      console.log(error, "fds");
-    }
+    } catch (error) {}
   };
   const confirmFriendRequest = async (id: string) => {
     try {
@@ -304,11 +301,9 @@ const useFriend = () => {
       getFriends();
       getUsers();
       getRequest();
-    } catch (error) {
-      console.log(error);
-    }
+    } catch (error) {}
   };
-  console.log(isLoading, "sfsaf");
+
   return {
     isActionLoading,
     user,

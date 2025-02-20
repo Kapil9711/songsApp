@@ -97,7 +97,6 @@ const SongsSmollCard = ({
                 }}
                 iconColor={isFav ? "red" : "white"}
                 onPress={() => {
-                  console.log("cliked");
                   handleFavorite(song);
                 }}
               />

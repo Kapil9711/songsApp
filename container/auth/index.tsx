@@ -73,7 +73,6 @@ const SignIn = () => {
           ) : (
             <Pressable
               onPress={() => {
-                console.log("clicked");
                 handleLogin();
               }}
               className=" w-32 border-y-[2px] border-x-[7px] border-pink-700 bg-pink-600   flex items-center rounded-xl"

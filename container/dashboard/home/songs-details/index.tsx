@@ -40,7 +40,6 @@ const SongsDetails = () => {
               <Pressable
                 key={item.id}
                 onPress={() => {
-                  console.log("✅ Item Clicked:", item.name);
                   setCurrentSong(item);
                 }}
               >
