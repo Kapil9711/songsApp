@@ -4,6 +4,7 @@ import { Avatar } from "tamagui";
 import { IconButton } from "react-native-paper";
 
 import { useGlobalContext } from "@/providers/GlobalProvider";
+import { getValueInAsync } from "@/utilities/helpers";
 
 const showAlert = (deleteFile: any, fileName: string) => {
   Alert.alert(
@@ -17,7 +18,11 @@ const showAlert = (deleteFile: any, fileName: string) => {
       },
       {
         text: "OK",
-        onPress: () => deleteFile(fileName),
+        onPress: async () => {
+          const user: any = await getValueInAsync("user");
+
+          deleteFile(fileName + "_" + JSON.parse(user || "")?._id);
+        },
       },
     ],
     { cancelable: false }
