@@ -52,7 +52,6 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
   const [punjabi, setPunjabi] = useState([]);
   const [haryanvi, setHaryanvi] = useState([]);
   const [active, setActive] = useState("search");
-
   const handleSearch = useCallback(
     debounce((text) => {
       (async () => {
@@ -374,6 +373,7 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
           visibilityTime: 2500,
           autoHide: true,
         });
+
         const uri = await downloadSong(url, image, fileName + "_" + user._id);
         try {
           const s: any = await getDownloadedSongs();
@@ -399,7 +399,7 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
         });
       }
     },
-    []
+    [user]
   );
 
   const value = useMemo(() => {

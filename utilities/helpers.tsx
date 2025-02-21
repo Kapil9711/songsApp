@@ -45,6 +45,7 @@ export const getDownloadedSongs = async () => {
     const audioFiles = files.filter(
       (file) => file.endsWith(`${id}.m4a`) || file.endsWith(`${id}.mp3`)
     );
+    console.log(audioFiles, "files");
 
     // Create list with song details & corresponding images
     const songList = audioFiles.map((file, idx) => {
