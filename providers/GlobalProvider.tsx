@@ -129,7 +129,9 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
     }, 150),
     []
   );
+
   useEffect(() => {
+    setIsLoadingSongListToRender(true);
     (async () => {
       // let songs = await AsyncStorage.getItem("song");
       // console.log(songs);
@@ -143,29 +145,27 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
       } catch (error) {}
 
       try {
-        const haryani = await readJsonFile("haryani.json");
-        const hindi = await readJsonFile("hindi.json");
-        const punjabi = await readJsonFile("punjabi.json");
-        if (haryani && hindi && punjabi) {
-          setHaryanvi(haryani);
-          setHindi(hindi);
-          setPunjabi(punjabi);
+        // const haryani = await readJsonFile("haryani.json");
+        // const hindi = await readJsonFile("hindi.json");
+        // const punjabi = await readJsonFile("punjabi.json");
+        if (false) {
+          // setHaryanvi(haryani);
+          // setHindi(hindi);
+          // setPunjabi(punjabi);
         } else {
           const { data } = await axiosInstance.get("/song/home-page");
           if (data.success) {
             setHaryanvi(data.haryanvi);
             setHindi(data.hindi);
             setPunjabi(data.punjabi);
-            await saveJsonToFile("haryani.json", JSON.stringify(data.haryani));
-            await saveJsonToFile("hindi.json", JSON.stringify(data.hindi));
-            await saveJsonToFile("punjabi.json", JSON.stringify(data.punjabi));
+            // await saveJsonToFile("haryani.json", JSON.stringify(data.haryani));
+            // await saveJsonToFile("hindi.json", JSON.stringify(data.hindi));
+            // await saveJsonToFile("punjabi.json", JSON.stringify(data.punjabi));
           }
         }
       } catch (error) {}
 
       try {
-        setIsLoadingSongListToRender(true);
-
         try {
           const song = await readJsonFile("initialSong.json");
           const album = await readJsonFile("initialAlbum.json");
@@ -374,7 +374,7 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
           visibilityTime: 2500,
           autoHide: true,
         });
-        const uri = await downloadSong(url, image, fileName);
+        const uri = await downloadSong(url, image, fileName + "_" + user._id);
         try {
           const s: any = await getDownloadedSongs();
           setLocalFiles(s);
@@ -463,7 +463,7 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
 const useFavorite = () => {
   const [favorite, setFavorite] = useState([]);
   const [favFilter, setFavFilter] = useState([]);
-  const [user, setUser] = useState({});
+  const [user, setUser] = useState({} as any);
   const [friends, setFriends] = useState([]);
 
   useEffect(() => {
@@ -479,14 +479,24 @@ const useFavorite = () => {
     })();
   }, []);
 
-  const getFavorite = async (islocal = true) => {
+  const getFavorite = async (islocal = true, userId?: any) => {
     try {
       if (islocal) {
-        const data = await readJsonFile("favorite.json");
+        const data = await readJsonFile(`favorite_${userId}.json`);
         if (data) {
           setFavorite(data);
           setFavFilter(data);
           return;
+        } else {
+          await setAuthHeader();
+          const { data } = await axiosInstance.get("/favorite");
+          if (data?.success) {
+            setFavorite(data?.favorite);
+            try {
+              console.log(user, "users");
+              await saveJsonToFile(`favorite_${user._id}.json`, data?.favorite);
+            } catch (error) {}
+          }
         }
       }
     } catch (error) {}
@@ -495,7 +505,8 @@ const useFavorite = () => {
     if (data?.success) {
       setFavorite(data?.favorite);
       try {
-        await saveJsonToFile("favorite.json", data?.favorite);
+        console.log(user, "users");
+        await saveJsonToFile(`favorite_${user._id}.json`, data?.favorite);
       } catch (error) {}
     }
   };
@@ -560,7 +571,9 @@ const useFavorite = () => {
         downloadUrl,
         image,
       });
-      getFavorite(false);
+      setTimeout(async () => {
+        await getFavorite(false);
+      }, 100);
       Toast.show({
         type: "success", // success | error | info
         text1: "Successfully  done",
@@ -580,11 +593,11 @@ const useFavorite = () => {
   }, []);
 
   useEffect(() => {
-    getFavorite();
     (async () => {
       const user = await AsyncStorage.getItem("user");
       if (user) {
         setUser(JSON.parse(user));
+        getFavorite(true, JSON.parse(user)?._id);
       }
     })();
   }, []);

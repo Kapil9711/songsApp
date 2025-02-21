@@ -3,8 +3,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 //https://song-backend-two.vercel.app/
 // "https://songspro.vercel.app/api/v1"
 // Create an Axios instance with a base URL
+// 192.168.31.250
+// https://song-backend-two.vercel.app/
 const api = axios.create({
-  baseURL: "https://song-backend-two.vercel.app/", // Your base API URL
+  baseURL: "http://192.168.31.250:8001", // Your base API URL
   headers: {
     "Content-Type": "application/json", // Default headers
   },
