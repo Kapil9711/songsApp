@@ -56,12 +56,6 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
   const handleSearch = useCallback(
     debounce((text) => {
       (async () => {
-        // let songs = await AsyncStorage.getItem("song");
-        // console.log(songs);
-        // if (songs) {
-        //   setSongListToRender(JSON.parse(songs));
-        // } else {
-
         try {
           setIsLoadingSongListToRender(true);
           const songPromise = axios.get(
@@ -103,28 +97,6 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
         } catch (error) {
           setIsLoadingSongListToRender(false);
         }
-
-        // const { data: song }: any = await axios.get(
-        //   "https://saavn.dev/api/search/songs?query=" + text
-        // );
-        // const { data: album } = await axios.get(
-        //   "https://saavn.dev/api/search/albums?query=" + text
-        // );
-        // const { data: playlist } = await axios.get(
-        //   "https://saavn.dev/api/search/playlists?query=" + text
-        // );
-
-        // if (song) {
-        //   setSongListToRender(song?.data?.results);
-        //   setSearchedSongList(song?.data?.results);
-        // }
-        // if (album) {
-        //   setAlbumListToRender(album?.data?.results);
-        // }
-        // if (playlist) {
-        //   setPlaListToRender(playlist?.data?.results);
-        // }
-        // }
       })();
     }, 150),
     []
@@ -156,9 +128,10 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
             setHaryanvi(data.haryanvi);
             setHindi(data.hindi);
             setPunjabi(data.punjabi);
-            await saveJsonToFile("haryani.json", JSON.stringify(data.haryani));
-            await saveJsonToFile("hindi.json", JSON.stringify(data.hindi));
-            await saveJsonToFile("punjabi.json", JSON.stringify(data.punjabi));
+
+            await saveJsonToFile("haryani.json", data.haryanvi);
+            await saveJsonToFile("hindi.json", data.hindi);
+            await saveJsonToFile("punjabi.json", data.punjabi);
           }
         }
       } catch (error) {}
@@ -234,28 +207,6 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
       } catch (error) {
         setIsLoadingSongListToRender(false);
       }
-
-      // const { data: song }: any = await axios.get(
-      //   "https://saavn.dev/api/search/songs?query=" + text
-      // );
-      // const { data: album } = await axios.get(
-      //   "https://saavn.dev/api/search/albums?query=" + text
-      // );
-      // const { data: playlist } = await axios.get(
-      //   "https://saavn.dev/api/search/playlists?query=" + text
-      // );
-
-      // if (song) {
-      //   setSongListToRender(song?.data?.results);
-      //   setSearchedSongList(song?.data?.results);
-      // }
-      // if (album) {
-      //   setAlbumListToRender(album?.data?.results);
-      // }
-      // if (playlist) {
-      //   setPlaListToRender(playlist?.data?.results);
-      // }
-      // }
     })();
   }, []);
   const handleSingleAlbumOrPlalist = useCallback(
@@ -399,7 +350,7 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
         });
       }
     },
-    []
+    [currentPath]
   );
 
   const value = useMemo(() => {
@@ -525,7 +476,9 @@ const useFavorite = () => {
     async (filename: string, jsonData: any) => {
       try {
         // Convert JSON data to string
-        const jsonString = JSON.stringify(jsonData, null, 2);
+        const jsonString = JSON.stringify(jsonData);
+
+        console.log(jsonString, "dafsdkfkds");
 
         // Define file path (documents directory)
         const fileUri = `${fileSystem.documentDirectory}${filename}`;

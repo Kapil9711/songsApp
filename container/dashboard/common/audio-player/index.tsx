@@ -106,19 +106,6 @@ const PlayerUi = () => {
 
           <View style={{ flex: 1, marginLeft: 15, marginTop: 9 }}>
             <ShowTime duration={duration} position={position} />
-            {/* <TouchableOpacity
-              onPress={() => {
-                handleDownload(currentSong.downloadUrl[4]?.url, title);
-              }}
-            >
-              <Button
-                onPress={() => {
-                  handleDownload(currentSong.downloadUrl[4]?.url, title);
-                }}
-              >
-                Download
-              </Button>
-            </TouchableOpacity> */}
           </View>
         </View>
       )}
@@ -153,7 +140,7 @@ const ShowTime = ({ duration, position }: any) => {
         <TouchableOpacity
           onPress={() => {
             handleDownload(
-              currentSong?.downloadUrl[downloadUrl]?.url,
+              currentSong?.downloadUrl[4]?.url,
               currentSong?.image[2]?.url,
               currentSong?.name
             );
