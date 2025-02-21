@@ -102,6 +102,7 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
     []
   );
   useEffect(() => {
+    setIsLoadingSongListToRender(true);
     (async () => {
       // let songs = await AsyncStorage.getItem("song");
       // console.log(songs);
@@ -137,8 +138,6 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
       } catch (error) {}
 
       try {
-        setIsLoadingSongListToRender(true);
-
         try {
           const song = await readJsonFile("initialSong.json");
           const album = await readJsonFile("initialAlbum.json");

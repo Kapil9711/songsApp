@@ -263,7 +263,7 @@ const usePlayer = () => {
   if (currentSong) {
     if (currentSong.id) {
       imageUrl = currentSong?.image[user?.imageQuality]?.url;
-      songUrl = currentSong?.downloadUrl[user?.songQuality]?.url;
+      songUrl = currentSong?.downloadUrl[4]?.url;
       title = currentSong?.name;
     } else {
       imageUrl = currentSong?.image[2]?.url;
@@ -304,7 +304,7 @@ const usePlayer = () => {
         const { sound } = await Audio.Sound.createAsync(
           {
             uri: currentSong.id
-              ? currentSong.downloadUrl[user?.songQuality]?.url
+              ? currentSong.downloadUrl[4]?.url
               : currentSong.downloadUrl[4],
           },
           { shouldPlay: true }
