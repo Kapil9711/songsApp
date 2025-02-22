@@ -90,8 +90,8 @@ const Header = ({
       style={{
         height: 70,
         width: "100%",
-        backgroundColor: "rgba(0,0,0,.7)",
-        elevation: 16,
+        backgroundColor: "rgba(0,0,0,0)",
+        // elevation: 16,
       }}
     >
       <ScrollView horizontal>
@@ -100,6 +100,7 @@ const Header = ({
             flexDirection: "row",
             gap: 20,
             height: "100%",
+            width: "80%",
             alignItems: "center",
             position: "relative",
             left: 40,

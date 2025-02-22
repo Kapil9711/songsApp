@@ -1,8 +1,6 @@
 import { View } from "react-native";
 import React, { useState } from "react";
-
 import { Button, ScrollView, Spinner } from "tamagui";
-
 import ShowData from "./components/ShowData";
 import { useGlobalContext } from "@/providers/GlobalProvider";
 
@@ -17,6 +15,7 @@ const Home = () => {
     hindi,
     punjabi,
     haryanvi,
+    recentlyPlayed,
   } = useGlobalContext();
 
   // const [active, setActive] = useState("search");
@@ -25,7 +24,7 @@ const Home = () => {
     <View style={{ flex: 1 }}>
       <View
         style={{
-          height: 70,
+          height: 43,
           width: "100%",
           backgroundColor: "rgba(0,0,0,0)",
         }}
@@ -76,9 +75,9 @@ const Home = () => {
           <View
             style={{
               paddingHorizontal: 2,
-              paddingTop: 10,
+              paddingTop: 5,
               paddingBottom: 190,
-              gap: 35,
+              gap: 20,
             }}
           >
             {isLoadingSongListToRender ? (
@@ -97,17 +96,34 @@ const Home = () => {
               </View>
             ) : (
               <>
-                <ShowData data={searchedSongList} heading="Songs" type="song" />
                 <ShowData
-                  data={albumListToRender}
-                  heading="Ablum"
+                  data={searchedSongList.slice(0, 6)}
+                  heading="Songs"
+                  type="song"
+                />
+                <ShowData
+                  isTrending={true}
+                  data={albumListToRender.slice(0, 6)}
+                  renderData={albumListToRender}
+                  heading="Album"
                   type="album"
                 />
                 <ShowData
-                  data={playListToRender}
+                  isTrending={true}
+                  data={playListToRender.slice(0, 6)}
+                  renderData={playListToRender}
                   heading="Playlist"
                   type="playlist"
                 />
+                {recentlyPlayed.length > 0 && (
+                  <ShowData
+                    isTrending={true}
+                    data={recentlyPlayed.slice(0, 6)}
+                    renderData={recentlyPlayed}
+                    heading="Recently Played"
+                    type="song"
+                  />
+                )}
               </>
             )}
           </View>
@@ -117,7 +133,7 @@ const Home = () => {
           <View
             style={{
               paddingHorizontal: 2,
-              paddingTop: 10,
+              paddingTop: 5,
               paddingBottom: 190,
               gap: 35,
             }}

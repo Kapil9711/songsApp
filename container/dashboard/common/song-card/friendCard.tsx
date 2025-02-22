@@ -1,5 +1,7 @@
-import { View, Text } from "react-native";
+import { View } from "react-native";
 import React from "react";
+import { Text, TextInput } from "@/providers/CustomText";
+
 import { IconButton } from "react-native-paper";
 import { Avatar, Button, Spinner } from "tamagui";
 

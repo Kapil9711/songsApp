@@ -1,7 +1,8 @@
-import { View, Text, Alert, Pressable } from "react-native";
+import { View, Alert, Pressable } from "react-native";
 import React, { useEffect, useMemo } from "react";
 import { Avatar } from "tamagui";
 import { IconButton } from "react-native-paper";
+import { Text } from "@/providers/CustomText";
 
 import { useGlobalContext } from "@/providers/GlobalProvider";
 import { getValueInAsync } from "@/utilities/helpers";
@@ -98,7 +99,7 @@ const SongsSmollCard = ({
                 size={24}
                 style={{
                   borderWidth: isFav ? 2 : 0,
-                  backgroundColor: isFav ? "white" : "transparent",
+                  backgroundColor: isFav ? "white" : "rgba(0,0,0,1)",
                 }}
                 iconColor={isFav ? "red" : "white"}
                 onPress={() => {

@@ -7,6 +7,25 @@ import Toast from "react-native-toast-message";
 
 import * as FileSystem from "expo-file-system";
 
+export const RECENTLY_PLAYED_DIR = `${FileSystem.documentDirectory}recentlyPlayed/`;
+export const SEARCH_SONG_DIR = `${FileSystem.documentDirectory}searchSong/`;
+
+export const ensureDirectoryExists = async (path: string) => {
+  try {
+    const dirInfo = await FileSystem.getInfoAsync(path);
+    if (!dirInfo.exists) {
+      await FileSystem.makeDirectoryAsync(RECENTLY_PLAYED_DIR, {
+        intermediates: true,
+      });
+      console.log("Created recentlyPlayed directory");
+    }
+    return true;
+  } catch (error) {
+    return false;
+    console.error("Error ensuring directory exists:", error);
+  }
+};
+
 // export const getDownloadedSongs = async () => {
 //   try {
 //     const files = await fileSystem.readDirectoryAsync(

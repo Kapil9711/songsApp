@@ -3,7 +3,7 @@ import React from "react";
 import HorizontalList from "./HorizontalList";
 import { useBackgroudImage } from "@/providers/BackgroundImage";
 import { useAudioContext } from "@/providers/AudioProvider";
-import { H3, H4, Paragraph } from "tamagui";
+import { H3, H4, H6, Paragraph } from "tamagui";
 import { useRouter } from "expo-router";
 import { useGlobalContext } from "@/providers/GlobalProvider";
 
@@ -73,14 +73,14 @@ const ShowData = ({
 
 const Heading = ({ heading }: { heading: string }) => {
   return (
-    <H4
+    <H6
       style={{
         paddingLeft: 10,
       }}
       color={"white"}
     >
       {heading}{" "}
-    </H4>
+    </H6>
   );
 };
 

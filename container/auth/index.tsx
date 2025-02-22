@@ -1,6 +1,7 @@
 import React, { createContext, useContext } from "react";
-import { Dimensions, Text, View, TextInput, Pressable } from "react-native";
+import { Dimensions, View, Pressable } from "react-native";
 import { Button, Spinner } from "tamagui";
+import { Text, TextInput } from "@/providers/CustomText";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 import useAuth from "./hook";

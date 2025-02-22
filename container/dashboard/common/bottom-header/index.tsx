@@ -14,7 +14,7 @@ const BottomHeader = () => {
         alignItems: "center",
         position: "absolute",
         bottom: 0,
-        backgroundColor: "black",
+        backgroundColor: "rgba(0,0,0,.93)",
         height: 50,
         paddingHorizontal: 25,
         width: width,
@@ -23,7 +23,7 @@ const BottomHeader = () => {
       <Pressable onPress={() => router.push("/(dashboard)/home")}>
         <Avatar.Icon
           size={45}
-          style={{ backgroundColor: "black" }}
+          style={{ backgroundColor: "transparent" }}
           icon={icons.home}
         />
       </Pressable>
@@ -31,21 +31,21 @@ const BottomHeader = () => {
       <Pressable onPress={() => router.push("/(dashboard)/favorites")}>
         <Avatar.Icon
           size={45}
-          style={{ backgroundColor: "black", marginLeft: 5 }}
+          style={{ backgroundColor: "transparent", marginLeft: 5 }}
           icon={icons.heart}
         />
       </Pressable>
       <Pressable onPress={() => router.push("/(dashboard)/friends")}>
         <Avatar.Icon
           size={45}
-          style={{ backgroundColor: "black" }}
+          style={{ backgroundColor: "transparent" }}
           icon={icons.friend}
         />
       </Pressable>
       <Pressable onPress={() => router.push("/(dashboard)/file")}>
         <Avatar.Icon
           size={45}
-          style={{ backgroundColor: "black" }}
+          style={{ backgroundColor: "transparent" }}
           icon={icons.explore}
         />
       </Pressable>

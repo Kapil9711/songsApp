@@ -22,10 +22,10 @@ const Header = () => {
       {(currentPath.includes("home") || currentPath.includes("file")) && (
         <View
           style={{
-            backgroundColor: "white",
+            backgroundColor: "rgba(0,0,0,.1)",
             height: 70,
             borderRadius: 4,
-            elevation: 1,
+            // elevation: 1,
           }}
           // className="h-[50px] text-white border-2 border-white bg-white"
         >

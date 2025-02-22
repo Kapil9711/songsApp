@@ -14,8 +14,10 @@ import axios from "axios";
 import axiosInstance, { setAuthHeader } from "@/network/api";
 import {
   downloadSong,
+  ensureDirectoryExists,
   getDownloadedSongs,
   getValueInAsync,
+  RECENTLY_PLAYED_DIR,
 } from "@/utilities/helpers";
 import { debounce, rangeRight } from "lodash";
 import Toast from "react-native-toast-message";
@@ -62,10 +64,10 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
           );
 
           const albumPromise = axios.get(
-            "https://saavn.dev/api/search/albums?limit=20&&query=" + text
+            "https://saavn.dev/api/search/albums?limit=30&&query=" + text
           );
           const playlistPromise = axios.get(
-            "https://saavn.dev/api/search/playlists?limit=20&&query=" + text
+            "https://saavn.dev/api/search/playlists?limit=30&&query=" + text
           );
 
           const [songsData, albumData, playlistData] = await Promise.allSettled(
@@ -100,6 +102,8 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
     }, 150),
     []
   );
+
+  const { recentlyPlayed, saveRecentlyPlayedSong } = useRecentlyPlayed();
 
   useEffect(() => {
     setIsLoadingSongListToRender(true);
@@ -141,7 +145,6 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
           const song = await readJsonFile("initialSong.json");
           const album = await readJsonFile("initialAlbum.json");
           const playlist = await readJsonFile("initialPlaylist.json");
-
           if (song && album && playlist) {
             setAlbumListToRender(album);
             setSongListToRender(song);
@@ -157,10 +160,10 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
         );
 
         const albumPromise = axios.get(
-          "https://saavn.dev/api/search/albums?limit=6&&query=" + "arijit"
+          "https://saavn.dev/api/search/albums?limit=30&&query=" + "arijit"
         );
         const playlistPromise = axios.get(
-          "https://saavn.dev/api/search/playlists?limit=6&&query=" + "arijit"
+          "https://saavn.dev/api/search/playlists?limit=30&&query=" + "arijit"
         );
 
         const [songsData, albumData, playlistData] = await Promise.allSettled([
@@ -385,6 +388,8 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
       punjabi,
       active,
       setActive,
+      recentlyPlayed,
+      saveRecentlyPlayedSong,
     };
   }, [
     hindi,
@@ -404,6 +409,8 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
     page,
     isLoading,
     favorite,
+    recentlyPlayed,
+    saveRecentlyPlayedSong,
   ]);
   return (
     <GlobalContext.Provider value={value}>{children}</GlobalContext.Provider>
@@ -565,6 +572,108 @@ const useFavorite = () => {
     friends,
     setFriends,
   };
+};
+
+const useRecentlyPlayed = () => {
+  const [recentlyPlayed, setRecentlyPlayed] = useState([]);
+  const saveRecentlyPlayedSong = useCallback(
+    async (userId: string, songData: any) => {
+      try {
+        const songName = songData.name;
+        const files = await fileSystem.readDirectoryAsync(RECENTLY_PLAYED_DIR);
+
+        // Check if a file with the same songName and userId already exists
+        const existingFile = files.find((file) =>
+          file.startsWith(`${songName}_${userId}_`)
+        );
+
+        if (existingFile) {
+          // Update the playedAt timestamp for the existing file
+          const filePath = `${RECENTLY_PLAYED_DIR}${existingFile}`;
+          const fileContent = await fileSystem.readAsStringAsync(filePath);
+          const existingSongData = JSON.parse(fileContent);
+
+          existingSongData.playedAt = Date.now(); // Update timestamp
+
+          await fileSystem.writeAsStringAsync(
+            filePath,
+            JSON.stringify(existingSongData)
+          );
+          const song: any = await getRecentlyPlayedSongs();
+          setRecentlyPlayed(song);
+          console.log("Updated existing song timestamp:", filePath);
+          return;
+        }
+
+        // If the song does not exist, save it as a new entry
+        const fileName = `${songName}_${userId}_${Date.now()}.json`;
+        const filePath = `${RECENTLY_PLAYED_DIR}${fileName}`;
+        songData = { ...songData, playedAt: Date.now() };
+
+        await fileSystem.writeAsStringAsync(filePath, JSON.stringify(songData));
+        const song: any = await getRecentlyPlayedSongs();
+        setRecentlyPlayed(song);
+        console.log("Song saved:", filePath);
+      } catch (error) {
+        console.error("Error saving/updating song:", error);
+      }
+    },
+    [recentlyPlayed]
+  );
+  const deleteOldSongs = async () => {
+    try {
+      const files = await fileSystem.readDirectoryAsync(RECENTLY_PLAYED_DIR);
+      const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+
+      for (const file of files) {
+        const filePath = `${RECENTLY_PLAYED_DIR}${file}`;
+        const parts = file.split("_");
+        const timestamp = parseInt(parts[parts.length - 1].split(".")[0], 10);
+
+        if (timestamp < oneWeekAgo) {
+          await fileSystem.deleteAsync(filePath);
+          console.log("Deleted old song:", file);
+        }
+      }
+    } catch (error) {
+      console.error("Error deleting old songs:", error);
+    }
+  };
+
+  const getRecentlyPlayedSongs = async () => {
+    try {
+      const files = await fileSystem.readDirectoryAsync(RECENTLY_PLAYED_DIR);
+      const songs = [];
+
+      for (const file of files) {
+        const filePath = `${RECENTLY_PLAYED_DIR}${file}`;
+        const fileContent = await fileSystem.readAsStringAsync(filePath);
+        const songData = JSON.parse(fileContent);
+        songs.push(songData);
+      }
+
+      // Sort by playedAt (most recent first)
+      songs.sort((a, b) => b.playedAt - a.playedAt);
+      console.log("Recently played songs:", songs);
+      return songs;
+    } catch (error) {
+      console.error("Error retrieving recently played songs:", error);
+      return [];
+    }
+  };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        await ensureDirectoryExists(RECENTLY_PLAYED_DIR);
+        await deleteOldSongs();
+        const songs: any = await getRecentlyPlayedSongs();
+        setRecentlyPlayed(songs);
+      } catch (error) {}
+    })();
+  }, []);
+
+  return { recentlyPlayed, saveRecentlyPlayedSong };
 };
 
 export default GlobalProvider;

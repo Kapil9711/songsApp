@@ -13,7 +13,7 @@ const VerticalList = ({
   type?: string;
 }) => {
   const { setCurrentSong, setCurrentSongList } = useAudioContext();
-  const { handleSingleAlbumOrPlalist } = useGlobalContext();
+  const { handleSingleAlbumOrPlalist, setPage } = useGlobalContext();
   const router = useRouter();
   return (
     <View>
@@ -27,6 +27,7 @@ const VerticalList = ({
             flexDirection: "row",
             flexWrap: "wrap",
             gap: 14,
+            justifyContent: "center",
             paddingTop: 14,
             paddingBottom: 230,
             paddingHorizontal: 10,
@@ -42,6 +43,7 @@ const VerticalList = ({
                   }
                   if (type === "album" || type === "playlist") {
                     handleSingleAlbumOrPlalist(item.id, type);
+                    setPage(20);
                     router.push("/(dashboard)/home/songs");
                   }
                 }}

@@ -1,10 +1,11 @@
 import {
   View,
-  Text,
   Dimensions,
   ImageBackground,
   TouchableOpacity,
 } from "react-native";
+import { Text } from "@/providers/CustomText";
+
 import React, {
   createContext,
   useContext,
@@ -19,6 +20,8 @@ import { Avatar } from "tamagui";
 import { Icon, IconButton, ProgressBar } from "react-native-paper";
 import { useGlobalContext } from "@/providers/GlobalProvider";
 import { usePathname } from "expo-router";
+import { getValueInAsync } from "@/utilities/helpers";
+import { scale, verticalScale, moderateScale } from "react-native-size-matters";
 
 const { width } = Dimensions.get("window");
 const PlayerContext = createContext(null as any);
@@ -62,44 +65,50 @@ const PlayerUi = () => {
         <View
           style={{
             width: width,
-            backgroundColor: "rgba(0,0,0,1)",
-            borderRightWidth: 5,
-            borderLeftWidth: 5,
-            borderTopWidth: 2,
-            borderBottomWidth: 2,
-            borderRadius: 10,
-            borderColor: "#ff268b",
+            backgroundColor: "rgba(0,0,0,.93)",
+            // borderRightWidth: 5,
+            // borderLeftWidth: 5,
+            // borderTopWidth: 2,
+            borderBottomWidth: 0.52,
+            // borderRadius: 10,
+            // borderColor: "#ff268b",
+            borderColor: "gray",
             height: 87,
             position: "absolute",
             bottom: 50,
             flexDirection: "row",
+            gap: 14,
+            elevation: 100,
           }}
         >
-          <Avatar style={{ marginTop: 2, marginLeft: 1 }} size={80}>
+          <Avatar style={{ marginTop: 2, marginLeft: 1, flex: 1 }} size={80}>
             <Avatar.Image src={imageUrl} />
           </Avatar>
 
           <View
             style={{
-              flex: 3,
+              flex: 4,
+              flexDirection: "row",
 
-              paddingHorizontal: 20,
               paddingVertical: 4,
               alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            <View style={{ gap: 5 }}>
+            <View style={{ gap: 5, width: "100%" }}>
               <Text
                 style={{ color: "white", fontSize: 12, textAlign: "center" }}
               >
                 {title?.slice(0, 16)}
               </Text>
+
               <ProgressBarComponent
                 sound={sound}
                 setPosition={setPosition}
                 duration={duration}
                 position={position}
               />
+
               <MediaControls />
             </View>
           </View>
@@ -182,7 +191,11 @@ const ProgressBarComponent = ({
   return (
     <TouchableOpacity onPress={seekAudio} activeOpacity={0.7}>
       <ProgressBar
-        style={{ height: 10, width: 218, borderRadius: 3 }}
+        style={{
+          height: 12,
+          width: "100%",
+          borderRadius: 3,
+        }}
         progress={Math.min(1, Math.max(0, position / duration))}
         color={"#f5075e"}
       />
@@ -249,12 +262,13 @@ const MediaControls = () => {
 const usePlayer = () => {
   const { sound, setSound, currentSong, setCurrentSong, currentSongList } =
     useAudioContext();
-  const { user } = useGlobalContext();
+  const { user, saveRecentlyPlayedSong } = useGlobalContext();
   const [isPlaying, setIsPlaying] = useState(false);
   const { setImage } = useBackgroudImage();
   const [position, setPosition] = useState(0); // Current playback time (ms)
   const [duration, setDuration] = useState(1);
   const [isLoop, setIsLoop] = useState(false);
+
   // const isLoop = useRef(false);
 
   let imageUrl = "";
@@ -317,6 +331,12 @@ const usePlayer = () => {
           setIsPlaying(true);
           // showNowPlayingNotification(title, imageUrl);
         }
+      }
+      if (currentSong.type || currentSong.downloadUrl[0]?.url) {
+        try {
+          const user: any = await getValueInAsync("user");
+          saveRecentlyPlayedSong(JSON.parse(user)?._id, currentSong);
+        } catch (error) {}
       }
     })();
   }, [currentSong]);
