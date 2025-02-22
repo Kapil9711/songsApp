@@ -22,7 +22,7 @@ const DashboardLayout = () => {
               <View
                 style={{
                   flex: 1,
-                  backgroundColor: "rgba(0,0,0,.855)",
+                  backgroundColor: "rgba(0,0,0,.863)",
                 }}
               >
                 <Header />
