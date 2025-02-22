@@ -289,7 +289,7 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const fetchData = useCallback(async () => {
-    if (page >= 4) return;
+    if (page >= 10) return;
     if (isLoadingSongListToRender) return;
     setIsLoadingSongListToRender(true);
     try {
@@ -309,7 +309,7 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } catch (error) {
       setIsLoadingSongListToRender(false);
-      setPage(8);
+      setPage(20);
     }
   }, [page, isLoadingSongListToRender, searchQuery]);
 

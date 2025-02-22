@@ -148,49 +148,55 @@ const Header = ({
         elevation: 16,
       }}
     >
-      <ScrollView horizontal>
-        <View
-          style={{
-            flexDirection: "row",
-            gap: 20,
-            height: "100%",
-            alignItems: "center",
-            position: "relative",
-            left: 40,
-            justifyContent: "center",
-          }}
-        >
-          <Button
-            onPress={() => {
-              setActive("my");
-            }}
+      <View
+        style={{
+          height: "100%",
+          width: "85%",
+        }}
+      >
+        <ScrollView horizontal>
+          <View
             style={{
-              backgroundColor: active == "my" ? "#f5075e" : "white",
+              flexDirection: "row",
+              gap: 20,
+              height: "100%",
+              alignItems: "center",
+              position: "relative",
+              left: 40,
+              justifyContent: "center",
             }}
-            color={active == "my" ? "white" : "default"}
           >
-            MY
-          </Button>
+            <Button
+              onPress={() => {
+                setActive("my");
+              }}
+              style={{
+                backgroundColor: active == "my" ? "#f5075e" : "white",
+              }}
+              color={active == "my" ? "white" : "default"}
+            >
+              MY
+            </Button>
 
-          {friends.map((item: any) => {
-            return (
-              <Button
-                key={item._id}
-                onPress={() => {
-                  setActive(item?.user?.name);
-                }}
-                style={{
-                  backgroundColor:
-                    active == item?.user?.name ? "#f5075e" : "white",
-                }}
-                color={active == item?.user?.name ? "white" : "default"}
-              >
-                {item?.user.name}
-              </Button>
-            );
-          })}
+            {friends.map((item: any) => {
+              return (
+                <Button
+                  key={item._id}
+                  onPress={() => {
+                    setActive(item?.user?.name);
+                  }}
+                  style={{
+                    backgroundColor:
+                      active == item?.user?.name ? "#f5075e" : "white",
+                  }}
+                  color={active == item?.user?.name ? "white" : "default"}
+                >
+                  {item?.user.name}
+                </Button>
+              );
+            })}
 
-          {/* <Button
+            {/* <Button
             // onPress={() => {
             //   setActive("requests");
             //   getRequest();
@@ -202,8 +208,9 @@ const Header = ({
           >
             Request
           </Button> */}
-        </View>
-      </ScrollView>
+          </View>
+        </ScrollView>
+      </View>
     </View>
   );
 };

@@ -40,7 +40,7 @@ const HorizontalList = ({
                   }
                   if (type === "album" || type === "playlist") {
                     handleSingleAlbumOrPlalist(item.id, type);
-                    setPage(8);
+                    setPage(20);
                     router.push("/(dashboard)/home/songs");
                   }
                 }}
