@@ -614,7 +614,8 @@ const useRecentlyPlayed = () => {
             filePath,
             JSON.stringify(existingSongData)
           );
-          const song: any = await getRecentlyPlayedSongs();
+          const user: any = await getValueInAsync("user");
+          const song: any = await getRecentlyPlayedSongs(JSON.parse(user)?._id);
           setRecentlyPlayed(song);
 
           return;
