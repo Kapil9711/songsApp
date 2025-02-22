@@ -61,6 +61,7 @@ const useAuth = () => {
       mutationFn: createUser,
       onSuccess: async ({ data }) => {
         if (data.success) {
+          setForm({});
           Toast.show({
             type: "success", // success | error | info
             text1: "SignUp  SuccessFull",

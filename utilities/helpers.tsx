@@ -37,10 +37,15 @@ export const getDownloadedSongs = async () => {
       fileSystem.documentDirectory as string
     );
 
+    const user: any = await getValueInAsync("user");
+
+    const id = JSON.parse(user)?._id;
+
     // Get audio files
     const audioFiles = files.filter(
-      (file) => file.endsWith(".m4a") || file.endsWith(".mp3")
+      (file) => file.endsWith(`${id}.m4a`) || file.endsWith(`${id}.mp3`)
     );
+    console.log(audioFiles, "files");
 
     // Create list with song details & corresponding images
     const songList = audioFiles.map((file, idx) => {
@@ -59,7 +64,7 @@ export const getDownloadedSongs = async () => {
           "",
           { url: fileSystem.documentDirectory + baseName + ".jpg" },
         ],
-        name: baseName,
+        name: baseName.split("_")[0],
       };
     });
 
@@ -107,7 +112,7 @@ export const downloadSong = async (
   try {
     const songUri = FileSystem.documentDirectory + fileName + ".m4a";
     const imageUri = FileSystem.documentDirectory + fileName + ".jpg"; // Save image with same name
-
+    console.log(fileName, "name");
     // Download the song
     const songDownload = FileSystem.createDownloadResumable(songUrl, songUri);
     await songDownload.downloadAsync();

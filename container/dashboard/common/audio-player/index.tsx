@@ -121,7 +121,7 @@ const ShowTime = ({ duration, position }: any) => {
   const { user } = useGlobalContext();
   let downloadUrl = currentSong?.downloadUrl[4]?.url;
   if (user) {
-    downloadUrl = currentSong?.downloadUrl[currentSong.downloadUrl]?.url;
+    downloadUrl = currentSong?.downloadUrl[4]?.url;
   }
   return (
     <View>

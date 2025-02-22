@@ -174,6 +174,7 @@ export const RightDrawer = () => {
         <Button
           onPress={async () => {
             await AsyncStorage.removeItem("token");
+            await AsyncStorage.removeItem("user");
             router.replace("/");
           }}
           size={"large"}
