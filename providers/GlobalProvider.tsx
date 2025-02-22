@@ -120,22 +120,39 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
       } catch (error) {}
 
       try {
-        // const haryani = await readJsonFile("haryani.json");
+        // const haryanvi = await readJsonFile("haryanvi.json");
         // const hindi = await readJsonFile("hindi.json");
         // const punjabi = await readJsonFile("punjabi.json");
+        // const time = Date.now() - 2 * 24 * 60 * 60;
         if (false) {
-          // setHaryanvi(haryani);
-          // setHindi(hindi);
-          // setPunjabi(punjabi);
+          // let storedTime = haryanvi?.pop();
+          // hindi?.pop();
+          // punjabi?.pop();
+          // console.log(storedTime, "timefjjffjjfjfjjfj");
+          // if (Number(storedTime?.time) > time) {
+          //   console.log("from local");
+          //   setHaryanvi(haryanvi);
+          //   setHindi(hindi);
+          //   setPunjabi(punjabi);
+          // }
         } else {
+          console.log("from live");
           const { data } = await axiosInstance.get("/song/home-page");
           if (data.success) {
             setHaryanvi(data.haryanvi);
             setHindi(data.hindi);
             setPunjabi(data.punjabi);
-            // await saveJsonToFile("haryani.json", JSON.stringify(data.haryani));
-            // await saveJsonToFile("hindi.json", JSON.stringify(data.hindi));
-            // await saveJsonToFile("punjabi.json", JSON.stringify(data.punjabi));
+
+            // let hr = data.haryanvi;
+            // let hi = data.hindi;
+            // let pb = data.punjabi;
+            // hr.push({ time: Date.now() });
+            // hi.push({ time: Date.now() });
+            // pb.push({ time: Date.now() });
+
+            // await saveJsonToFile("haryanvi.json", JSON.stringify(hr));
+            // await saveJsonToFile("hindi.json", JSON.stringify(hi));
+            // await saveJsonToFile("punjabi.json", JSON.stringify(pb));
           }
         }
       } catch (error) {}
@@ -495,8 +512,6 @@ const useFavorite = () => {
         // Convert JSON data to string
         const jsonString = JSON.stringify(jsonData);
 
-        console.log(jsonString, "dafsdkfkds");
-
         // Define file path (documents directory)
         const fileUri = `${fileSystem.documentDirectory}${filename}`;
 
@@ -601,7 +616,7 @@ const useRecentlyPlayed = () => {
           );
           const song: any = await getRecentlyPlayedSongs();
           setRecentlyPlayed(song);
-          console.log("Updated existing song timestamp:", filePath);
+
           return;
         }
 
@@ -613,7 +628,6 @@ const useRecentlyPlayed = () => {
         await fileSystem.writeAsStringAsync(filePath, JSON.stringify(songData));
         const song: any = await getRecentlyPlayedSongs();
         setRecentlyPlayed(song);
-        console.log("Song saved:", filePath);
       } catch (error) {
         console.error("Error saving/updating song:", error);
       }
@@ -632,7 +646,6 @@ const useRecentlyPlayed = () => {
 
         if (timestamp < oneWeekAgo) {
           await fileSystem.deleteAsync(filePath);
-          console.log("Deleted old song:", file);
         }
       }
     } catch (error) {
@@ -640,21 +653,23 @@ const useRecentlyPlayed = () => {
     }
   };
 
-  const getRecentlyPlayedSongs = async () => {
+  const getRecentlyPlayedSongs = async (userId: string) => {
     try {
       const files = await fileSystem.readDirectoryAsync(RECENTLY_PLAYED_DIR);
       const songs = [];
 
       for (const file of files) {
-        const filePath = `${RECENTLY_PLAYED_DIR}${file}`;
-        const fileContent = await fileSystem.readAsStringAsync(filePath);
-        const songData = JSON.parse(fileContent);
-        songs.push(songData);
+        if (file.includes(userId)) {
+          const filePath = `${RECENTLY_PLAYED_DIR}${file}`;
+          const fileContent = await fileSystem.readAsStringAsync(filePath);
+          const songData = JSON.parse(fileContent);
+          songs.push(songData);
+        }
       }
 
       // Sort by playedAt (most recent first)
       songs.sort((a, b) => b.playedAt - a.playedAt);
-      console.log("Recently played songs:", songs);
+
       return songs;
     } catch (error) {
       console.error("Error retrieving recently played songs:", error);
@@ -667,7 +682,8 @@ const useRecentlyPlayed = () => {
       try {
         await ensureDirectoryExists(RECENTLY_PLAYED_DIR);
         await deleteOldSongs();
-        const songs: any = await getRecentlyPlayedSongs();
+        const user: any = await getValueInAsync("user");
+        const songs: any = await getRecentlyPlayedSongs(JSON.parse(user)?._id);
         setRecentlyPlayed(songs);
       } catch (error) {}
     })();

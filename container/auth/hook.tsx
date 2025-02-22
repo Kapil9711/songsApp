@@ -93,8 +93,8 @@ const useAuth = () => {
     if (password && userId) {
       const isEmail = emailRegex.test(userId);
       const payload: LoginPayload = { password };
-      if (isEmail) payload.email = userId;
-      else payload.name = userId;
+      if (isEmail) payload.email = userId.trim();
+      else payload.name = userId.trim();
       userLoginMutation(payload);
     }
   };
@@ -103,7 +103,11 @@ const useAuth = () => {
     const { password, name, email } = form;
 
     if (password && name && email) {
-      const payload = { password, name, email };
+      const payload = {
+        password: password.trim(),
+        name: name.trim(),
+        email: email.trim(),
+      };
 
       userRegisterMutation(payload);
     }

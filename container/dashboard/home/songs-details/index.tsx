@@ -10,50 +10,48 @@ import React from "react";
 import { useGlobalContext } from "@/providers/GlobalProvider";
 import SongsSmollCard from "../../common/song-card/SongsSmollCard";
 import { useAudioContext } from "@/providers/AudioProvider";
+import { Avatar, H4, H6, Image, Paragraph } from "tamagui";
+// import {
+//   GestureDetector,
+//   Gesture,
+//   GestureHandlerRootView,
+//   Directions,
+// } from "react-native-gesture-handler";
+import { useRouter } from "expo-router";
 
 const SongsDetails = () => {
-  const { songListToRender } = useGlobalContext();
-  const { currentSong, setCurrentSong } = useAudioContext();
+  const { currentSong } = useAudioContext();
+  const router = useRouter();
+  // const swipeDown = Gesture.Fling()
+  //   .direction(Directions.DOWN)
+  //   .onEnd(() => {
+  //     router.back();
+  //   });
 
   return (
     <View
       style={{
         flex: 1,
+        backgroundColor: "rgba(0,0,0,.6)",
       }}
     >
-      <ScrollView
+      <Image
+        source={{ uri: currentSong?.image[2]?.url }}
         style={{
-          flex: 1,
+          marginTop: 80,
+          width: "85%",
+          height: "40%",
+          borderRadius: 16,
+          marginHorizontal: "auto",
+          elevation: 100,
         }}
-      >
-        <View
-          style={{
-            flex: 1,
-            gap: 10,
-            paddingBottom: 160,
-            paddingTop: 10,
-            paddingHorizontal: 5,
-          }}
-        >
-          {songListToRender.map((item: any, idx: number) => {
-            return (
-              <Pressable
-                key={item.id}
-                onPress={() => {
-                  setCurrentSong(item);
-                }}
-              >
-                <SongsSmollCard
-                  isActive={currentSong.id === item.id}
-                  title={item.name}
-                  image={item?.image[2]?.url}
-                  number={idx + 1}
-                />
-              </Pressable>
-            );
-          })}
-        </View>
-      </ScrollView>
+      />
+      <View style={{ marginTop: 20 }}>
+        <H6 style={{ textAlign: "center" }} color={"white"}>
+          {currentSong?.name}
+        </H6>
+        <View></View>
+      </View>
     </View>
   );
 };

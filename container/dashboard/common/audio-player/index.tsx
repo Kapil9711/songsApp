@@ -3,6 +3,7 @@ import {
   Dimensions,
   ImageBackground,
   TouchableOpacity,
+  Pressable,
 } from "react-native";
 import { Text } from "@/providers/CustomText";
 
@@ -19,7 +20,7 @@ import { useBackgroudImage } from "@/providers/BackgroundImage";
 import { Avatar } from "tamagui";
 import { Icon, IconButton, ProgressBar } from "react-native-paper";
 import { useGlobalContext } from "@/providers/GlobalProvider";
-import { usePathname } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import { getValueInAsync } from "@/utilities/helpers";
 import { scale, verticalScale, moderateScale } from "react-native-size-matters";
 
@@ -58,6 +59,7 @@ const PlayerUi = () => {
     setPosition,
     duration,
   } = usePlayerConext();
+  const router = useRouter();
 
   return (
     <>
@@ -81,9 +83,15 @@ const PlayerUi = () => {
             elevation: 100,
           }}
         >
-          <Avatar style={{ marginTop: 2, marginLeft: 1, flex: 1 }} size={80}>
-            <Avatar.Image src={imageUrl} />
-          </Avatar>
+          <Pressable
+            onPress={() => {
+              router.push("/(dashboard)/home/songs-details");
+            }}
+          >
+            <Avatar style={{ marginTop: 2, marginLeft: 1, flex: 1 }} size={80}>
+              <Avatar.Image src={imageUrl} />
+            </Avatar>
+          </Pressable>
 
           <View
             style={{

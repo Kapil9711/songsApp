@@ -19,44 +19,45 @@ const Header = () => {
 
   return (
     <>
-      {(currentPath.includes("home") || currentPath.includes("file")) && (
-        <View
-          style={{
-            backgroundColor: "rgba(0,0,0,.1)",
-            height: 70,
-            borderRadius: 4,
-            // elevation: 1,
-          }}
-          // className="h-[50px] text-white border-2 border-white bg-white"
-        >
+      {(currentPath.includes("home") || currentPath.includes("file")) &&
+        !currentPath.includes("songs-details") && (
           <View
             style={{
-              flex: 1,
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 15,
-              paddingHorizontal: 15,
-              paddingVertical: 8,
+              backgroundColor: "rgba(0,0,0,.1)",
+              height: 70,
+              borderRadius: 4,
+              // elevation: 1,
             }}
+            // className="h-[50px] text-white border-2 border-white bg-white"
           >
-            <Pressable>
-              <AvatarTamagui circular size="$5">
-                <AvatarTamagui.Image
-                  accessibilityLabel="Cam"
-                  src="https://res.cloudinary.com/deyhhkkmr/image/upload/v1739944680/uploads/zxnukungugjvhy3064ma.png"
-                  // src="https://images.unsplash.com/photo-1548142813-c348350df52b?&w=150&h=150&dpr=2&q=80"
-                  // src="/assets/images/icon3.png"
-                />
-                <AvatarTamagui.Fallback backgroundColor="$blue10" />
-              </AvatarTamagui>
-            </Pressable>
+            <View
+              style={{
+                flex: 1,
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 15,
+                paddingHorizontal: 15,
+                paddingVertical: 8,
+              }}
+            >
+              <Pressable>
+                <AvatarTamagui circular size="$5">
+                  <AvatarTamagui.Image
+                    accessibilityLabel="Cam"
+                    src="https://res.cloudinary.com/deyhhkkmr/image/upload/v1739944680/uploads/zxnukungugjvhy3064ma.png"
+                    // src="https://images.unsplash.com/photo-1548142813-c348350df52b?&w=150&h=150&dpr=2&q=80"
+                    // src="/assets/images/icon3.png"
+                  />
+                  <AvatarTamagui.Fallback backgroundColor="$blue10" />
+                </AvatarTamagui>
+              </Pressable>
 
-            <SearchBar />
-            <View style={{ width: 40, height: 20 }}></View>
+              <SearchBar />
+              <View style={{ width: 40, height: 20 }}></View>
+            </View>
           </View>
-        </View>
-      )}
+        )}
     </>
   );
 };
@@ -128,6 +129,7 @@ export const RightDrawer = () => {
     transform: [{ translateX: translateX.value }],
   }));
 
+  const currentPath = usePathname();
   // useEffect(() => {
   //   (async () => {
   //     const user = await AsyncStorage.getItem("user");
@@ -140,14 +142,16 @@ export const RightDrawer = () => {
   return (
     <View style={{ zIndex: 1000, position: "absolute", right: 8, top: 0 }}>
       {/* Button to Open Drawer */}
-      <Pressable onPress={openDrawer}>
-        <Avatar.Icon
-          icon={"menu"}
-          color="black"
-          style={{ backgroundColor: "white", marginTop: 9 }}
-          size={50}
-        />
-      </Pressable>
+      {!currentPath.includes("songs-details") && (
+        <Pressable onPress={openDrawer}>
+          <Avatar.Icon
+            icon={"menu"}
+            color="black"
+            style={{ backgroundColor: "white", marginTop: 9 }}
+            size={50}
+          />
+        </Pressable>
+      )}
 
       {/* Only show overlay when `open` is true */}
       {open && (

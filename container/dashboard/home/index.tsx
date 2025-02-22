@@ -165,7 +165,7 @@ const Home = () => {
                   isTrending={true}
                   data={haryanvi.slice(0, 6)}
                   renderData={haryanvi}
-                  heading="Haryani"
+                  heading="Haryanvi"
                   type="song"
                 />
                 <ShowData

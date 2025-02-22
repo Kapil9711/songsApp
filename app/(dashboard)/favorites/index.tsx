@@ -150,7 +150,7 @@ const Header = ({
       <View
         style={{
           height: "100%",
-          // width: "80%",
+          width: "85%",
         }}
       >
         <ScrollView horizontal>
@@ -159,7 +159,8 @@ const Header = ({
               flexDirection: "row",
               gap: 20,
               height: "100%",
-              width: "80%",
+              // width: "80%",
+              paddingRight: 90,
 
               alignItems: "center",
               position: "relative",

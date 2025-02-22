@@ -20,25 +20,27 @@ import {
 } from "tamagui";
 
 import { useAuthContext } from "@/providers/AuthProvider";
+import { useRouter } from "expo-router";
 
 const SignUp = () => {
   const { form, setForm, isUserRegisterPending, handleRegister } =
     useAuthContext();
+  const router = useRouter();
 
   return (
     <View
       style={{
         flex: 1,
-        backgroundColor: "#ff268b",
-        paddingTop: 150,
+        backgroundColor: "rgba(0,0,0,.95)",
+        paddingTop: 30,
         alignItems: "center",
       }}
     >
       <View>
-        <H2 color={"white"} style={{ textAlign: "center" }}>
+        <H2 color={"orange"} style={{ textAlign: "center" }}>
           Sign-Up
         </H2>
-        <View style={{ gap: 12, marginTop: 20 }}>
+        <View style={{ gap: 12, marginTop: 15 }}>
           <View style={{ gap: 4 }}>
             <H6 color={"white"}>Email</H6>
             <Input
@@ -74,6 +76,17 @@ const SignUp = () => {
                 });
               }}
             />
+          </View>
+
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Paragraph color={"white"}>Already Have An Account, </Paragraph>
+            <TouchableOpacity
+              onPress={() => {
+                router.push("/(auth)/sign-in");
+              }}
+            >
+              <H6 color={"orange"}>Log-In</H6>
+            </TouchableOpacity>
           </View>
 
           <View

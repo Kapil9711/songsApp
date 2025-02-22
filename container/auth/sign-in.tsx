@@ -30,20 +30,20 @@ const SignIn = () => {
     <View
       style={{
         flex: 1,
-        backgroundColor: "#ff268b",
-        paddingTop: 150,
+        backgroundColor: "rgba(0, 0, 0,.9)",
+        paddingTop: 30,
         alignItems: "center",
       }}
     >
       <View>
-        <H2 color={"white"} style={{ textAlign: "center" }}>
-          Sign-In
+        <H2 color={"orange"} style={{ textAlign: "center" }}>
+          Log-In
         </H2>
         <View style={{ gap: 20, marginTop: 20 }}>
-          <View style={{ gap: 4 }}>
+          <View style={{ gap: 6, width: "100%" }}>
             <H6 color={"white"}>Email / UserName</H6>
             <Input
-              style={{ width: 290, fontSize: 18 }}
+              style={{ width: "100%", fontSize: 18 }}
               onChangeText={(value: string) => {
                 setForm((prev: any) => {
                   return { ...prev, userId: value };
@@ -80,7 +80,7 @@ const SignIn = () => {
             style={{
               justifyContent: "center",
               alignItems: "center",
-              marginTop: 8,
+              marginTop: -8,
             }}
           >
             {isUserLoginPending ? (
