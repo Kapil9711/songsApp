@@ -12,12 +12,14 @@ import { useGlobalContext } from "@/providers/GlobalProvider";
 import SongsSmollCard from "../../common/song-card/SongsSmollCard";
 import { useAudioContext } from "@/providers/AudioProvider";
 import { Spinner } from "tamagui";
+import { getValueInAsync } from "@/utilities/helpers";
+import { useSocket } from "@/providers/socketProvider";
 
 const Songs = () => {
   const { songListToRender, isLoadingSongListToRender, fetchData, isLoading } =
     useGlobalContext();
   const { currentSong, setCurrentSong, setCurrentSongList } = useAudioContext();
-
+  const { socket } = useSocket();
   return (
     <View
       style={{
@@ -60,6 +62,16 @@ const Songs = () => {
                   key={item.id + index}
                   onPress={() => {
                     setCurrentSong(item);
+                    if (item.type || item.downloadUrl[0]?.url) {
+                      (async () => {
+                        const user: any = await getValueInAsync("user");
+                        const userId = JSON.parse(user)?._id;
+                        socket?.emit("songPlaying", {
+                          senderId: userId,
+                          song: item,
+                        });
+                      })();
+                    }
                     setCurrentSongList(songListToRender);
                   }}
                 >

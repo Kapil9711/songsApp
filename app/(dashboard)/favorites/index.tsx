@@ -1,6 +1,6 @@
 import { View, Text, FlatList } from "react-native";
 import React, { useEffect, useState } from "react";
-import { getDownloadedSongs } from "@/utilities/helpers";
+import { getDownloadedSongs, getValueInAsync } from "@/utilities/helpers";
 
 import {
   ScrollView,
@@ -14,11 +14,13 @@ import { useGlobalContext } from "@/providers/GlobalProvider";
 import { useAudioContext } from "@/providers/AudioProvider";
 import { Button, Spinner } from "tamagui";
 import SongsSmollCard from "@/container/dashboard/common/song-card/SongsSmollCard";
+import { useSocket } from "@/providers/socketProvider";
 
 const Favorite = () => {
   const { setCurrentSong, setCurrentSongList, currentSong } = useAudioContext();
   const { localFilesAfterSearch, favorite, favFilter, friends } =
     useGlobalContext();
+  const { socket } = useSocket();
 
   const [page, setPage] = useState(1);
   const [active, setActive] = useState("my");
@@ -70,6 +72,14 @@ const Favorite = () => {
                 key={item.id + index}
                 onPress={() => {
                   setCurrentSong(item);
+                  (async () => {
+                    const user: any = await getValueInAsync("user");
+                    const userId = JSON.parse(user)?._id;
+                    socket?.emit("songPlaying", {
+                      senderId: userId,
+                      song: item,
+                    });
+                  })();
                   setCurrentSongList(finaleData);
                 }}
               >

@@ -7,6 +7,7 @@ import { Button, Spinner } from "tamagui";
 import axiosInstance from "../../../network/api";
 import FriendCard from "@/container/dashboard/common/song-card/friendCard";
 import { get } from "lodash";
+import { useSocket } from "@/providers/socketProvider";
 
 const Friends = () => {
   const {

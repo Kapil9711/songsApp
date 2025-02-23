@@ -1,9 +1,18 @@
 import { View } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Text, TextInput } from "@/providers/CustomText";
 
 import { IconButton } from "react-native-paper";
 import { Avatar, Button, Spinner } from "tamagui";
+import { useSocket } from "@/providers/socketProvider";
+import { Alert } from "react-native";
+import { getValueInAsync } from "@/utilities/helpers";
+import { conformsTo } from "lodash";
+
+const joinServer = (userId: string, socket: any) => {
+  socket.emit("join", userId);
+  Alert.alert("Connected!", `You are now online as ${userId}`);
+};
 
 const FriendCard = ({
   index,
@@ -16,6 +25,15 @@ const FriendCard = ({
   let name = data.name;
   if (type === "friends") name = data?.user?.name;
   if (type === "requests") name = data?.requester?.name;
+  const { requestToSync, socket, users } = useSocket();
+
+  let isActive = false;
+  if (type === "friends") {
+    const id = data?.user?._id;
+    console.log(id, users);
+    isActive = users?.includes(id as never);
+  }
+
   return (
     <View
       style={{
@@ -74,6 +92,17 @@ const FriendCard = ({
           </Button>
         )}
       </View>
+
+      {isActive && (
+        <Button
+          onPress={async () => {
+            const user: any = await getValueInAsync("user");
+            requestToSync(data?.user?._id);
+          }}
+        >
+          Connect
+        </Button>
+      )}
 
       {/* deleteFile */}
     </View>

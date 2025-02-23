@@ -4,6 +4,8 @@ import SongBigCard from "../../common/song-card/SongBigCard";
 import { useAudioContext } from "@/providers/AudioProvider";
 import { useGlobalContext } from "@/providers/GlobalProvider";
 import { useRouter } from "expo-router";
+import { getValueInAsync } from "@/utilities/helpers";
+import { useSocket } from "@/providers/socketProvider";
 
 const VerticalList = ({
   data,
@@ -15,6 +17,7 @@ const VerticalList = ({
   const { setCurrentSong, setCurrentSongList } = useAudioContext();
   const { handleSingleAlbumOrPlalist, setPage } = useGlobalContext();
   const router = useRouter();
+
   return (
     <View>
       <ScrollView
@@ -39,6 +42,7 @@ const VerticalList = ({
                 onPress={() => {
                   if (type === "song") {
                     setCurrentSong(item);
+
                     setCurrentSongList(data);
                   }
                   if (type === "album" || type === "playlist") {

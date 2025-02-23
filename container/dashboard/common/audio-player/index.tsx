@@ -4,6 +4,7 @@ import {
   ImageBackground,
   TouchableOpacity,
   Pressable,
+  Alert,
 } from "react-native";
 import { Text } from "@/providers/CustomText";
 
@@ -23,6 +24,7 @@ import { useGlobalContext } from "@/providers/GlobalProvider";
 import { usePathname, useRouter } from "expo-router";
 import { getValueInAsync } from "@/utilities/helpers";
 import { scale, verticalScale, moderateScale } from "react-native-size-matters";
+import { useSocket } from "@/providers/socketProvider";
 
 const { width } = Dimensions.get("window");
 const PlayerContext = createContext(null as any);
@@ -185,6 +187,7 @@ const ProgressBarComponent = ({
   duration,
   position,
 }: any) => {
+  const { socket } = useSocket();
   const seekAudio = async (event: any) => {
     if (!sound || duration <= 1) return;
 
@@ -193,8 +196,28 @@ const ProgressBarComponent = ({
     const seekTo = (touchX / progressWidth) * duration;
 
     await sound.setPositionAsync(seekTo); // Seek to new position
-    setPosition(seekTo); // Update UI immediately
+    setPosition(seekTo);
+    const user: any = await getValueInAsync("user");
+    const userId = JSON.parse(user)?._id;
+    console.log(userId, "seekSong");
+    socket.emit("seekSong", {
+      senderId: userId,
+      newTime: seekTo,
+    });
+
+    // Update UI immediately
   };
+
+  useEffect(() => {
+    socket.on("syncSeek", async ({ newTime, receiverId }: any) => {
+      const user: any = await getValueInAsync("user");
+      const userId = JSON.parse(user)?._id;
+      console.log(userId, receiverId, newTime, "ids");
+      if (receiverId === userId) {
+        await sound.setPositionAsync(Number(newTime));
+      }
+    });
+  }, [sound]);
 
   return (
     <TouchableOpacity onPress={seekAudio} activeOpacity={0.7}>
@@ -276,6 +299,7 @@ const usePlayer = () => {
   const [position, setPosition] = useState(0); // Current playback time (ms)
   const [duration, setDuration] = useState(1);
   const [isLoop, setIsLoop] = useState(false);
+  const { socket } = useSocket();
 
   // const isLoop = useRef(false);
 
@@ -312,22 +336,24 @@ const usePlayer = () => {
     }
   }, [sound, isLoop]);
 
+  // Send song details to a friend
+
   useEffect(() => {
     (async () => {
       if (setImage) {
-        if (currentSong.id)
+        if (currentSong?.id)
           setImage(currentSong?.image[user?.imageQuality]?.url);
         else setImage(currentSong?.image[2]?.url);
       }
       if (sound) {
         await sound.unloadAsync();
       }
-      if (Audio) {
-        const { sound } = await Audio.Sound.createAsync(
+      if (Audio && currentSong?.id) {
+        const { sound } = await Audio?.Sound?.createAsync(
           {
-            uri: currentSong.id
-              ? currentSong.downloadUrl[4]?.url
-              : currentSong.downloadUrl[4],
+            uri: currentSong?.id
+              ? currentSong?.downloadUrl[4]?.url
+              : currentSong?.downloadUrl[4],
           },
           { shouldPlay: true }
         );
@@ -340,20 +366,55 @@ const usePlayer = () => {
           // showNowPlayingNotification(title, imageUrl);
         }
       }
-      if (currentSong.type || currentSong.downloadUrl[0]?.url) {
+      if (currentSong?.type || currentSong?.downloadUrl[0]?.url) {
         try {
           const user: any = await getValueInAsync("user");
-          saveRecentlyPlayedSong(JSON.parse(user)?._id, currentSong);
+          const userId = JSON.parse(user)?._id;
+          saveRecentlyPlayedSong(userId, currentSong);
         } catch (error) {}
       }
     })();
   }, [currentSong]);
 
+  useEffect(() => {
+    socket?.on("syncSong", async ({ song, receiverId }: any) => {
+      const user: any = await getValueInAsync("user");
+      const userId = JSON.parse(user)?._id;
+      console.log(receiverId, userId);
+      if (receiverId === userId) {
+        setCurrentSong(song);
+      }
+    });
+    socket?.on("syncPlayPause", async ({ isPlaying, receiverId }: any) => {
+      const user: any = await getValueInAsync("user");
+      console.log(isPlaying, "syncPlay");
+      const userId = JSON.parse(user)?._id;
+      if (userId === receiverId) {
+        if (isPlaying == true) {
+          await sound?.playAsync();
+          setIsPlaying(true);
+        }
+        if (isPlaying == false) {
+          await sound?.pauseAsync();
+          setIsPlaying(false);
+        }
+      }
+    });
+  }, [socket, currentSong, sound]);
+
   const handleNext = () => {
     let currenIndex = null;
 
     if (isLoop === true) {
-      setCurrentSong((prev: any) => ({ ...prev }));
+      let prev1 = {};
+      setCurrentSong((prev: any) => {
+        prev1 = prev;
+        return { ...prev };
+      })(async () => {
+        const user: any = await getValueInAsync("user");
+        const userId = JSON.parse(user)?._id;
+        socket?.emit("songPlaying", { senderId: userId, song: prev1 });
+      })();
       return;
     }
 
@@ -369,12 +430,24 @@ const usePlayer = () => {
       const length = currentSongList.length - 1;
       let newIndex = length === currenIndex ? 0 : currenIndex + 1;
       setCurrentSong(currentSongList[newIndex]);
+      (async () => {
+        const user: any = await getValueInAsync("user");
+        const userId = JSON.parse(user)?._id;
+        socket?.emit("songPlaying", {
+          senderId: userId,
+          song: currentSongList[newIndex],
+        });
+      })();
     }
   };
   const handlePrev = () => {
     let currenIndex = null;
+    let prev1 = {};
     if (isLoop === true) {
-      setCurrentSong((prev: any) => ({ ...prev }));
+      setCurrentSong((prev: any) => {
+        prev1 = prev;
+        return { ...prev };
+      });
       return;
     }
     if (Array.isArray(currentSongList) && currentSongList.length) {
@@ -389,11 +462,22 @@ const usePlayer = () => {
       const length = currentSongList.length - 1;
       let newIndex = currenIndex === 0 ? length : currenIndex - 1;
       setCurrentSong(currentSongList[newIndex]);
+      (async () => {
+        const user: any = await getValueInAsync("user");
+        const userId = JSON.parse(user)?._id;
+        socket?.emit("songPlaying", {
+          senderId: userId,
+          song: currentSongList[newIndex],
+        });
+      })();
     }
   };
 
   const handlePlay = async () => {
     setIsPlaying(true);
+    const user: any = await getValueInAsync("user");
+    const userId = JSON.parse(user)._id;
+    socket.emit("playPauseSong", { senderId: userId, isPlaying: true });
     if (sound) {
       await sound.playAsync();
     }
@@ -401,6 +485,9 @@ const usePlayer = () => {
 
   const handlePause = async () => {
     setIsPlaying(false);
+    const user: any = await getValueInAsync("user");
+    const userId = JSON.parse(user)._id;
+    socket.emit("playPauseSong", { senderId: userId, isPlaying: false });
     if (sound) {
       await sound.pauseAsync();
     }

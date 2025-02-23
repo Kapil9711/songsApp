@@ -9,10 +9,11 @@ import BottomHeader from "@/container/dashboard/common/bottom-header";
 import AudioProvider from "@/providers/AudioProvider";
 import AudioPlayer from "@/container/dashboard/common/audio-player";
 import GlobalProvider from "@/providers/GlobalProvider";
+import SocketProvider from "@/providers/socketProvider";
 
 const DashboardLayout = () => {
   return (
-    <>
+    <SocketProvider>
       <BackgroundImageProvider>
         <BackgroundImageWrapper>
           <AudioProvider>
@@ -22,7 +23,7 @@ const DashboardLayout = () => {
               <View
                 style={{
                   flex: 1,
-                  backgroundColor: "rgba(0,0,0,.863)",
+                  backgroundColor: "rgba(0,0,0,.89)",
                 }}
               >
                 <Header />
@@ -34,7 +35,7 @@ const DashboardLayout = () => {
           </AudioProvider>
         </BackgroundImageWrapper>
       </BackgroundImageProvider>
-    </>
+    </SocketProvider>
   );
 };
 

@@ -4,6 +4,8 @@ import SongBigCard from "../../common/song-card/SongBigCard";
 import { useAudioContext } from "@/providers/AudioProvider";
 import { useGlobalContext } from "@/providers/GlobalProvider";
 import { useRouter } from "expo-router";
+import { useSocket } from "@/providers/socketProvider";
+import { getValueInAsync } from "@/utilities/helpers";
 
 const HorizontalList = ({
   data,
@@ -14,6 +16,7 @@ const HorizontalList = ({
 }) => {
   const { setCurrentSong, setCurrentSongList } = useAudioContext();
   const { handleSingleAlbumOrPlalist, setPage } = useGlobalContext();
+  const { socket } = useSocket();
   const router = useRouter();
   return (
     <>
@@ -35,6 +38,14 @@ const HorizontalList = ({
               <Pressable
                 onPress={() => {
                   if (type === "song") {
+                    (async () => {
+                      const user: any = await getValueInAsync("user");
+                      const userId = JSON.parse(user)?._id;
+                      socket?.emit("songPlaying", {
+                        senderId: userId,
+                        song: item,
+                      });
+                    })();
                     setCurrentSong(item);
                     setCurrentSongList(data);
                   }
