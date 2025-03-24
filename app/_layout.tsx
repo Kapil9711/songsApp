@@ -7,6 +7,7 @@ import { StatusBar } from "react-native";
 import Toast from "react-native-toast-message";
 import { Text, TextInput } from "@/providers/CustomText";
 import { useEffect } from "react";
+import { registerBackgroundTask } from "@/utilities/backgroundTask";
 
 const queryClient = new QueryClient();
 const config = createTamagui(defaultConfig);
@@ -22,6 +23,12 @@ export default function RootLayout() {
   //     TextInput.defaultProps.allowFontScaling = false;
   //   }
   // }, []);
+
+  useEffect(() => {
+    // Register background task when the app starts
+    registerBackgroundTask();
+  }, []);
+
   return (
     <TamaguiProvider config={config}>
       <QueryClientProvider client={queryClient}>

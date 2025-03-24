@@ -38,7 +38,7 @@ const ShowData = ({
             if (type === "song") {
               if (isTrending) {
                 setSongListToRender(renderData);
-                setPage(20);
+                setPage(999);
               } else {
                 setSongListToRender(searchedSongList);
                 setPage(1);

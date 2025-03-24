@@ -25,6 +25,13 @@ import { usePathname, useRouter } from "expo-router";
 import { getValueInAsync } from "@/utilities/helpers";
 import { scale, verticalScale, moderateScale } from "react-native-size-matters";
 import { useSocket } from "@/providers/socketProvider";
+import useNotification from "@/utilities/showNotification";
+import * as TaskManager from "expo-task-manager";
+import * as BackgroundFetch1 from "expo-background-fetch";
+
+const BackgroundFetch: any = BackgroundFetch1;
+
+const BACKGROUND_FETCH_TASK = "BACKGROUND_FETCH_TASK";
 
 const { width } = Dimensions.get("window");
 const PlayerContext = createContext(null as any);
@@ -33,12 +40,8 @@ const usePlayerConext = () => useContext(PlayerContext);
 async function setupAudio() {
   await Audio.setAudioModeAsync({
     allowsRecordingIOS: false,
-    staysActiveInBackground: true,
     playsInSilentModeIOS: true,
-    shouldDuckAndroid: true,
-    playThroughEarpieceAndroid: false,
-    // interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
-    // interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
+    staysActiveInBackground: true,
   });
 }
 
@@ -300,6 +303,7 @@ const usePlayer = () => {
   const [duration, setDuration] = useState(1);
   const [isLoop, setIsLoop] = useState(false);
   const { socket } = useSocket();
+  const { showNowPlayingNotification } = useNotification();
 
   // const isLoop = useRef(false);
 
@@ -320,6 +324,15 @@ const usePlayer = () => {
 
   useEffect(() => {
     (async () => await setupAudio())();
+    // Run this once to set the audio mode and register the background task
+    registerBackgroundFetch();
+
+    // Cleanup when the component is unmounted
+    return () => {
+      if (sound) {
+        sound.unloadAsync();
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -345,11 +358,15 @@ const usePlayer = () => {
           setImage(currentSong?.image[user?.imageQuality]?.url);
         else setImage(currentSong?.image[2]?.url);
       }
-      if (sound) {
-        await sound.unloadAsync();
+      // if (sound) {
+      //   await sound.unloadAsync();
+      // }
+      // If a sound is playing, stop it before loading a new one
+      if (sound && sound.stopAsync) {
+        await sound.stopAsync();
       }
       if (Audio && currentSong?.id) {
-        const { sound } = await Audio?.Sound?.createAsync(
+        const { sound: newSound } = await Audio?.Sound?.createAsync(
           {
             uri: currentSong?.id
               ? currentSong?.downloadUrl[4]?.url
@@ -357,14 +374,12 @@ const usePlayer = () => {
           },
           { shouldPlay: true }
         );
-        if (setSound) {
-          setSound((prev: any) => {
-            if (prev) prev?.stopAsync();
-            return sound;
-          });
-          setIsPlaying(true);
-          // showNowPlayingNotification(title, imageUrl);
-        }
+
+        setSound(newSound);
+        setIsPlaying(true);
+        const title = currentSong.name;
+        const imageUrl = currentSong?.image[2]?.url;
+        showNowPlayingNotification(title, imageUrl);
       }
       if (currentSong?.type || currentSong?.downloadUrl[0]?.url) {
         try {
@@ -491,6 +506,37 @@ const usePlayer = () => {
     if (sound) {
       await sound.pauseAsync();
     }
+  };
+
+  // Initialize the background fetch task
+  TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
+    try {
+      // Your background task logic: Check if the song is still playing and resume playback
+      if (sound) {
+        const status = await sound.getStatusAsync();
+        if (status.isPlaying) {
+          // If the song is still playing, continue it
+          console.log("Continuing playback in the background...");
+        } else {
+          // If not playing, maybe do something like play the next song
+          handleNext();
+          console.log("Playback stopped in the background...");
+        }
+      }
+      return BackgroundFetch.Result.NewData;
+    } catch (error) {
+      console.error(error);
+      return BackgroundFetch.Result.Failed;
+    }
+  });
+
+  // Register the background task to keep running even when the app is backgrounded or terminated
+  const registerBackgroundFetch = async () => {
+    await BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
+      minimumInterval: 1, // Time interval in seconds to perform the background task
+      stopOnTerminate: false, // Keep running after app is terminated
+      startOnBoot: true, // Start the task again after a device reboot
+    });
   };
 
   return {

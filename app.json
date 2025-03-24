@@ -2,6 +2,7 @@
   "expo": {
     "name": "songsProCleint",
     "slug": "songsProCleint",
+    "platforms": ["ios", "android"],
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon3.png",
@@ -25,7 +26,21 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.kapil9711.songsProCleint",
-      "permissions": ["NOTIFICATIONS"]
+      "permissions": [
+        "NOTIFICATIONS",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "INTERNET",
+        "WAKE_LOCK",
+        "FOREGROUND_SERVICE"
+      ],
+      "taskManager": {
+        "backgroundFetch": {
+          "minimumInterval": 20,
+          "stopOnTerminate": false,
+          "startOnBoot": true
+        }
+      }
     },
     "web": {
       "bundler": "metro",
