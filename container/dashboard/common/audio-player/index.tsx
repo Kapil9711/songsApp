@@ -398,6 +398,18 @@ const usePlayer = () => {
       if (sound && sound.stopAsync) {
         await sound.stopAsync();
       }
+
+      await TrackPlayer.add({
+        id: currentSong._id || "",
+        url: currentSong?.id
+          ? currentSong?.downloadUrl[4]?.url
+          : currentSong?.downloadUrl[4],
+        title: currentSong.name,
+        // artist: "Artist Name",
+        artwork: currentSong?.image[2]?.url, // Optional artwork image
+      });
+
+      await TrackPlayer.play();
       if (Audio && currentSong?.id) {
         // const { sound: newSound } = await Audio?.Sound?.createAsync(
         //   {
@@ -407,18 +419,6 @@ const usePlayer = () => {
         //   },
         //   { shouldPlay: true }
         // );
-
-        await TrackPlayer.add({
-          id: currentSong._id || "",
-          url: currentSong?.id
-            ? currentSong?.downloadUrl[4]?.url
-            : currentSong?.downloadUrl[4],
-          title: currentSong.name,
-          // artist: "Artist Name",
-          artwork: currentSong?.image[2]?.url, // Optional artwork image
-        });
-
-        await TrackPlayer.play();
 
         // setSound(newSound);
         setIsPlaying(true);
@@ -538,6 +538,7 @@ const usePlayer = () => {
     const user: any = await getValueInAsync("user");
     const userId = JSON.parse(user)._id;
     socket.emit("playPauseSong", { senderId: userId, isPlaying: true });
+    await TrackPlayer.play();
     if (sound) {
       await sound.playAsync();
     }
@@ -548,6 +549,7 @@ const usePlayer = () => {
     const user: any = await getValueInAsync("user");
     const userId = JSON.parse(user)._id;
     socket.emit("playPauseSong", { senderId: userId, isPlaying: false });
+    await TrackPlayer.pause();
     if (sound) {
       await sound.pauseAsync();
     }
