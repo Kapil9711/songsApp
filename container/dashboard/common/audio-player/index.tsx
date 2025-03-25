@@ -28,6 +28,8 @@ import { useSocket } from "@/providers/socketProvider";
 import useNotification from "@/utilities/showNotification";
 import * as TaskManager from "expo-task-manager";
 import * as BackgroundFetch1 from "expo-background-fetch";
+import TrackPlayer, { Capability } from "react-native-track-player";
+import service from "../../../../service";
 
 const BackgroundFetch: any = BackgroundFetch1;
 
@@ -333,6 +335,37 @@ const usePlayer = () => {
         sound.unloadAsync();
       }
     };
+
+    async function setupPlayer() {
+      try {
+        // Run in correct thread
+        await TrackPlayer.runInPlayerScope(async () => {
+          await TrackPlayer.setupPlayer(); // Initialize Track Player
+          console.log("✅ Track Player Initialized");
+
+          // Register playback service (only needs to be called once)
+          TrackPlayer.registerPlaybackService(() => service);
+          console.log("✅ Track Player Service Registered");
+
+          await TrackPlayer.updateOptions({
+            capabilities: [
+              Capability.Play,
+              Capability.Pause,
+              Capability.SkipToNext,
+              Capability.SkipToPrevious,
+              Capability.Stop,
+            ],
+            compactCapabilities: [Capability.Play, Capability.Pause],
+          });
+
+          console.log("✅ Track Player Options Updated");
+        });
+      } catch (error) {
+        console.error("❌ Error setting up Track Player:", error);
+      }
+    }
+
+    setupPlayer();
   }, []);
 
   useEffect(() => {
@@ -519,7 +552,8 @@ const usePlayer = () => {
           console.log("Continuing playback in the background...");
         } else {
           // If not playing, maybe do something like play the next song
-          handleNext();
+          handlePlay();
+          // handleNext();
           console.log("Playback stopped in the background...");
         }
       }

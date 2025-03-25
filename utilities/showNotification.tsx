@@ -3,6 +3,14 @@ import { useEffect } from "react";
 import * as Notifications from "expo-notifications";
 import * as FileSystem from "expo-file-system";
 
+// Notifications.setNotificationHandler({
+//   handleNotification: async () => ({
+//     shouldShowAlert: true, // Show pop-up alert even when app is open
+//     shouldPlaySound: true, // Play sound if enabled
+//     shouldSetBadge: false, // Optional: Set app icon badge count
+//   }),
+// });
+
 const useNotification = () => {
   // Function to request notification permissions
   const requestNotificationPermissions = async () => {
@@ -42,6 +50,7 @@ const useNotification = () => {
     console.log(status, "permisionGranted");
 
     const imageUri = await downloadImage(imageUrl);
+    const imageBase64 = await convertImageToBase64(imageUri);
 
     // Create the notification content
     const content = {
@@ -52,7 +61,7 @@ const useNotification = () => {
         // Customization for Android
         channelId: "default", // Make sure you create a channel for Android
         smallIcon: "ic_notification", // You should provide an icon for the notification
-        largeIcon: imageUri, // You can use the song's album artwork for a larger icon
+        largeIcon: imageBase64, // You can use the song's album artwork for a larger icon
         priority: Notifications.AndroidNotificationPriority.HIGH, // Make sure it’s high priority
       },
       ios: {
@@ -78,17 +87,29 @@ const downloadImage = async (imageUrl: string) => {
   return uri;
 };
 
-async function scheduleNotification() {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: "Music Player",
-      body: "Playing audio in the background",
-    },
-    trigger: { seconds: 60, repeats: true } as any, // Trigger every 60 seconds
-  });
+async function convertImageToBase64(fileUri: any) {
+  try {
+    const base64 = await FileSystem.readAsStringAsync(fileUri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    return `data:image/png;base64,${base64}`; // Ensure proper format
+  } catch (error) {
+    console.error("Error converting image to Base64:", error);
+    return null;
+  }
 }
 
+// async function scheduleNotification() {
+//   await Notifications.scheduleNotificationAsync({
+//     content: {
+//       title: "Music Player",
+//       body: "Playing audio in the background",
+//     },
+//     trigger: { seconds: 1, repeats: true } as any, // Trigger every 60 seconds
+//   });
+// }
+
 // Call this function when your app starts
-scheduleNotification();
+// scheduleNotification();
 
 export default useNotification;

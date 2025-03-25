@@ -92,6 +92,7 @@ const Songs = () => {
                 <View
                   style={{
                     paddingTop: 40,
+                    paddingBottom: 40,
                     justifyContent: "center",
                     alignItems: "center",
                   }}
