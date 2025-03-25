@@ -336,36 +336,36 @@ const usePlayer = () => {
       }
     };
 
-    async function setupPlayer() {
-      try {
-        // Run in correct thread
-        await TrackPlayer.runInPlayerScope(async () => {
-          await TrackPlayer.setupPlayer(); // Initialize Track Player
-          console.log("✅ Track Player Initialized");
+    // async function setupPlayer() {
+    //   try {
+    //     // Run in correct thread
+    //     await TrackPlayer.runInPlayerScope(async () => {
+    //       await TrackPlayer.setupPlayer(); // Initialize Track Player
+    //       console.log("✅ Track Player Initialized");
 
-          // Register playback service (only needs to be called once)
-          TrackPlayer.registerPlaybackService(() => service);
-          console.log("✅ Track Player Service Registered");
+    //       // Register playback service (only needs to be called once)
+    //       TrackPlayer.registerPlaybackService(() => service);
+    //       console.log("✅ Track Player Service Registered");
 
-          await TrackPlayer.updateOptions({
-            capabilities: [
-              Capability.Play,
-              Capability.Pause,
-              Capability.SkipToNext,
-              Capability.SkipToPrevious,
-              Capability.Stop,
-            ],
-            compactCapabilities: [Capability.Play, Capability.Pause],
-          });
+    //       await TrackPlayer.updateOptions({
+    //         capabilities: [
+    //           Capability.Play,
+    //           Capability.Pause,
+    //           Capability.SkipToNext,
+    //           Capability.SkipToPrevious,
+    //           Capability.Stop,
+    //         ],
+    //         compactCapabilities: [Capability.Play, Capability.Pause],
+    //       });
 
-          console.log("✅ Track Player Options Updated");
-        });
-      } catch (error) {
-        console.error("❌ Error setting up Track Player:", error);
-      }
-    }
+    //       console.log("✅ Track Player Options Updated");
+    //     });
+    //   } catch (error) {
+    //     console.error("❌ Error setting up Track Player:", error);
+    //   }
+    // }
 
-    setupPlayer();
+    // setupPlayer();
   }, []);
 
   useEffect(() => {
