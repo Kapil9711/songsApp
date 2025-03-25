@@ -61,7 +61,8 @@ const useNotification = () => {
         // Customization for Android
         channelId: "default", // Make sure you create a channel for Android
         smallIcon: "ic_notification", // You should provide an icon for the notification
-        largeIcon: imageBase64, // You can use the song's album artwork for a larger icon
+        largeIcon: imageUri, // You can use the song's album artwork for a larger icon
+
         priority: Notifications.AndroidNotificationPriority.HIGH, // Make sure it’s high priority
       },
       ios: {

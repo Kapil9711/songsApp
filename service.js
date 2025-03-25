@@ -1,6 +1,6 @@
 import TrackPlayer, { Event } from "react-native-track-player";
 
-module.exports = async function () {
+export default async function () {
   TrackPlayer.addEventListener(Event.RemotePlay, () => {
     TrackPlayer.play();
   });
@@ -20,4 +20,4 @@ module.exports = async function () {
   TrackPlayer.addEventListener(Event.RemoteStop, () => {
     TrackPlayer.destroy();
   });
-};
+}

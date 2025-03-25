@@ -330,42 +330,42 @@ const usePlayer = () => {
     registerBackgroundFetch();
 
     // Cleanup when the component is unmounted
+
+    async function setupPlayer() {
+      try {
+        // Run in correct thread
+
+        await TrackPlayer.setupPlayer(); // Initialize Track Player
+        console.log("✅ Track Player Initialized");
+
+        // Register playback service (only needs to be called once)
+        TrackPlayer.registerPlaybackService(() => service);
+        console.log("✅ Track Player Service Registered");
+
+        await TrackPlayer.updateOptions({
+          capabilities: [
+            Capability.Play,
+            Capability.Pause,
+            Capability.SkipToNext,
+            Capability.SkipToPrevious,
+            Capability.Stop,
+          ],
+          compactCapabilities: [Capability.Play, Capability.Pause],
+        });
+
+        console.log("✅ Track Player Options Updated");
+      } catch (error) {
+        console.error("❌ Error setting up Track Player:", error);
+      }
+    }
+
+    setupPlayer();
+
     return () => {
       if (sound) {
         sound.unloadAsync();
       }
     };
-
-    // async function setupPlayer() {
-    //   try {
-    //     // Run in correct thread
-    //     await TrackPlayer.runInPlayerScope(async () => {
-    //       await TrackPlayer.setupPlayer(); // Initialize Track Player
-    //       console.log("✅ Track Player Initialized");
-
-    //       // Register playback service (only needs to be called once)
-    //       TrackPlayer.registerPlaybackService(() => service);
-    //       console.log("✅ Track Player Service Registered");
-
-    //       await TrackPlayer.updateOptions({
-    //         capabilities: [
-    //           Capability.Play,
-    //           Capability.Pause,
-    //           Capability.SkipToNext,
-    //           Capability.SkipToPrevious,
-    //           Capability.Stop,
-    //         ],
-    //         compactCapabilities: [Capability.Play, Capability.Pause],
-    //       });
-
-    //       console.log("✅ Track Player Options Updated");
-    //     });
-    //   } catch (error) {
-    //     console.error("❌ Error setting up Track Player:", error);
-    //   }
-    // }
-
-    // setupPlayer();
   }, []);
 
   useEffect(() => {
@@ -399,16 +399,28 @@ const usePlayer = () => {
         await sound.stopAsync();
       }
       if (Audio && currentSong?.id) {
-        const { sound: newSound } = await Audio?.Sound?.createAsync(
-          {
-            uri: currentSong?.id
-              ? currentSong?.downloadUrl[4]?.url
-              : currentSong?.downloadUrl[4],
-          },
-          { shouldPlay: true }
-        );
+        // const { sound: newSound } = await Audio?.Sound?.createAsync(
+        //   {
+        //     uri: currentSong?.id
+        //       ? currentSong?.downloadUrl[4]?.url
+        //       : currentSong?.downloadUrl[4],
+        //   },
+        //   { shouldPlay: true }
+        // );
 
-        setSound(newSound);
+        await TrackPlayer.add({
+          id: currentSong._id || "",
+          url: currentSong?.id
+            ? currentSong?.downloadUrl[4]?.url
+            : currentSong?.downloadUrl[4],
+          title: currentSong.name,
+          // artist: "Artist Name",
+          artwork: currentSong?.image[2]?.url, // Optional artwork image
+        });
+
+        await TrackPlayer.play();
+
+        // setSound(newSound);
         setIsPlaying(true);
         const title = currentSong.name;
         const imageUrl = currentSong?.image[2]?.url;
