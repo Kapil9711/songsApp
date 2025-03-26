@@ -485,7 +485,7 @@ const usePlayer = () => {
         setIsPlaying(true);
         const title = currentSong.name;
         const imageUrl = currentSong?.image[2]?.url;
-        showNowPlayingNotification(title, imageUrl);
+        // showNowPlayingNotification(title, imageUrl);
       }
       if (currentSong?.type || currentSong?.downloadUrl[0]?.url) {
         try {
@@ -540,17 +540,18 @@ const usePlayer = () => {
     }
 
     if (Array.isArray(currentSongList) && currentSongList.length) {
-      currentSongList.some((item, idx) => {
-        if (item.id === currentSong.id) {
-          currenIndex = idx;
-          return true;
-        } else return false;
-      });
+      currenIndex = getCurrentIndex();
     }
     if (currenIndex || currenIndex === 0) {
-      const length = currentSongList.length - 1;
+      let length = currentSongList.length - 1;
       let newIndex = length === currenIndex ? 0 : currenIndex + 1;
-      setCurrentSong(currentSongList[newIndex]);
+      if (isShuffle) newIndex = currenIndex;
+      console.log(newIndex, currentSongList.length, "dataTest");
+      const newSong = currentSongList[newIndex];
+      if (newSong) {
+        setCurrentSong(newSong);
+      }
+
       (async () => {
         const user: any = await getValueInAsync("user");
         const userId = JSON.parse(user)?._id;
@@ -572,17 +573,17 @@ const usePlayer = () => {
       return;
     }
     if (Array.isArray(currentSongList) && currentSongList.length) {
-      currentSongList.some((item, idx) => {
-        if (item.id === currentSong.id) {
-          currenIndex = idx;
-          return true;
-        } else return false;
-      });
+      currenIndex = getCurrentIndex();
     }
     if (currenIndex || currenIndex === 0) {
       const length = currentSongList.length - 1;
       let newIndex = currenIndex === 0 ? length : currenIndex - 1;
-      setCurrentSong(currentSongList[newIndex]);
+      if (isShuffle) newIndex = currenIndex;
+      console.log(newIndex, currentSongList.length, "dataTest");
+      const newSong = currentSongList[newIndex];
+      if (newSong) {
+        setCurrentSong(newSong);
+      }
       (async () => {
         const user: any = await getValueInAsync("user");
         const userId = JSON.parse(user)?._id;
@@ -696,37 +697,67 @@ const usePlayer = () => {
     });
   };
 
-  useEffect(() => {
-    if (isShuffle === false && originalList.length) {
-      setCurrentSongList(originalList);
-    }
+  let lastRandomRef = useRef(null as any);
 
-    if (isShuffle === true) {
-      setCurrentSongList((prev: any) => {
-        const or = JSON.parse(JSON.stringify(prev));
-        setOriginalList(prev);
-        shuffleArray(or);
-        return or;
+  const getCurrentIndex = () => {
+    let currenIndex;
+    if (isShuffle && currentSongList.length) {
+      let random = getRandom();
+      while (lastRandomRef.current == random) {
+        random = getRandom();
+      }
+      lastRandomRef.current = random;
+      return random;
+    } else {
+      currentSongList.some((item: any, idx: any) => {
+        if (item.id === currentSong.id) {
+          currenIndex = idx;
+          return true;
+        } else return false;
       });
-    }
-  }, [isShuffle]);
-
-  useEffect(() => {
-    if (originalList.length && currentSongList.length) {
-      if (originalList.length !== currentSongList.length) {
-        const v = JSON.parse(JSON.stringify(currentSongList));
-        setOriginalList(v);
+      if (currenIndex || currenIndex == 0) {
+        return currenIndex;
       }
     }
-  }, [currentSongList]);
+    return null;
+  };
 
-  function shuffleArray(array: any) {
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1)); // Random index from 0 to i
-      [array[i], array[j]] = [array[j], array[i]]; // Swap elements
-    }
-    return array;
-  }
+  const getRandom = () => {
+    const random = Math.floor(Math.random() * currentSongList.length);
+    return random;
+  };
+
+  // useEffect(() => {
+  //   if (isShuffle === false && originalList.length) {
+  //     setCurrentSongList(originalList);
+  //   }
+
+  //   if (isShuffle === true) {
+  //     setCurrentSongList((prev: any) => {
+  //       const or = JSON.parse(JSON.stringify(prev));
+  //       setOriginalList(prev);
+  //       shuffleArray(or);
+  //       return or;
+  //     });
+  //   }
+  // }, [isShuffle]);
+
+  // useEffect(() => {
+  //   if (originalList.length && currentSongList.length) {
+  //     if (originalList.length !== currentSongList.length) {
+  //       const v = JSON.parse(JSON.stringify(currentSongList));
+  //       setOriginalList(v);
+  //     }
+  //   }
+  // }, [currentSongList]);
+
+  // function shuffleArray(array: any) {
+  //   for (let i = array.length - 1; i > 0; i--) {
+  //     const j = Math.floor(Math.random() * (i + 1)); // Random index from 0 to i
+  //     [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+  //   }
+  //   return array;
+  // }
 
   return {
     isLoop,
