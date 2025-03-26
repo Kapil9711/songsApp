@@ -262,6 +262,8 @@ const MediaControls = () => {
     handlePrev,
     isLoop,
     setIsLoop,
+    isShuffle,
+    setIsShuffle,
   } = usePlayerConext();
 
   return (
@@ -276,13 +278,23 @@ const MediaControls = () => {
       {/* Previous Button */}
 
       <TouchableOpacity
-        style={{ position: "absolute", left: 4 }}
+        style={{ position: "absolute", left: -5 }}
         activeOpacity={0.5}
         onPress={() => {
           setIsLoop((prev: boolean) => !prev);
         }}
       >
         <Icon source="repeat" size={20} color={isLoop ? "red" : "white"} />
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={{ position: "absolute", left: 20 }}
+        activeOpacity={0.5}
+        onPress={() => {
+          setIsLoop((prev: boolean) => !prev);
+        }}
+      >
+        <Icon source="shuffle" size={20} color={isLoop ? "red" : "white"} />
       </TouchableOpacity>
 
       <TouchableOpacity activeOpacity={0.5} onPress={handlePrev}>
@@ -317,6 +329,7 @@ const usePlayer = () => {
   const [position, setPosition] = useState(0); // Current playback time (ms)
   const [duration, setDuration] = useState(1);
   const [isLoop, setIsLoop] = useState(false);
+  const [isShuffle, setIsShuffle] = useState(false);
   const { socket } = useSocket();
   const { showNowPlayingNotification } = useNotification();
 
@@ -348,7 +361,7 @@ const usePlayer = () => {
       try {
         // Run in correct thread
 
-        await TrackPlayer.setupPlayer(); // Initialize Track Player
+        await TrackPlayer.setupPlayer({ autoHandleInterruptions: true }); // Initialize Track Player
         console.log("✅ Track Player Initialized");
 
         // Register playback service (only needs to be called once)
@@ -362,8 +375,13 @@ const usePlayer = () => {
             Capability.SkipToNext,
             Capability.SkipToPrevious,
             Capability.Stop,
+            Capability.SeekTo,
           ],
-          compactCapabilities: [Capability.Play, Capability.Pause],
+          compactCapabilities: [
+            Capability.Play,
+            Capability.Pause,
+            Capability.SeekTo,
+          ],
         });
 
         console.log("✅ Track Player Options Updated");
@@ -613,6 +631,20 @@ const usePlayer = () => {
     handleNext(); // Call handleNext when the last track finishes
   });
 
+  useTrackPlayerEvents([Event.RemoteSeek], async (event: any) => {
+    if (event) {
+      // Extract the position from the event object, assuming `event.position` is the correct field
+      const position = event.position;
+
+      // Ensure position is a number before calling seekTo
+      if (typeof position === "number") {
+        await TrackPlayer.seekTo(position);
+      } else {
+        console.warn("Invalid position data:", position);
+      }
+    }
+  });
+
   // Initialize the background fetch task
   TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
     try {
@@ -645,6 +677,19 @@ const usePlayer = () => {
     });
   };
 
+  useEffect(() => {
+    if (isShuffle === false) {
+    }
+  }, [isShuffle]);
+
+  function shuffleArray(array: any) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1)); // Random index from 0 to i
+      [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+    }
+    return array;
+  }
+
   return {
     isLoop,
     setIsLoop,
@@ -662,6 +707,8 @@ const usePlayer = () => {
     setPosition,
     duration,
     setDuration,
+    isShuffle,
+    setIsShuffle,
   };
 };
 

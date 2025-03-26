@@ -57,20 +57,23 @@ const SongsSmollCard = ({
           flex: 1,
           gap: 20,
           flexDirection: "row",
-          padding: 2,
-          borderRadius: 14,
-          backgroundColor: isActive ? "#fa0c5c" : "rgba(0,0,0,.6)",
-          borderColor: isActive ? "white" : "#FF69B4",
-          borderLeftWidth: 4,
-          borderRightWidth: 4,
-          borderTopWidth: 1,
-          borderBottomWidth: 1,
+          padding: 12,
+          paddingTop: 2,
+          paddingBottom: 2,
+
+          borderRadius: 5,
+          // backgroundColor: isActive ? "#fa0c5c" : "rgba(0,0,0,.6)",
+          // borderColor: isActive ? "white" : "#FF69B4",
+          // borderLeftWidth: 4,
+          // borderRightWidth: 4,
+          // borderTopWidth: 1,
+          // borderBottomWidth: 1,
           alignItems: "center",
           elevation: 100,
           position: "relative",
         }}
       >
-        <Avatar style={{ borderRadius: 10 }} size={56}>
+        <Avatar style={{ borderRadius: 10 }} size={52}>
           <Avatar.Image src={image} />
         </Avatar>
         <Text style={{ color: "white", flex: 1 }}>
