@@ -291,10 +291,10 @@ const MediaControls = () => {
         style={{ position: "absolute", left: 20 }}
         activeOpacity={0.5}
         onPress={() => {
-          setIsLoop((prev: boolean) => !prev);
+          setIsShuffle((prev: boolean) => !prev);
         }}
       >
-        <Icon source="shuffle" size={20} color={isLoop ? "red" : "white"} />
+        <Icon source="shuffle" size={20} color={isShuffle ? "red" : "white"} />
       </TouchableOpacity>
 
       <TouchableOpacity activeOpacity={0.5} onPress={handlePrev}>
@@ -321,8 +321,14 @@ const MediaControls = () => {
 };
 
 const usePlayer = () => {
-  const { sound, setSound, currentSong, setCurrentSong, currentSongList } =
-    useAudioContext();
+  const {
+    sound,
+    setSound,
+    currentSong,
+    setCurrentSong,
+    currentSongList,
+    setCurrentSongList,
+  } = useAudioContext();
   const { user, saveRecentlyPlayedSong } = useGlobalContext();
   const [isPlaying, setIsPlaying] = useState(false);
   const { setImage } = useBackgroudImage();
@@ -332,6 +338,7 @@ const usePlayer = () => {
   const [isShuffle, setIsShuffle] = useState(false);
   const { socket } = useSocket();
   const { showNowPlayingNotification } = useNotification();
+  const [originalList, setOriginalList] = useState([]);
 
   // const isLoop = useRef(false);
 
@@ -678,7 +685,16 @@ const usePlayer = () => {
   };
 
   useEffect(() => {
-    if (isShuffle === false) {
+    if (isShuffle === false && originalList.length) {
+      setCurrentSongList(originalList);
+    }
+    if (isShuffle === true) {
+      setCurrentSongList((prev: any) => {
+        const or = JSON.parse(JSON.stringify(prev));
+        setOriginalList(prev);
+        shuffleArray(or);
+        return or;
+      });
     }
   }, [isShuffle]);
 
