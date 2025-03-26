@@ -340,6 +340,8 @@ const usePlayer = () => {
   const { showNowPlayingNotification } = useNotification();
   const [originalList, setOriginalList] = useState([]);
 
+  const [shuffledList, setShuffledList] = useState([]);
+
   // const isLoop = useRef(false);
 
   let imageUrl = "";
@@ -388,6 +390,7 @@ const usePlayer = () => {
             Capability.Play,
             Capability.Pause,
             Capability.SeekTo,
+            Capability.Stop,
           ],
         });
 
@@ -652,6 +655,15 @@ const usePlayer = () => {
     }
   });
 
+  useTrackPlayerEvents([Event.RemoteStop], async (event: any) => {
+    try {
+      await TrackPlayer.reset();
+      setCurrentSong(null);
+    } catch (error) {
+      console.log(error, "RemoteStop Error");
+    }
+  });
+
   // Initialize the background fetch task
   TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
     try {
@@ -688,6 +700,7 @@ const usePlayer = () => {
     if (isShuffle === false && originalList.length) {
       setCurrentSongList(originalList);
     }
+
     if (isShuffle === true) {
       setCurrentSongList((prev: any) => {
         const or = JSON.parse(JSON.stringify(prev));
@@ -697,6 +710,15 @@ const usePlayer = () => {
       });
     }
   }, [isShuffle]);
+
+  useEffect(() => {
+    if (originalList.length && currentSongList.length) {
+      if (originalList.length !== currentSongList.length) {
+        const v = JSON.parse(JSON.stringify(currentSongList));
+        setOriginalList(v);
+      }
+    }
+  }, [currentSongList]);
 
   function shuffleArray(array: any) {
     for (let i = array.length - 1; i > 0; i--) {

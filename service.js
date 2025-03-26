@@ -17,7 +17,7 @@ export default async function () {
     TrackPlayer.skipToPrevious();
   });
 
-  TrackPlayer.addEventListener(Event.RemoteStop, () => {
-    TrackPlayer.destroy();
-  });
+  // TrackPlayer.addEventListener(Event.RemoteStop, () => {
+  //   TrackPlayer.destroy();
+  // });
 }

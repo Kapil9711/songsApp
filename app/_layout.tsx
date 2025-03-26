@@ -8,6 +8,7 @@ import Toast from "react-native-toast-message";
 import { Text, TextInput } from "@/providers/CustomText";
 import { useEffect } from "react";
 import { registerBackgroundTask } from "@/utilities/backgroundTask";
+import * as Notifications from "expo-notifications";
 
 const queryClient = new QueryClient();
 const config = createTamagui(defaultConfig);
@@ -27,6 +28,16 @@ export default function RootLayout() {
   useEffect(() => {
     // Register background task when the app starts
     registerBackgroundTask();
+
+    // Handle notification clicks
+    const subscription = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        // This prevents the default navigation behavior
+        // App will just come to foreground without changing routes
+        return;
+      }
+    );
+    return () => subscription.remove();
   }, []);
 
   return (
