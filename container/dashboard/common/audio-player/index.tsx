@@ -28,7 +28,12 @@ import { useSocket } from "@/providers/socketProvider";
 import useNotification from "@/utilities/showNotification";
 import * as TaskManager from "expo-task-manager";
 import * as BackgroundFetch1 from "expo-background-fetch";
-import TrackPlayer, { Capability } from "react-native-track-player";
+import TrackPlayer, {
+  Capability,
+  Event,
+  useProgress,
+  useTrackPlayerEvents,
+} from "react-native-track-player";
 import service from "../../../../service";
 
 const BackgroundFetch: any = BackgroundFetch1;
@@ -147,6 +152,7 @@ const ShowTime = ({ duration, position }: any) => {
   if (user) {
     downloadUrl = currentSong?.downloadUrl[4]?.url;
   }
+  // console.log(duration, position, "remaningTime", remainingTime);
   return (
     <View>
       {/* 🕒 Display Remaining Time (e.g., 1:33) */}
@@ -191,16 +197,21 @@ const ProgressBarComponent = ({
   setPosition,
   duration,
   position,
-}: any) => {
+}: // duration,
+// position,
+any) => {
   const { socket } = useSocket();
   const seekAudio = async (event: any) => {
-    if (!sound || duration <= 1) return;
+    if (duration <= 1) return;
 
     const touchX = event.nativeEvent.locationX; // Get touch position
     const progressWidth = 230; // Subtract padding/margins
     const seekTo = (touchX / progressWidth) * duration;
 
-    await sound.setPositionAsync(seekTo); // Seek to new position
+    // await sound.setPositionAsync(seekTo); // Seek to new position
+    console.log(seekTo / 1000, "seekTo");
+
+    await TrackPlayer.seekTo(seekTo / 1000);
     setPosition(seekTo);
     const user: any = await getValueInAsync("user");
     const userId = JSON.parse(user)?._id;
@@ -212,6 +223,8 @@ const ProgressBarComponent = ({
 
     // Update UI immediately
   };
+
+  // const { position, duration } = useProgress();
 
   useEffect(() => {
     socket.on("syncSeek", async ({ newTime, receiverId }: any) => {
@@ -382,6 +395,25 @@ const usePlayer = () => {
     }
   }, [sound, isLoop]);
 
+  useEffect(() => {
+    const updateProgress = async () => {
+      const progress = await TrackPlayer.getProgress(); // ✅ New API method
+      setPosition(progress.position * 1000);
+      setDuration(progress.duration * 1000 || 1);
+    };
+
+    // Set interval to update progress
+    const intervalId = setInterval(updateProgress, 1000);
+
+    return () => clearInterval(intervalId); // Cleanup on unmount
+  }, []);
+
+  useTrackPlayerEvents([Event.PlaybackTrackChanged], async (event) => {
+    if (event.nextTrack === null) {
+      handleNext(); // Call handleNext when the last track finishes
+    }
+  });
+
   // Send song details to a friend
 
   useEffect(() => {
@@ -399,18 +431,8 @@ const usePlayer = () => {
         await sound.stopAsync();
       }
 
-      await TrackPlayer.add({
-        id: currentSong._id || "",
-        url: currentSong?.id
-          ? currentSong?.downloadUrl[4]?.url
-          : currentSong?.downloadUrl[4],
-        title: currentSong.name,
-        // artist: "Artist Name",
-        artwork: currentSong?.image[2]?.url, // Optional artwork image
-      });
-
-      await TrackPlayer.play();
       if (Audio && currentSong?.id) {
+        await TrackPlayer.reset();
         // const { sound: newSound } = await Audio?.Sound?.createAsync(
         //   {
         //     uri: currentSong?.id
@@ -421,6 +443,17 @@ const usePlayer = () => {
         // );
 
         // setSound(newSound);
+        await TrackPlayer.add({
+          id: currentSong._id || "",
+          url: currentSong?.id
+            ? currentSong?.downloadUrl[4]?.url
+            : currentSong?.downloadUrl[4],
+          title: currentSong.name,
+          // artist: "Artist Name",
+          artwork: currentSong?.image[2]?.url, // Optional artwork image
+        });
+
+        await TrackPlayer.play();
         setIsPlaying(true);
         const title = currentSong.name;
         const imageUrl = currentSong?.image[2]?.url;
@@ -554,6 +587,31 @@ const usePlayer = () => {
       await sound.pauseAsync();
     }
   };
+
+  // Register event listeners for remote controls
+  useTrackPlayerEvents(
+    [
+      Event.RemotePlay,
+      Event.RemotePause,
+      Event.RemoteNext,
+      Event.RemotePrevious,
+    ],
+    async (event) => {
+      if (event.type === Event.RemotePlay) {
+        handlePlay(); // Toggle play/pause
+      } else if (event.type === Event.RemotePause) {
+        handlePause();
+      } else if (event.type === Event.RemoteNext) {
+        handleNext(); // Play next track
+      } else if (event.type === Event.RemotePrevious) {
+        handlePrev(); // Play previous track
+      }
+    }
+  );
+
+  useTrackPlayerEvents([Event.PlaybackQueueEnded], async () => {
+    handleNext(); // Call handleNext when the last track finishes
+  });
 
   // Initialize the background fetch task
   TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
