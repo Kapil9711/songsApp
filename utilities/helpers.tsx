@@ -26,30 +26,6 @@ export const ensureDirectoryExists = async (path: string) => {
   }
 };
 
-// export const getDownloadedSongs = async () => {
-//   try {
-//     const files = await fileSystem.readDirectoryAsync(
-//       fileSystem.documentDirectory as string
-//     );
-
-//     // Filter only audio files (e.g., .mp3, .m4a)
-//     const audioFiles = files.filter(
-//       (file) => file.endsWith(".mp3") || file.endsWith(".m4a")
-//     );
-
-//     // Generate full file paths
-//     const songList = audioFiles.map((file) => ({
-//       filename: file,
-//       uri: FileSystem.documentDirectory + file,
-//     }));
-
-//     return songList;
-//   } catch (error) {
-//     console.error("Error fetching downloaded songs:", error);
-//     return [];
-//   }
-// };
-
 export const getDownloadedSongs = async () => {
   try {
     const files = await fileSystem.readDirectoryAsync(
@@ -111,18 +87,6 @@ export const getValueInAsync = async (key: string) => {
   }
 };
 
-// export const downloadSong = async (url: string, fileName: any) => {
-//   try {
-//     const fileUri = fileSystem.documentDirectory + fileName + ".m4a";
-//     const downloadResumable = fileSystem.createDownloadResumable(url, fileUri);
-//     const { uri }: any = await downloadResumable.downloadAsync();
-//     return uri;
-//   } catch (error) {
-//     console.log(error);
-//     return null;
-//   }
-// };
-
 export const downloadSong = async (
   songUrl: string,
   imageUrl: string,
@@ -146,6 +110,56 @@ export const downloadSong = async (
     return { songUri, imageUri };
   } catch (error) {
     console.error("Error downloading song or image:", error);
+    return null;
+  }
+};
+
+export const exportToDownloads = async (
+  fileUri?: string,
+  fileName?: string
+) => {
+  try {
+    // Ask for media library permission
+    const { status } = await MediaLibrary.requestPermissionsAsync();
+    if (status !== "granted") {
+      console.log("Permission not granted to access media library");
+      return null;
+    }
+
+    // Create custom folder in cache before moving to MediaLibrary
+    const downloadsDir = FileSystem.cacheDirectory + "songsPro/";
+    await FileSystem.makeDirectoryAsync(downloadsDir, { intermediates: true });
+
+    // Function to copy + move to MediaLibrary
+    const saveFile = async (sourceUri: string, name: string) => {
+      const newPath = downloadsDir + name + ".mp3"; // rename to mp3
+      await FileSystem.copyAsync({ from: sourceUri, to: newPath });
+
+      const asset = await MediaLibrary.createAssetAsync(newPath);
+      await MediaLibrary.createAlbumAsync("songsPro", asset, false);
+      console.log("Exported:", newPath);
+    };
+
+    if (fileUri) {
+      // Case 1: Single file export
+      const safeName = fileName ?? Date.now().toString();
+      await saveFile(fileUri, safeName);
+    } else {
+      // Case 2: Export ALL files in documentDirectory
+      const files = await FileSystem.readDirectoryAsync(
+        FileSystem.documentDirectory!
+      );
+
+      for (const f of files) {
+        const sourceUri = FileSystem.documentDirectory + f;
+        const name = f.split(".")[0]; // remove extension
+        await saveFile(sourceUri, name);
+      }
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error exporting files:", error);
     return null;
   }
 };

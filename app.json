@@ -32,7 +32,9 @@
         "ACCESS_COARSE_LOCATION",
         "INTERNET",
         "WAKE_LOCK",
-        "FOREGROUND_SERVICE"
+        "FOREGROUND_SERVICE",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
       ],
       "taskManager": {
         "backgroundFetch": {

@@ -74,7 +74,7 @@ import { Ionicons } from "@expo/vector-icons"; // Close Icon
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { usePathname, useRouter } from "expo-router";
 import { useGlobalContext } from "@/providers/GlobalProvider";
-import { setValueInAsync } from "@/utilities/helpers";
+import { exportToDownloads, setValueInAsync } from "@/utilities/helpers";
 
 export const RightDrawer = () => {
   const [open, setOpen] = useState(false);
@@ -199,11 +199,19 @@ export const RightDrawer = () => {
               <Switch.Thumb animation="bouncy" />
             </Switch>
           </View>
-          {/* <Pressable onPress={onToggleSwitch}>
-            <Switch value={isSwitchOn} onValueChange={onToggleSwitch} />
-          </Pressable> */}
+
+          <View>
+            <Button
+              onPress={() => {
+                exportToDownloads();
+              }}
+              size={30}
+              width={130}
+            >
+              Export Songs
+            </Button>
+          </View>
         </View>
-        {/* <Text style={styles.drawerText}>Right Drawer Content</Text> */}
       </Animated.View>
     </View>
   );
