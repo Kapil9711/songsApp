@@ -627,7 +627,8 @@ const useRecentlyPlayed = () => {
         songData = { ...songData, playedAt: Date.now() };
 
         await fileSystem.writeAsStringAsync(filePath, JSON.stringify(songData));
-        const song: any = await getRecentlyPlayedSongs();
+        const user: any = await getValueInAsync("user");
+        const song: any = await getRecentlyPlayedSongs(JSON.parse(user)?._id);
         setRecentlyPlayed(song);
       } catch (error) {
         console.error("Error saving/updating song:", error);
