@@ -1,10 +1,8 @@
-// import AuthPage from "@/container/auth";
-import { getValueInAsync } from "@/utilities/helpers";
+import SplashScreen from "@/src/container/splashScreen";
+import { getValueInAsync } from "@/src/utilities/helpers";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
 import { View } from "react-native";
-import { Spinner } from "tamagui";
-// import { Text, View } from "react-native";
 
 export default function HomePage() {
   const router = useRouter();
@@ -19,8 +17,8 @@ export default function HomePage() {
   }, []);
 
   return (
-    <View style={{ flex: 1, alignItems: "center", paddingTop: 200 }}>
-      <Spinner size="large" color={"#ff268b"} style={{ scale: 1.5 }} />
+    <View className="flex-1 bg-white">
+      <SplashScreen />
     </View>
   );
 }

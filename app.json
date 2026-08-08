@@ -2,7 +2,10 @@
   "expo": {
     "name": "songsProCleint",
     "slug": "songsProCleint",
-    "platforms": ["ios", "android"],
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon3.png",
@@ -17,8 +20,12 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "UIBackgroundModes": ["audio"]
-      }
+        "UIBackgroundModes": [
+          "audio",
+          "audio"
+        ]
+      },
+      "bundleIdentifier": "com.kapil9711.songsProCleint"
     },
     "android": {
       "adaptiveIcon": {

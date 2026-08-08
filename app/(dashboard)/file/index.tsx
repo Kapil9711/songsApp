@@ -1,6 +1,6 @@
 import { View, Text, FlatList } from "react-native";
 import React, { useEffect, useState } from "react";
-import { getDownloadedSongs } from "@/utilities/helpers";
+import { getDownloadedSongs } from "@/src/utilities/helpers";
 
 import {
   ScrollView,
@@ -9,11 +9,11 @@ import {
   Touchable,
 } from "react-native";
 
-import { useGlobalContext } from "@/providers/GlobalProvider";
+import { useGlobalContext } from "@/src/providers/GlobalProvider";
 
-import { useAudioContext } from "@/providers/AudioProvider";
+import { useAudioContext } from "@/src/providers/AudioProvider";
 import { Spinner } from "tamagui";
-import SongsSmollCard from "@/container/dashboard/common/song-card/SongsSmollCard";
+import SongsSmollCard from "@/src/container/dashboard/common/song-card/SongsSmollCard";
 
 const Files = () => {
   const { setCurrentSong, setCurrentSongList, currentSong } = useAudioContext();

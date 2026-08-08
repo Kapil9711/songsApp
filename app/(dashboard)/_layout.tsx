@@ -3,15 +3,17 @@ import React from "react";
 import { Slot } from "expo-router";
 import BackgroundImageProvider, {
   useBackgroudImage,
-} from "@/providers/BackgroundImage";
-import Header, { RightDrawer } from "@/container/dashboard/common/header";
-import BottomHeader from "@/container/dashboard/common/bottom-header";
-import AudioProvider from "@/providers/AudioProvider";
-import AudioPlayer from "@/container/dashboard/common/audio-player";
-import GlobalProvider from "@/providers/GlobalProvider";
-import SocketProvider from "@/providers/socketProvider";
+} from "@/src/providers/BackgroundImage";
+import Header from "@/src/container/dashboard/common/header";
+import BottomHeader from "@/src/container/dashboard/common/bottom-header";
+import AudioProvider from "@/src/providers/AudioProvider";
+import AudioPlayer from "@/src/container/dashboard/common/audio-player";
+import GlobalProvider from "@/src/providers/GlobalProvider";
+import SocketProvider from "@/src/providers/socketProvider";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const DashboardLayout = () => {
+  const insets = useSafeAreaInsets();
   return (
     <SocketProvider>
       <BackgroundImageProvider>
@@ -19,11 +21,12 @@ const DashboardLayout = () => {
           <AudioProvider>
             <GlobalProvider>
               {/* <Toast /> */}
-              <RightDrawer />
+              {/* <RightDrawer /> */}
               <View
                 style={{
                   flex: 1,
                   backgroundColor: "rgba(0,0,0,.89)",
+                  paddingTop: insets.top + 8,
                 }}
               >
                 <Header />

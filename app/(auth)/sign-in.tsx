@@ -1,5 +1,5 @@
 import React from "react";
-import SignIn from "@/container/auth/sign-in";
+import SignIn from "@/src/container/auth/sign-in";
 
 const SignInPage = () => {
   return (
