@@ -3,10 +3,14 @@ import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
 import { usePathname, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 
 import { colors } from "@/src/constants/theme";
+import { moderateScale } from "react-native-size-matters";
 
 const { width } = Dimensions.get("window");
+
+const NAV_HEIGHT = moderateScale(62);
 
 type TabItem = {
   key: string;
@@ -67,57 +71,96 @@ const BottomHeader = () => {
       style={[
         styles.wrapper,
         {
-          paddingBottom: Math.max(insets.bottom, 8),
+          paddingBottom: Math.max(insets.bottom, moderateScale(6)),
         },
       ]}
     >
-      <View style={styles.container}>
-        {/* Top subtle highlight */}
-        <View style={styles.topHighlight} />
+      {/* ------------------------------------------------------------ */}
+      {/* Gradient border                                               */}
+      {/* ------------------------------------------------------------ */}
 
-        {tabs.map((tab) => {
-          const active = isActive(tab);
+      <LinearGradient
+        colors={[
+          "rgba(168,85,247,0.60)",
+          "rgba(100,70,150,0.28)",
+          "rgba(168,85,247,0.50)",
+        ]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.border}
+      >
+        {/* ---------------------------------------------------------- */}
+        {/* Navigation background                                      */}
+        {/* ---------------------------------------------------------- */}
 
-          return (
-            <Pressable
-              key={tab.key}
-              onPress={() => router.push(tab.route as any)}
-              style={({ pressed }) => [
-                styles.tab,
-                pressed && styles.tabPressed,
-              ]}
-            >
-              <View
-                style={[
-                  styles.iconContainer,
-                  active && styles.activeIconContainer,
+        <LinearGradient
+          colors={["rgba(24,18,31,0.98)", "rgba(14,13,19,0.99)"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={styles.container}
+        >
+          {tabs.map((tab) => {
+            const active = isActive(tab);
+
+            return (
+              <Pressable
+                key={tab.key}
+                onPress={() => router.push(tab.route as any)}
+                style={({ pressed }) => [
+                  styles.tab,
+                  pressed && styles.tabPressed,
                 ]}
               >
-                <Ionicons
-                  name={active ? tab.activeIcon : tab.icon}
-                  size={active ? 23 : 22}
-                  color={active ? colors.primary : colors.textMuted}
-                />
-              </View>
+                {/* Active pill */}
 
-              <Text
-                numberOfLines={1}
-                style={[styles.label, active && styles.activeLabel]}
-              >
-                {tab.label}
-              </Text>
+                {active && (
+                  <LinearGradient
+                    colors={["rgba(168,85,247,0.24)", "rgba(126,61,190,0.08)"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    style={styles.activePill}
+                  />
+                )}
 
-              {/* Active indicator */}
-              {active && <View style={styles.activeIndicator} />}
-            </Pressable>
-          );
-        })}
-      </View>
+                <View style={styles.tabContent}>
+                  <View
+                    style={[
+                      styles.iconContainer,
+                      active && styles.activeIconContainer,
+                    ]}
+                  >
+                    <Ionicons
+                      name={active ? tab.activeIcon : tab.icon}
+                      size={moderateScale(active ? 20 : 19)}
+                      color={active ? colors.primary : colors.textMuted}
+                    />
+                  </View>
+
+                  <Text
+                    numberOfLines={1}
+                    style={[styles.label, active && styles.activeLabel]}
+                  >
+                    {tab.label}
+                  </Text>
+                </View>
+
+                {/* Small active dot */}
+
+                {active && <View style={styles.activeDot} />}
+              </Pressable>
+            );
+          })}
+        </LinearGradient>
+      </LinearGradient>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  /* ================================================================ */
+  /* WRAPPER                                                          */
+  /* ================================================================ */
+
   wrapper: {
     position: "absolute",
 
@@ -127,54 +170,64 @@ const styles = StyleSheet.create({
 
     alignItems: "center",
 
-    paddingHorizontal: 12,
+    paddingHorizontal: moderateScale(14),
 
-    zIndex: 100,
+    zIndex: 300,
+
+    elevation: 30,
   },
 
-  container: {
-    width: width - 24,
+  /* ================================================================ */
+  /* OUTER BORDER                                                      */
+  /* ================================================================ */
 
-    height: 72,
+  border: {
+    width: width - moderateScale(28),
 
-    borderRadius: 24,
+    height: NAV_HEIGHT,
 
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-around",
+    padding: 1,
 
-    backgroundColor: colors.surface,
+    borderRadius: moderateScale(20),
 
-    borderWidth: 1,
-    borderColor: colors.border,
-
-    shadowColor: "#000",
+    shadowColor: colors.primary,
 
     shadowOffset: {
       width: 0,
-      height: 6,
+      height: 5,
     },
 
-    shadowOpacity: 0.35,
+    shadowOpacity: 0.18,
 
-    shadowRadius: 14,
+    shadowRadius: 12,
 
-    elevation: 16,
+    elevation: 20,
 
     overflow: "hidden",
   },
 
-  topHighlight: {
-    position: "absolute",
+  /* ================================================================ */
+  /* INNER CONTAINER                                                   */
+  /* ================================================================ */
 
-    top: 0,
-    left: 35,
-    right: 35,
+  container: {
+    flex: 1,
 
-    height: 1,
+    flexDirection: "row",
 
-    backgroundColor: "rgba(168, 85, 247, 0.35)",
+    alignItems: "center",
+    justifyContent: "space-around",
+
+    paddingHorizontal: moderateScale(3),
+
+    borderRadius: moderateScale(19),
+
+    overflow: "hidden",
   },
+
+  /* ================================================================ */
+  /* TAB                                                               */
+  /* ================================================================ */
 
   tab: {
     flex: 1,
@@ -186,7 +239,9 @@ const styles = StyleSheet.create({
 
     position: "relative",
 
-    paddingTop: 2,
+    borderRadius: moderateScale(16),
+
+    paddingVertical: moderateScale(4),
   },
 
   tabPressed: {
@@ -199,40 +254,74 @@ const styles = StyleSheet.create({
     ],
   },
 
-  iconContainer: {
-    width: 44,
-    height: 38,
+  /* ================================================================ */
+  /* ACTIVE PILL                                                       */
+  /* ================================================================ */
 
-    borderRadius: 14,
+  activePill: {
+    position: "absolute",
+
+    top: moderateScale(5),
+    bottom: moderateScale(5),
+
+    left: moderateScale(8),
+    right: moderateScale(8),
+
+    borderRadius: moderateScale(15),
+
+    borderWidth: 1,
+
+    borderColor: "rgba(168,85,247,0.16)",
+  },
+
+  /* ================================================================ */
+  /* TAB CONTENT                                                       */
+  /* ================================================================ */
+
+  tabContent: {
+    alignItems: "center",
+
+    justifyContent: "center",
+
+    zIndex: 2,
+  },
+
+  /* ================================================================ */
+  /* ICON                                                              */
+  /* ================================================================ */
+
+  iconContainer: {
+    width: moderateScale(28),
+    height: moderateScale(26),
 
     alignItems: "center",
     justifyContent: "center",
 
-    backgroundColor: "transparent",
+    borderRadius: moderateScale(9),
   },
 
   activeIconContainer: {
-    backgroundColor: "rgba(168, 85, 247, 0.13)",
-
-    shadowColor: colors.primary,
-
-    shadowOpacity: 0.15,
-
-    shadowRadius: 8,
-
-    elevation: 3,
+    backgroundColor: "rgba(168,85,247,0.12)",
   },
 
-  label: {
-    marginTop: 2,
+  /* ================================================================ */
+  /* LABEL                                                             */
+  /* ================================================================ */
 
-    fontSize: 9,
+  label: {
+    marginTop: moderateScale(1),
+
+    fontSize: moderateScale(8.5),
+
+    lineHeight: moderateScale(11),
 
     fontWeight: "500",
 
     color: colors.textMuted,
 
-    letterSpacing: 0.1,
+    textAlign: "center",
+
+    includeFontPadding: false,
   },
 
   activeLabel: {
@@ -241,15 +330,19 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
-  activeIndicator: {
+  /* ================================================================ */
+  /* ACTIVE DOT                                                        */
+  /* ================================================================ */
+
+  activeDot: {
     position: "absolute",
 
-    bottom: 5,
+    bottom: moderateScale(3),
 
-    width: 4,
-    height: 4,
+    width: moderateScale(3.5),
+    height: moderateScale(3.5),
 
-    borderRadius: 2,
+    borderRadius: moderateScale(2),
 
     backgroundColor: colors.primary,
 
@@ -259,7 +352,9 @@ const styles = StyleSheet.create({
 
     shadowRadius: 5,
 
-    elevation: 4,
+    elevation: 5,
+
+    zIndex: 4,
   },
 });
 

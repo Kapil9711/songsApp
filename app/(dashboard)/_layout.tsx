@@ -13,7 +13,6 @@ import SocketProvider from "@/src/providers/socketProvider";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const DashboardLayout = () => {
-  const insets = useSafeAreaInsets();
   return (
     <SocketProvider>
       <BackgroundImageProvider>
@@ -25,11 +24,9 @@ const DashboardLayout = () => {
               <View
                 style={{
                   flex: 1,
-                  backgroundColor: "rgba(0,0,0,.89)",
-                  paddingTop: insets.top + 8,
+                  backgroundColor: "rgba(0,0,0,.91)",
                 }}
               >
-                <Header />
                 <Slot />
                 <AudioPlayer />
                 <BottomHeader />

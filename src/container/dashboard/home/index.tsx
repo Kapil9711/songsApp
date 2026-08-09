@@ -1,11 +1,15 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { ScrollView, Spinner } from "tamagui";
+import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import ShowData from "./components/ShowData";
 import { useGlobalContext } from "@/src/providers/GlobalProvider";
 import { colors } from "@/src/constants/theme";
+import { moderateScale } from "react-native-size-matters";
+import Header from "../common/header";
+import TopFade from "../../shared/topFade";
 
 const Home = () => {
   const {
@@ -32,142 +36,69 @@ const Home = () => {
         },
       ]}
     >
-      {/* Content */}
       {active === "search" ? (
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {/* Header */}
-          <View style={styles.header}>
-            <View>
-              <Text style={styles.logo}>
-                Melodia<Text style={styles.logoDot}>.</Text>
-              </Text>
+          <View
+            style={{ flex: 1, paddingTop: insets.top, gap: moderateScale(20) }}
+          >
+            <HomeHeader />
 
-              <Text style={styles.subtitle}>Your music, your mood.</Text>
-            </View>
-          </View>
+            <SearchModeSwitch active={active} setActive={setActive} />
 
-          {/* Search / Trending Switch */}
-          <View style={styles.segmentContainer}>
-            <View style={styles.segmentControl}>
-              <View
-                style={[
-                  styles.activeIndicator,
-                  active === "trending" && styles.activeIndicatorRight,
-                ]}
-              />
-
-              <Text
-                onPress={() => setActive("search")}
-                style={[
-                  styles.segmentText,
-                  active === "search" && styles.activeSegmentText,
-                ]}
-              >
-                Search
-              </Text>
-
-              <Text
-                onPress={() => setActive("trending")}
-                style={[
-                  styles.segmentText,
-                  active === "trending" && styles.activeSegmentText,
-                ]}
-              >
-                Trending
-              </Text>
-            </View>
-          </View>
-          {isLoadingSongListToRender ? (
-            <Loading />
-          ) : (
-            <>
-              <ShowData
-                data={searchedSongList.slice(0, 6)}
-                heading="Songs"
-                type="song"
-              />
-
-              <ShowData
-                isTrending
-                data={albumListToRender.slice(0, 6)}
-                renderData={albumListToRender}
-                heading="Albums"
-                type="album"
-              />
-
-              <ShowData
-                isTrending
-                data={playListToRender.slice(0, 6)}
-                renderData={playListToRender}
-                heading="Playlists"
-                type="playlist"
-              />
-
-              {recentlyPlayed.length > 0 && (
+            {isLoadingSongListToRender ? (
+              <Loading />
+            ) : (
+              <>
                 <ShowData
-                  isTrending
-                  data={recentlyPlayed.slice(0, 6)}
-                  renderData={recentlyPlayed}
-                  heading="Recently Played"
+                  data={searchedSongList.slice(0, 6)}
+                  heading="Songs"
                   type="song"
                 />
-              )}
-            </>
-          )}
+
+                <ShowData
+                  isTrending
+                  data={albumListToRender.slice(0, 6)}
+                  renderData={albumListToRender}
+                  heading="Albums"
+                  type="album"
+                />
+
+                <ShowData
+                  isTrending
+                  data={playListToRender.slice(0, 6)}
+                  renderData={playListToRender}
+                  heading="Playlists"
+                  type="playlist"
+                />
+
+                {recentlyPlayed.length > 0 && (
+                  <ShowData
+                    isTrending
+                    data={recentlyPlayed.slice(0, 6)}
+                    renderData={recentlyPlayed}
+                    heading="Recently Played"
+                    type="song"
+                  />
+                )}
+              </>
+            )}
+          </View>
         </ScrollView>
       ) : (
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContentTrending}
+          contentContainerStyle={styles.scrollContent}
         >
-          {/* Header */}
-          <View style={styles.header}>
-            <View>
-              <Text style={styles.logo}>
-                Melodia<Text style={styles.logoDot}>.</Text>
-              </Text>
+          <View
+            style={{ flex: 1, paddingTop: insets.top, gap: moderateScale(20) }}
+          >
+            <HomeHeader showHeader={false} />
 
-              <Text style={styles.subtitle}>Your music, your mood.</Text>
-            </View>
-          </View>
+            <SearchModeSwitch active={active} setActive={setActive} />
 
-          {/* Search / Trending Switch */}
-          <View style={styles.segmentContainer}>
-            <View style={styles.segmentControl}>
-              <View
-                style={[
-                  styles.activeIndicator,
-                  active === "trending" && styles.activeIndicatorRight,
-                ]}
-              />
-
-              <Text
-                onPress={() => setActive("search")}
-                style={[
-                  styles.segmentText,
-                  active === "search" && styles.activeSegmentText,
-                ]}
-              >
-                Search
-              </Text>
-
-              <Text
-                onPress={() => setActive("trending")}
-                style={[
-                  styles.segmentText,
-                  active === "trending" && styles.activeSegmentText,
-                ]}
-              >
-                Trending
-              </Text>
-            </View>
-          </View>
-          {false ? (
-            <Loading />
-          ) : (
             <>
               <ShowData
                 isTrending
@@ -193,12 +124,138 @@ const Home = () => {
                 type="song"
               />
             </>
-          )}
+          </View>
         </ScrollView>
       )}
+
+      <TopFade height={insets.top} />
     </View>
   );
 };
+
+/* -------------------------------------------------------------------------- */
+/* Header                                                                     */
+/* -------------------------------------------------------------------------- */
+
+const HomeHeader = ({ showHeader = true }: any) => {
+  return (
+    <View style={styles.header}>
+      {/* <View style={styles.headerTop}>
+        <View style={styles.profileContainer}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>M</Text>
+          </View>
+
+          <View style={styles.onlineDot} />
+        </View>
+
+        <Pressable style={styles.searchContainer}>
+          <Ionicons
+            name="search-outline"
+            size={moderateScale(22)}
+            color={colors.textMuted}
+          />
+
+          <TextInput
+            placeholder="Search songs, artists..."
+            placeholderTextColor={colors.textMuted}
+            style={styles.searchInput}
+          />
+        </Pressable>
+
+        <Pressable
+          hitSlop={10}
+          style={({ pressed }) => [
+            styles.menuButton,
+            pressed && styles.pressed,
+          ]}
+        >
+          <Ionicons
+            name="menu-outline"
+            size={moderateScale(30)}
+            color={colors.text}
+          />
+        </Pressable>
+      </View> */}
+      {showHeader && <Header />}
+
+      {/* Small greeting */}
+      <View style={styles.greetingContainer}>
+        <Text style={styles.greeting}>Good morning</Text>
+
+        <Text style={styles.subtitle}>Your music, your mood.</Text>
+      </View>
+    </View>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/* Search / Trending Switch                                                   */
+/* -------------------------------------------------------------------------- */
+
+type SearchModeSwitchProps = {
+  active: string;
+  setActive: (value: "search" | "trending") => void;
+};
+
+const SearchModeSwitch = ({ active, setActive }: SearchModeSwitchProps) => {
+  return (
+    <View style={styles.segmentWrapper}>
+      <View style={styles.segmentControl}>
+        <View
+          style={[
+            styles.activeIndicator,
+            active === "trending" && styles.activeIndicatorRight,
+          ]}
+        />
+
+        <Pressable
+          onPress={() => setActive("search")}
+          style={styles.segmentButton}
+        >
+          <Ionicons
+            name="search-outline"
+            size={moderateScale(15)}
+            color={active === "search" ? colors.text : colors.textMuted}
+          />
+
+          <Text
+            style={[
+              styles.segmentText,
+              active === "search" && styles.activeSegmentText,
+            ]}
+          >
+            Search
+          </Text>
+        </Pressable>
+
+        <Pressable
+          onPress={() => setActive("trending")}
+          style={styles.segmentButton}
+        >
+          <Ionicons
+            name="flame-outline"
+            size={moderateScale(15)}
+            color={active === "trending" ? colors.text : colors.textMuted}
+          />
+
+          <Text
+            style={[
+              styles.segmentText,
+              active === "trending" && styles.activeSegmentText,
+            ]}
+          >
+            Trending
+          </Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/* Loading                                                                    */
+/* -------------------------------------------------------------------------- */
 
 const Loading = () => {
   return (
@@ -207,64 +264,175 @@ const Loading = () => {
         <Spinner size="large" color={colors.primary} />
       </View>
 
-      <Text style={styles.loadingText}>Finding your music...</Text>
+      <Text style={styles.loadingTitle}>Finding your music</Text>
+
+      <Text style={styles.loadingText}>
+        Looking for something you'll love...
+      </Text>
     </View>
   );
 };
 
+/* -------------------------------------------------------------------------- */
+/* Styles                                                                     */
+/* -------------------------------------------------------------------------- */
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor: colors.background,
+    // backgroundColor: ,
+    position: "relative",
   },
+
+  scrollContent: {
+    // paddingTop: moderateScale(10),
+    paddingBottom: moderateScale(180),
+    // gap: moderateScale(30),
+  },
+
+  /* Header */
 
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 0,
+    paddingHorizontal: moderateScale(16),
+    // paddingTop: moderateScale(8),
   },
 
-  logo: {
-    fontSize: 28,
+  headerTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: moderateScale(10),
+  },
+
+  profileContainer: {
+    position: "relative",
+  },
+
+  avatar: {
+    width: moderateScale(48),
+    height: moderateScale(48),
+    borderRadius: moderateScale(24),
+    backgroundColor: colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  avatarText: {
+    fontSize: moderateScale(18),
     fontWeight: "800",
-    color: colors.text,
-    letterSpacing: -0.8,
-  },
-
-  logoDot: {
     color: colors.primary,
   },
 
+  onlineDot: {
+    position: "absolute",
+    right: 0,
+    bottom: 1,
+
+    width: moderateScale(12),
+    height: moderateScale(12),
+    borderRadius: moderateScale(6),
+
+    backgroundColor: "#48D597",
+
+    borderWidth: 2,
+    borderColor: colors.background,
+  },
+
+  searchContainer: {
+    flex: 1,
+
+    height: moderateScale(48),
+
+    flexDirection: "row",
+    alignItems: "center",
+
+    paddingHorizontal: moderateScale(14),
+
+    borderRadius: moderateScale(24),
+
+    backgroundColor: colors.surface,
+
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+
+  searchInput: {
+    flex: 1,
+
+    marginLeft: moderateScale(8),
+
+    paddingVertical: 0,
+
+    fontSize: moderateScale(14),
+    color: colors.text,
+  },
+
+  menuButton: {
+    width: moderateScale(36),
+    height: moderateScale(44),
+
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  pressed: {
+    opacity: 0.55,
+  },
+
+  greetingContainer: {
+    // marginTop: moderateScale(16),
+    paddingHorizontal: moderateScale(2),
+  },
+
+  greeting: {
+    fontSize: moderateScale(25),
+    fontWeight: "800",
+    letterSpacing: -0.6,
+    color: colors.text,
+  },
+
   subtitle: {
-    marginTop: 3,
-    fontSize: 13,
+    marginTop: moderateScale(3),
+    fontSize: moderateScale(12),
     color: colors.textSecondary,
   },
 
-  segmentContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 10,
+  /* Segment */
+
+  segmentWrapper: {
+    paddingHorizontal: moderateScale(16),
+    marginTop: moderateScale(-12),
   },
 
   segmentControl: {
-    height: 46,
-    borderRadius: 14,
+    height: moderateScale(42),
+
+    borderRadius: moderateScale(22),
+
     backgroundColor: colors.surface,
+
     borderWidth: 1,
     borderColor: colors.border,
+
     flexDirection: "row",
     alignItems: "center",
+
     position: "relative",
     overflow: "hidden",
   },
 
   activeIndicator: {
     position: "absolute",
-    left: 3,
-    top: 3,
-    bottom: 3,
+
+    left: moderateScale(3),
+    top: moderateScale(3),
+    bottom: moderateScale(3),
+
     width: "50%",
-    borderRadius: 11,
+
+    borderRadius: moderateScale(20),
+
     backgroundColor: colors.primary,
   },
 
@@ -272,54 +440,73 @@ const styles = StyleSheet.create({
     left: "50%",
   },
 
-  segmentText: {
+  segmentButton: {
     flex: 1,
-    textAlign: "center",
-    fontSize: 14,
+
+    height: "100%",
+
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+
+    gap: moderateScale(6),
+
+    zIndex: 1,
+  },
+
+  segmentText: {
+    fontSize: moderateScale(13),
     fontWeight: "600",
     color: colors.textMuted,
-    zIndex: 1,
-    paddingVertical: 14,
   },
 
   activeSegmentText: {
     color: colors.text,
   },
 
-  scrollContent: {
-    paddingTop: 10,
-    paddingBottom: 190,
-    gap: 24,
-  },
-
-  scrollContentTrending: {
-    paddingTop: 10,
-    paddingBottom: 190,
-    gap: 30,
-  },
+  /* Loading */
 
   loadingContainer: {
-    flex: 1,
-    minHeight: 400,
+    minHeight: moderateScale(420),
+
     alignItems: "center",
     justifyContent: "center",
+
+    paddingHorizontal: moderateScale(30),
   },
 
   loadingCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: moderateScale(64),
+    height: moderateScale(64),
+
+    borderRadius: moderateScale(32),
+
     alignItems: "center",
     justifyContent: "center",
+
     backgroundColor: colors.surface,
+
     borderWidth: 1,
     borderColor: colors.border,
   },
 
+  loadingTitle: {
+    marginTop: moderateScale(18),
+
+    fontSize: moderateScale(15),
+    fontWeight: "700",
+
+    color: colors.text,
+  },
+
   loadingText: {
-    marginTop: 16,
-    fontSize: 13,
+    marginTop: moderateScale(5),
+
+    fontSize: moderateScale(12),
+
     color: colors.textSecondary,
+
+    textAlign: "center",
   },
 });
 

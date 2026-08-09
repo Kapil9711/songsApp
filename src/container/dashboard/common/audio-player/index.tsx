@@ -1,13 +1,6 @@
-import React, { createContext, useContext, useEffect, useRef } from "react";
-import {
-  Dimensions,
-  Pressable,
-  StyleSheet,
-  Text as RNText,
-  View,
-} from "react-native";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Avatar } from "tamagui";
-import { Icon, IconButton } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { usePathname, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -17,9 +10,10 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
+import { moderateScale } from "react-native-size-matters";
 
 import { Text } from "@/src/providers/CustomText";
-import { useAudioContext } from "@/src/providers/AudioProvider";
 import { useGlobalContext } from "@/src/providers/GlobalProvider";
 import { getValueInAsync } from "@/src/utilities/helpers";
 import { useSocket } from "@/src/providers/socketProvider";
@@ -28,15 +22,35 @@ import { colors } from "@/src/constants/theme";
 import TrackPlayer from "react-native-track-player";
 import { usePlayer } from "./usePlayer";
 
-const { width } = Dimensions.get("window");
+/* ================================================================== */
+/* CONTEXT                                                            */
+/* ================================================================== */
 
 const PlayerContext = createContext(null as any);
 
-const usePlayerConext = () => useContext(PlayerContext);
+export const usePlayerConext = () => useContext(PlayerContext);
 
-/* =========================================================
-   PLAYER UI
-========================================================= */
+/* ================================================================== */
+/* PLAYER CONSTANTS                                                   */
+/* ================================================================== */
+
+const PLAYER_HEIGHT = moderateScale(92);
+
+const PLAYER_GAP = moderateScale(10);
+
+/**
+ * Matches the compact BottomHeader.
+ *
+ * BottomHeader:
+ *   height: 62
+ *   safe area handled separately
+ */
+const BOTTOM_NAV_HEIGHT = moderateScale(55);
+const PROGRESS_THUMB_OFFSET = moderateScale(4);
+
+/* ================================================================== */
+/* PLAYER UI                                                          */
+/* ================================================================== */
 
 const PlayerUi = () => {
   const {
@@ -50,13 +64,14 @@ const PlayerUi = () => {
   } = usePlayerConext();
 
   const router = useRouter();
+  const currentPath = usePathname();
   const insets = useSafeAreaInsets();
 
-  // Reset playback position whenever a different song becomes active.
   useEffect(() => {
     if (!currentSong?.id) return;
 
     setPosition(0);
+
     TrackPlayer.seekTo(0).catch(() => {});
   }, [currentSong?.id, setPosition]);
 
@@ -64,124 +79,220 @@ const PlayerUi = () => {
     return null;
   }
 
+  /**
+   * Keep player clearly above the compact bottom nav.
+   *
+   * Player
+   *   ↓
+   * 10px gap
+   *   ↓
+   * Bottom nav
+   *   ↓
+   * Safe area
+   */
+  const bottomOffset =
+    BOTTOM_NAV_HEIGHT + Math.max(insets.bottom, moderateScale(6)) + PLAYER_GAP;
+
   return (
     <View
       style={[
-        styles.player,
+        styles.playerPosition,
         {
-          bottom: 68 + Math.max(insets.bottom, 8) + 8,
+          bottom: bottomOffset,
         },
       ]}
     >
-      {/* Top purple indicator */}
-      {/* <View style={styles.playerAccent} /> */}
+      {/* ============================================================ */}
+      {/* GRADIENT BORDER                                               */}
+      {/* ============================================================ */}
 
-      {/* Artwork */}
-      <Pressable
-        onPress={() => {
-          router.push("/(dashboard)/home/songs-details");
-        }}
-        style={({ pressed }) => [
-          styles.artworkButton,
-          pressed && styles.pressed,
+      <LinearGradient
+        colors={[
+          "rgba(168,85,247,0.62)",
+          "rgba(106,66,150,0.22)",
+          "rgba(168,85,247,0.48)",
         ]}
+        start={{
+          x: 0,
+          y: 0,
+        }}
+        end={{
+          x: 1,
+          y: 1,
+        }}
+        style={styles.playerBorder}
       >
-        <Avatar circular size="$4">
-          <Avatar.Image src={imageUrl} />
+        {/* ======================================================== */}
+        {/* PLAYER BODY                                               */}
+        {/* ======================================================== */}
 
-          <Avatar.Fallback backgroundColor={colors.surfaceElevated}>
-            <Ionicons name="musical-note" size={24} color={colors.textMuted} />
-          </Avatar.Fallback>
-        </Avatar>
-      </Pressable>
-
-      {/* Main */}
-      <View style={styles.mainContent}>
-        {/* Song information */}
-        <Pressable
-          onPress={() => {
-            router.push("/(dashboard)/home/songs-details");
+        <LinearGradient
+          colors={[
+            "rgba(28,20,38,0.99)",
+            "rgba(16,14,22,0.99)",
+            "rgba(24,17,34,0.99)",
+          ]}
+          start={{
+            x: 0,
+            y: 0,
           }}
-          style={styles.songHeader}
+          end={{
+            x: 1,
+            y: 1,
+          }}
+          style={styles.player}
         >
-          <View style={styles.songTextContainer}>
-            <Text numberOfLines={1} style={styles.songTitle}>
-              {title}
-            </Text>
+          {/* ====================================================== */}
+          {/* TOP PURPLE ACCENT                                       */}
+          {/* ====================================================== */}
 
-            <Text numberOfLines={1} style={styles.artist}>
-              {currentSong?.artist || "Unknown Artist"}
-            </Text>
+          <LinearGradient
+            colors={[
+              "rgba(168,85,247,0.80)",
+              "rgba(168,85,247,0.30)",
+              "rgba(168,85,247,0)",
+            ]}
+            start={{
+              x: 0,
+              y: 0,
+            }}
+            end={{
+              x: 1,
+              y: 0,
+            }}
+            style={styles.playerAccent}
+          />
+
+          {/* ====================================================== */}
+          {/* ARTWORK                                                 */}
+          {/* ====================================================== */}
+
+          <Pressable
+            onPress={() => {
+              router.push("/(dashboard)/home/songs-details");
+            }}
+            style={({ pressed }) => [
+              styles.artworkButton,
+              pressed && styles.pressed,
+            ]}
+          >
+            <Avatar circular size="$4">
+              <Avatar.Image src={imageUrl} />
+
+              <Avatar.Fallback backgroundColor={colors.surfaceElevated}>
+                <Ionicons
+                  name="musical-note"
+                  size={moderateScale(21)}
+                  color={colors.textMuted}
+                />
+              </Avatar.Fallback>
+            </Avatar>
+
+            {/* Tiny playing indicator */}
+
+            <View style={styles.artworkIndicator}>
+              <View style={styles.artworkIndicatorDot} />
+            </View>
+          </Pressable>
+
+          {/* ====================================================== */}
+          {/* CENTER                                                  */}
+          {/* ====================================================== */}
+
+          <View style={styles.mainContent}>
+            {/* ---------------------------------------------------- */}
+            {/* Song info                                             */}
+            {/* ---------------------------------------------------- */}
+
+            <Pressable
+              onPress={() => {
+                router.push("/(dashboard)/home/songs-details");
+              }}
+              style={styles.songInfo}
+            >
+              <Text numberOfLines={1} style={styles.songTitle}>
+                {title}
+              </Text>
+
+              <Text numberOfLines={1} style={styles.artist}>
+                {currentSong?.artist ||
+                  currentSong?.artists?.[0]?.name ||
+                  "Unknown Artist"}
+              </Text>
+            </Pressable>
+
+            {/* ---------------------------------------------------- */}
+            {/* Progress                                              */}
+            {/* ---------------------------------------------------- */}
+
+            <ProgressBarComponent
+              key={currentSong?.id}
+              sound={sound}
+              setPosition={setPosition}
+              duration={duration}
+              position={position}
+              currentSongId={currentSong?.id}
+            />
+
+            {/* ---------------------------------------------------- */}
+            {/* Controls                                              */}
+            {/* ---------------------------------------------------- */}
+
+            <MediaControls />
           </View>
 
-          <View style={styles.liveIndicator}>
-            <View style={styles.liveDot} />
+          {/* ====================================================== */}
+          {/* RIGHT SIDE                                              */}
+          {/* ====================================================== */}
 
-            <RNText style={styles.liveText}>PLAYING</RNText>
+          <View style={styles.rightSection}>
+            <Text style={styles.timeText}>
+              {formatTime(Math.max(0, duration - position))}
+            </Text>
+
+            {currentPath.includes("home") && <DownloadButton />}
           </View>
-        </Pressable>
-
-        {/* Progress */}
-        <ProgressBarComponent
-          key={currentSong?.id}
-          sound={sound}
-          setPosition={setPosition}
-          duration={duration}
-          position={position}
-          currentSongId={currentSong?.id}
-        />
-
-        {/* Controls */}
-        <MediaControls />
-      </View>
-
-      {/* Time + download */}
-      <ShowTime duration={duration} position={position} />
+        </LinearGradient>
+      </LinearGradient>
     </View>
   );
 };
 
-/* =========================================================
-   TIME
-========================================================= */
+/* ================================================================== */
+/* DOWNLOAD BUTTON                                                    */
+/* ================================================================== */
 
-const ShowTime = ({ duration, position }: any) => {
+const DownloadButton = () => {
   const { handleDownload } = useGlobalContext();
 
   const { currentSong } = usePlayerConext();
 
-  const currentPath = usePathname();
-
-  const remainingTime = Math.max(0, duration - position);
-
   return (
-    <View style={styles.timeSection}>
-      <RNText style={styles.timeText}>{formatTime(remainingTime)}</RNText>
-
-      {currentPath.includes("home") && (
-        <Pressable
-          onPress={() => {
-            handleDownload(
-              currentSong?.downloadUrl?.[4]?.url,
-              currentSong?.image?.[2]?.url,
-              currentSong?.name,
-            );
-          }}
-          style={({ pressed }) => [
-            styles.downloadButton,
-            pressed && styles.pressed,
-          ]}
-        >
-          <Ionicons
-            name="download-outline"
-            size={20}
-            color={colors.textSecondary}
-          />
-        </Pressable>
-      )}
-    </View>
+    <Pressable
+      onPress={() => {
+        handleDownload(
+          currentSong?.downloadUrl?.[4]?.url,
+          currentSong?.image?.[2]?.url,
+          currentSong?.name,
+        );
+      }}
+      style={({ pressed }) => [
+        styles.downloadButton,
+        pressed && styles.pressed,
+      ]}
+    >
+      <Ionicons
+        name="download-outline"
+        size={moderateScale(17)}
+        color={colors.textSecondary}
+      />
+    </Pressable>
   );
 };
+
+/* ================================================================== */
+/* TIME FORMAT                                                        */
+/* ================================================================== */
 
 const formatTime = (ms: number) => {
   const minutes = Math.floor(ms / 60000);
@@ -191,9 +302,9 @@ const formatTime = (ms: number) => {
   return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
 };
 
-/* =========================================================
-   DRAGGABLE PROGRESS BAR
-========================================================= */
+/* ================================================================== */
+/* PROGRESS BAR                                                       */
+/* ================================================================== */
 
 const ProgressBarComponent = ({
   sound,
@@ -204,31 +315,51 @@ const ProgressBarComponent = ({
 }: any) => {
   const { socket } = useSocket();
 
-  const progressWidth = width - 145;
+  /**
+   * Instead of:
+   *
+   * width - 145
+   *
+   * we measure the actual available
+   * width of the progress bar.
+   */
+  const [progressWidth, setProgressWidth] = useState(0);
 
   const progress =
     duration > 0 ? Math.min(1, Math.max(0, position / duration)) : 0;
 
-  // Start every new song at zero. The key on ProgressBarComponent also
-  // recreates the animated value when the song id changes.
   const progressValue = useSharedValue(0);
 
   const isDragging = useSharedValue(false);
 
+  /* -------------------------------------------------------------- */
+  /* Reset on song change                                           */
+  /* -------------------------------------------------------------- */
+
   useEffect(() => {
-    if (!currentSongId) return;
+    if (!currentSongId) {
+      return;
+    }
 
     progressValue.value = 0;
   }, [currentSongId]);
 
+  /* -------------------------------------------------------------- */
+  /* Sync playback position                                         */
+  /* -------------------------------------------------------------- */
+
   useEffect(() => {
-    if (!isDragging.value) {
+    if (!isDragging.value && progressWidth > 0) {
       progressValue.value = progress;
     }
-  }, [progress, currentSongId]);
+  }, [progress, currentSongId, progressWidth]);
+
+  /* -------------------------------------------------------------- */
+  /* Seek                                                            */
+  /* -------------------------------------------------------------- */
 
   const seekToPosition = async (value: number) => {
-    if (duration <= 1) {
+    if (duration <= 1 || progressWidth <= 0) {
       return;
     }
 
@@ -238,18 +369,30 @@ const ProgressBarComponent = ({
 
     await TrackPlayer.seekTo(newPosition / 1000);
 
-    const user: any = await getValueInAsync("user");
+    try {
+      const user: any = await getValueInAsync("user");
 
-    const userId = JSON.parse(user)?._id;
+      const userId = JSON.parse(user)?._id;
 
-    socket?.emit("seekSong", {
-      senderId: userId,
-      newTime: newPosition,
-    });
+      socket?.emit("seekSong", {
+        senderId: userId,
+        newTime: newPosition,
+      });
+    } catch (error) {
+      console.error("Seek user error:", error);
+    }
   };
+
+  /* -------------------------------------------------------------- */
+  /* Pan gesture                                                    */
+  /* -------------------------------------------------------------- */
 
   const gesture = Gesture.Pan()
     .onBegin((event) => {
+      if (progressWidth <= 0) {
+        return;
+      }
+
       isDragging.value = true;
 
       const newProgress = Math.min(1, Math.max(0, event.x / progressWidth));
@@ -257,6 +400,10 @@ const ProgressBarComponent = ({
       progressValue.value = newProgress;
     })
     .onUpdate((event) => {
+      if (progressWidth <= 0) {
+        return;
+      }
+
       const newProgress = Math.min(1, Math.max(0, event.x / progressWidth));
 
       progressValue.value = newProgress;
@@ -267,7 +414,15 @@ const ProgressBarComponent = ({
       runOnJS(seekToPosition)(progressValue.value);
     });
 
+  /* -------------------------------------------------------------- */
+  /* Tap gesture                                                     */
+  /* -------------------------------------------------------------- */
+
   const tapGesture = Gesture.Tap().onEnd((event) => {
+    if (progressWidth <= 0) {
+      return;
+    }
+
     const newProgress = Math.min(1, Math.max(0, event.x / progressWidth));
 
     progressValue.value = newProgress;
@@ -277,17 +432,29 @@ const ProgressBarComponent = ({
 
   const combinedGesture = Gesture.Simultaneous(gesture, tapGesture);
 
+  /* -------------------------------------------------------------- */
+  /* Animated fill                                                   */
+  /* -------------------------------------------------------------- */
+
   const progressStyle = useAnimatedStyle(() => {
     return {
       width: progressValue.value * progressWidth,
     };
   });
 
+  /* -------------------------------------------------------------- */
+  /* Animated thumb                                                  */
+  /* -------------------------------------------------------------- */
+
   const thumbStyle = useAnimatedStyle(() => {
     return {
-      left: progressValue.value * progressWidth - 7,
+      left: progressValue.value * progressWidth - PROGRESS_THUMB_OFFSET,
     };
   });
+
+  /* -------------------------------------------------------------- */
+  /* Socket sync                                                     */
+  /* -------------------------------------------------------------- */
 
   useEffect(() => {
     const syncSeek = async ({ newTime, receiverId }: any) => {
@@ -316,29 +483,34 @@ const ProgressBarComponent = ({
   return (
     <GestureDetector gesture={combinedGesture}>
       <View
-        style={[
-          styles.progressWrapper,
-          {
-            width: progressWidth,
-          },
-        ]}
+        onLayout={(event) => {
+          const measuredWidth = event.nativeEvent.layout.width;
+
+          if (measuredWidth !== progressWidth) {
+            setProgressWidth(measuredWidth);
+          }
+        }}
+        style={styles.progressWrapper}
       >
-        {/* Background */}
+        {/* Track */}
+
         <View style={styles.progressTrack} />
 
-        {/* Filled */}
+        {/* Fill */}
+
         <Animated.View style={[styles.progressFill, progressStyle]} />
 
         {/* Thumb */}
+
         <Animated.View style={[styles.progressThumb, thumbStyle]} />
       </View>
     </GestureDetector>
   );
 };
 
-/* =========================================================
-   MEDIA CONTROLS
-========================================================= */
+/* ================================================================== */
+/* MEDIA CONTROLS                                                     */
+/* ================================================================== */
 
 const MediaControls = () => {
   const {
@@ -355,22 +527,29 @@ const MediaControls = () => {
 
   return (
     <View style={styles.controls}>
-      {/* Repeat */}
+      {/* ========================================================== */}
+      {/* REPEAT                                                      */}
+      {/* ========================================================== */}
+
       <Pressable
         onPress={() => setIsLoop((prev: boolean) => !prev)}
         style={({ pressed }) => [
           styles.controlButton,
+          isLoop && styles.controlButtonActive,
           pressed && styles.pressed,
         ]}
       >
         <Ionicons
           name="repeat"
-          size={18}
+          size={moderateScale(16)}
           color={isLoop ? colors.primary : colors.textMuted}
         />
       </Pressable>
 
-      {/* Previous */}
+      {/* ========================================================== */}
+      {/* PREVIOUS                                                     */}
+      {/* ========================================================== */}
+
       <Pressable
         onPress={handlePrev}
         style={({ pressed }) => [
@@ -378,10 +557,17 @@ const MediaControls = () => {
           pressed && styles.pressed,
         ]}
       >
-        <Ionicons name="play-skip-back" size={21} color={colors.text} />
+        <Ionicons
+          name="play-skip-back"
+          size={moderateScale(19)}
+          color={colors.text}
+        />
       </Pressable>
 
-      {/* Play / Pause */}
+      {/* ========================================================== */}
+      {/* PLAY / PAUSE                                                 */}
+      {/* ========================================================== */}
+
       <Pressable
         onPress={() => {
           if (isPlaying) {
@@ -391,18 +577,41 @@ const MediaControls = () => {
           }
         }}
         style={({ pressed }) => [
-          styles.playButton,
+          styles.playButtonOuter,
           pressed && styles.playButtonPressed,
         ]}
       >
-        <Ionicons
-          name={isPlaying ? "pause" : "play"}
-          size={20}
-          color={colors.text}
-        />
+        <LinearGradient
+          colors={["#B05CFF", colors.primary]}
+          start={{
+            x: 0,
+            y: 0,
+          }}
+          end={{
+            x: 1,
+            y: 1,
+          }}
+          style={styles.playButton}
+        >
+          <Ionicons
+            name={isPlaying ? "pause" : "play"}
+            size={moderateScale(18)}
+            color="#17121D"
+            style={
+              !isPlaying
+                ? {
+                    marginLeft: moderateScale(2),
+                  }
+                : undefined
+            }
+          />
+        </LinearGradient>
       </Pressable>
 
-      {/* Next */}
+      {/* ========================================================== */}
+      {/* NEXT                                                         */}
+      {/* ========================================================== */}
+
       <Pressable
         onPress={handleNext}
         style={({ pressed }) => [
@@ -410,20 +619,28 @@ const MediaControls = () => {
           pressed && styles.pressed,
         ]}
       >
-        <Ionicons name="play-skip-forward" size={21} color={colors.text} />
+        <Ionicons
+          name="play-skip-forward"
+          size={moderateScale(19)}
+          color={colors.text}
+        />
       </Pressable>
 
-      {/* Shuffle */}
+      {/* ========================================================== */}
+      {/* SHUFFLE                                                      */}
+      {/* ========================================================== */}
+
       <Pressable
         onPress={() => setIsShuffle((prev: boolean) => !prev)}
         style={({ pressed }) => [
           styles.controlButton,
+          isShuffle && styles.controlButtonActive,
           pressed && styles.pressed,
         ]}
       >
         <Ionicons
           name="shuffle"
-          size={18}
+          size={moderateScale(16)}
           color={isShuffle ? colors.primary : colors.textMuted}
         />
       </Pressable>
@@ -431,148 +648,208 @@ const MediaControls = () => {
   );
 };
 
-/* =========================================================
-   STYLES
-========================================================= */
+/* ================================================================== */
+/* STYLES                                                             */
+/* ================================================================== */
 
 const styles = StyleSheet.create({
-  player: {
+  /* ================================================================ */
+  /* POSITION                                                          */
+  /* ================================================================ */
+
+  playerPosition: {
     position: "absolute",
 
-    left: 10,
-    right: 10,
+    left: moderateScale(10),
+    right: moderateScale(10),
 
-    width: width - 20,
-    height: 96,
+    height: PLAYER_HEIGHT,
 
-    flexDirection: "row",
-    alignItems: "center",
+    zIndex: 200,
 
-    paddingHorizontal: 10,
+    elevation: 24,
+  },
 
-    borderRadius: 20,
+  /* ================================================================ */
+  /* GRADIENT BORDER                                                   */
+  /* ================================================================ */
 
-    backgroundColor: colors.surface,
+  playerBorder: {
+    flex: 1,
 
-    borderWidth: 1,
-    borderColor: colors.border,
+    padding: 1,
 
-    shadowColor: "#000",
+    borderRadius: moderateScale(21),
+
+    overflow: "hidden",
+
+    shadowColor: colors.primary,
+
     shadowOffset: {
       width: 0,
       height: 6,
     },
-    shadowOpacity: 0.35,
+
+    shadowOpacity: 0.18,
+
     shadowRadius: 14,
+  },
 
-    elevation: 18,
+  /* ================================================================ */
+  /* PLAYER                                                            */
+  /* ================================================================ */
 
-    zIndex: 200,
+  player: {
+    flex: 1,
+
+    flexDirection: "row",
+
+    alignItems: "center",
+
+    paddingHorizontal: moderateScale(8),
+
+    paddingVertical: moderateScale(6),
+
+    borderRadius: moderateScale(20),
+
     overflow: "hidden",
   },
+
+  /* ================================================================ */
+  /* TOP ACCENT                                                        */
+  /* ================================================================ */
 
   playerAccent: {
     position: "absolute",
 
-    left: 0,
-    right: 0,
     top: 0,
 
-    height: 2,
+    left: moderateScale(24),
+    right: moderateScale(24),
+
+    height: moderateScale(2),
+
+    borderRadius: moderateScale(2),
+  },
+
+  /* ================================================================ */
+  /* ARTWORK                                                           */
+  /* ================================================================ */
+
+  artworkButton: {
+    width: moderateScale(56),
+    height: moderateScale(56),
+
+    borderRadius: moderateScale(15),
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    overflow: "hidden",
+
+    backgroundColor: colors.surfaceElevated,
+
+    borderWidth: 1,
+
+    borderColor: "rgba(255,255,255,0.10)",
+  },
+
+  artworkIndicator: {
+    position: "absolute",
+
+    right: moderateScale(4),
+    bottom: moderateScale(4),
+
+    width: moderateScale(14),
+    height: moderateScale(14),
+
+    borderRadius: moderateScale(7),
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: "rgba(18,14,24,0.90)",
+
+    borderWidth: 1,
+
+    borderColor: "rgba(168,85,247,0.45)",
+  },
+
+  artworkIndicatorDot: {
+    width: moderateScale(4),
+    height: moderateScale(4),
+
+    borderRadius: moderateScale(2),
 
     backgroundColor: colors.primary,
   },
 
-  artworkButton: {
-    width: 62,
-    height: 62,
-
-    borderRadius: 15,
-
-    overflow: "hidden",
-
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  /* ================================================================ */
+  /* MAIN CONTENT                                                      */
+  /* ================================================================ */
 
   mainContent: {
     flex: 1,
 
-    marginLeft: 10,
+    minWidth: 0,
+
+    height: "100%",
+
+    marginLeft: moderateScale(9),
 
     justifyContent: "center",
   },
 
-  songHeader: {
-    flexDirection: "row",
+  /* ================================================================ */
+  /* SONG INFO                                                         */
+  /* ================================================================ */
 
-    alignItems: "center",
+  songInfo: {
+    height: moderateScale(25),
 
-    marginBottom: 5,
-  },
+    justifyContent: "center",
 
-  songTextContainer: {
-    flex: 1,
-
-    marginRight: 6,
+    minWidth: 0,
   },
 
   songTitle: {
-    fontSize: 13,
+    fontSize: moderateScale(12.5),
 
-    fontWeight: "700",
+    lineHeight: moderateScale(15),
+
+    fontWeight: "800",
 
     color: colors.text,
+
+    letterSpacing: -0.15,
   },
 
   artist: {
-    marginTop: 1,
+    marginTop: moderateScale(1),
 
-    fontSize: 10,
+    fontSize: moderateScale(9.5),
+
+    lineHeight: moderateScale(12),
 
     color: colors.textMuted,
   },
 
-  liveIndicator: {
-    flexDirection: "row",
-
-    alignItems: "center",
-
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-
-    borderRadius: 8,
-
-    backgroundColor: "rgba(168, 85, 247, 0.10)",
-  },
-
-  liveDot: {
-    width: 5,
-    height: 5,
-
-    borderRadius: 3,
-
-    backgroundColor: colors.primary,
-
-    marginRight: 4,
-  },
-
-  liveText: {
-    fontSize: 7,
-
-    fontWeight: "800",
-
-    letterSpacing: 0.6,
-
-    color: colors.primary,
-  },
+  /* ================================================================ */
+  /* PROGRESS                                                          */
+  /* ================================================================ */
 
   progressWrapper: {
-    height: 18,
+    height: moderateScale(11),
+
+    width: "100%",
 
     justifyContent: "center",
 
     position: "relative",
+
+    marginTop: moderateScale(1),
+
+    overflow: "visible",
   },
 
   progressTrack: {
@@ -581,11 +858,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
 
-    height: 4,
+    height: moderateScale(3),
 
-    borderRadius: 4,
+    borderRadius: moderateScale(3),
 
-    backgroundColor: colors.surfaceElevated,
+    backgroundColor: "rgba(255,255,255,0.09)",
   },
 
   progressFill: {
@@ -593,9 +870,9 @@ const styles = StyleSheet.create({
 
     left: 0,
 
-    height: 4,
+    height: moderateScale(3),
 
-    borderRadius: 4,
+    borderRadius: moderateScale(3),
 
     backgroundColor: colors.primary,
   },
@@ -603,28 +880,32 @@ const styles = StyleSheet.create({
   progressThumb: {
     position: "absolute",
 
-    width: 14,
-    height: 14,
+    width: moderateScale(9),
+    height: moderateScale(9),
 
-    borderRadius: 7,
+    borderRadius: moderateScale(5),
 
     backgroundColor: colors.primary,
 
-    borderWidth: 3,
+    borderWidth: 2,
 
-    borderColor: colors.surface,
+    borderColor: "#17121D",
 
     shadowColor: colors.primary,
 
-    shadowOpacity: 0.5,
+    shadowOpacity: 0.75,
 
     shadowRadius: 5,
 
     elevation: 5,
   },
 
+  /* ================================================================ */
+  /* CONTROLS                                                          */
+  /* ================================================================ */
+
   controls: {
-    height: 28,
+    height: moderateScale(34),
 
     flexDirection: "row",
 
@@ -632,77 +913,133 @@ const styles = StyleSheet.create({
 
     justifyContent: "center",
 
-    gap: 9,
+    gap: moderateScale(4),
+
+    marginTop: moderateScale(1),
   },
 
   controlButton: {
-    width: 26,
-    height: 26,
+    width: moderateScale(31),
+    height: moderateScale(31),
 
-    borderRadius: 13,
+    borderRadius: moderateScale(16),
 
     alignItems: "center",
     justifyContent: "center",
+
+    backgroundColor: "rgba(255,255,255,0.035)",
+
+    borderWidth: 1,
+
+    borderColor: "rgba(255,255,255,0.055)",
+  },
+
+  controlButtonActive: {
+    backgroundColor: "rgba(168,85,247,0.12)",
+
+    borderColor: "rgba(168,85,247,0.28)",
+  },
+
+  /* ================================================================ */
+  /* PLAY BUTTON                                                       */
+  /* ================================================================ */
+
+  playButtonOuter: {
+    width: moderateScale(43),
+    height: moderateScale(43),
+
+    borderRadius: moderateScale(22),
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: "rgba(168,85,247,0.10)",
+
+    borderWidth: 1,
+
+    borderColor: "rgba(168,85,247,0.55)",
+
+    shadowColor: colors.primary,
+
+    shadowOpacity: 0.28,
+
+    shadowRadius: 9,
+
+    elevation: 7,
   },
 
   playButton: {
-    width: 30,
-    height: 30,
+    width: moderateScale(35),
+    height: moderateScale(35),
 
-    borderRadius: 15,
-
-    backgroundColor: colors.primary,
+    borderRadius: moderateScale(18),
 
     alignItems: "center",
     justifyContent: "center",
   },
 
   playButtonPressed: {
-    backgroundColor: colors.primaryPressed,
-
     transform: [
       {
-        scale: 0.92,
+        scale: 0.9,
       },
     ],
   },
 
-  timeSection: {
-    width: 48,
+  /* ================================================================ */
+  /* RIGHT SECTION                                                     */
+  /* ================================================================ */
+
+  rightSection: {
+    width: moderateScale(34),
+
+    height: "100%",
 
     alignItems: "center",
+
     justifyContent: "center",
 
-    marginLeft: 4,
+    marginLeft: moderateScale(4),
   },
 
   timeText: {
-    fontSize: 10,
+    fontSize: moderateScale(8),
 
-    fontWeight: "600",
+    lineHeight: moderateScale(10),
+
+    fontWeight: "700",
 
     color: colors.textSecondary,
   },
 
+  /* ================================================================ */
+  /* DOWNLOAD                                                          */
+  /* ================================================================ */
+
   downloadButton: {
-    width: 34,
-    height: 34,
+    width: moderateScale(29),
+    height: moderateScale(29),
 
-    marginTop: 3,
+    marginTop: moderateScale(3),
 
-    borderRadius: 11,
-
-    backgroundColor: colors.surfaceElevated,
+    borderRadius: moderateScale(9),
 
     alignItems: "center",
     justifyContent: "center",
 
+    backgroundColor: "rgba(255,255,255,0.035)",
+
     borderWidth: 1,
-    borderColor: colors.border,
+
+    borderColor: "rgba(255,255,255,0.07)",
   },
 
+  /* ================================================================ */
+  /* PRESS                                                             */
+  /* ================================================================ */
+
   pressed: {
-    opacity: 0.6,
+    opacity: 0.65,
 
     transform: [
       {
@@ -712,8 +1049,13 @@ const styles = StyleSheet.create({
   },
 });
 
+/* ================================================================== */
+/* AUDIO PLAYER                                                       */
+/* ================================================================== */
+
 const AudioPlayer = () => {
   const audioData = usePlayer();
+
   return (
     <PlayerContext.Provider value={audioData}>
       <PlayerUi />

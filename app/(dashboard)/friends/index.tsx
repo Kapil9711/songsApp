@@ -40,7 +40,7 @@ const Friends = () => {
       style={[
         styles.container,
         {
-          // paddingTop: insets.top,
+          paddingTop: insets.top,
         },
       ]}
     >
@@ -62,14 +62,14 @@ const Friends = () => {
       </View>
 
       {/* Tabs */}
-      <FriendsTabs
+      {/* <FriendsTabs
         active={active}
         setActive={setActive}
         getFriends={getFriends}
         getRequest={getRequest}
         getUsers={getUsers}
         requestCount={requests?.length ?? 0}
-      />
+      /> */}
 
       {/* Content */}
       {isLoading ? (

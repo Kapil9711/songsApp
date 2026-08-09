@@ -1,3 +1,4 @@
+import { colors } from "@/src/constants/theme";
 import { useGlobalContext } from "@/src/providers/GlobalProvider";
 import { usePathname } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -37,7 +38,16 @@ export const SearchBar = () => {
         placeholder="Search songs..."
         value={searchQuery}
         flex={1}
-        style={{ fontSize: 15 }}
+        style={{
+          fontSize: 15,
+          backgroundColor: colors.background,
+          opacity: 0.7,
+          borderColor: "gray",
+          // borderWidth: 1,
+          // borderColor: "gray",
+          color: "white",
+          borderRadius: 100,
+        }}
         size={"large"}
       />
     </View>
