@@ -1,3 +1,4 @@
+import { colors } from "@/src/constants/theme";
 import SplashScreen from "@/src/container/splashScreen";
 import { getValueInAsync } from "@/src/utilities/helpers";
 import { useRouter } from "expo-router";
@@ -17,8 +18,8 @@ export default function HomePage() {
   }, []);
 
   return (
-    <View className="flex-1 bg-white">
-      <SplashScreen />
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {/* <SplashScreen /> */}
     </View>
   );
 }

@@ -26,50 +26,6 @@ export const ensureDirectoryExists = async (path: string) => {
   }
 };
 
-export const getDownloadedSongs = async () => {
-  try {
-    const files = await fileSystem.readDirectoryAsync(
-      fileSystem.documentDirectory as string
-    );
-
-    const user: any = await getValueInAsync("user");
-
-    const id = JSON.parse(user)?._id;
-
-    // Get audio files
-    const audioFiles = files.filter(
-      (file) => file.endsWith(`${id}.m4a`) || file.endsWith(`${id}.mp3`)
-    );
-    console.log(audioFiles, "files");
-
-    // Create list with song details & corresponding images
-    const songList = audioFiles.map((file, idx) => {
-      const baseName = file.replace(/\.(m4a|mp3)$/, "");
-      return {
-        id: "fdfdsfd" + idx,
-        downloadUrl: [
-          "",
-          "",
-          "",
-          "",
-          { url: fileSystem.documentDirectory + file },
-        ],
-        image: [
-          "",
-          "",
-          { url: fileSystem.documentDirectory + baseName + ".jpg" },
-        ],
-        name: baseName.split("_")[0],
-      };
-    });
-
-    return songList;
-  } catch (error) {
-    console.error("Error fetching downloaded songs:", error);
-    return [];
-  }
-};
-
 export const setValueInAsync = async (key: string, value: string) => {
   try {
     await AsyncStorage.setItem(key, value);
@@ -87,10 +43,64 @@ export const getValueInAsync = async (key: string) => {
   }
 };
 
+export const getDownloadedSongs = async () => {
+  try {
+    const files = await FileSystem.readDirectoryAsync(
+      FileSystem.documentDirectory as string,
+    );
+
+    const user: any = await getValueInAsync("user");
+
+    const id = JSON.parse(user)?._id;
+
+    // Get audio files belonging to the current user
+    const audioFiles = files.filter(
+      (file) => file.endsWith(`${id}.m4a`) || file.endsWith(`${id}.mp3`),
+    );
+
+    console.log(audioFiles, "files");
+
+    // Create list with song details & corresponding images
+    const songList = audioFiles.map((file, idx) => {
+      const baseName = file.replace(/\.(m4a|mp3)$/, "");
+
+      return {
+        id: "fdfdsfd" + idx,
+
+        downloadUrl: [
+          "",
+          "",
+          "",
+          "",
+          {
+            url: FileSystem.documentDirectory + file,
+          },
+        ],
+
+        image: [
+          "",
+          "",
+          {
+            url: FileSystem.documentDirectory + baseName + ".jpg",
+          },
+        ],
+
+        name: baseName.split("_")[0],
+      };
+    });
+
+    return songList;
+  } catch (error) {
+    console.error("Error fetching downloaded songs:", error);
+
+    return [];
+  }
+};
+
 export const downloadSong = async (
   songUrl: string,
   imageUrl: string,
-  fileName: string
+  fileName: string,
 ) => {
   try {
     const songUri = FileSystem.documentDirectory + fileName + ".m4a";
@@ -103,7 +113,7 @@ export const downloadSong = async (
     // Download the image
     const imageDownload = FileSystem.createDownloadResumable(
       imageUrl,
-      imageUri
+      imageUri,
     );
     await imageDownload.downloadAsync();
 
@@ -116,7 +126,7 @@ export const downloadSong = async (
 
 export const exportToDownloads = async (
   fileUri?: string,
-  fileName?: string
+  fileName?: string,
 ) => {
   try {
     // Ask for media library permission
@@ -147,7 +157,7 @@ export const exportToDownloads = async (
     } else {
       // Case 2: Export ALL files in documentDirectory
       const files = await FileSystem.readDirectoryAsync(
-        FileSystem.documentDirectory!
+        FileSystem.documentDirectory!,
       );
 
       for (const f of files) {
@@ -161,6 +171,249 @@ export const exportToDownloads = async (
   } catch (error) {
     console.error("Error exporting files:", error);
     return null;
+  }
+};
+
+export const exportSongToFolder = async (songUri: string, imageUri: string) => {
+  try {
+    const permissions =
+      await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+
+    if (!permissions.granted) {
+      return false;
+    }
+
+    const directoryUri = permissions.directoryUri;
+
+    // Read files as base64
+    const songBase64 = await FileSystem.readAsStringAsync(songUri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+
+    const imageBase64 = await FileSystem.readAsStringAsync(imageUri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+
+    const songName = songUri.split("/").pop()!;
+    const imageName = imageUri.split("/").pop()!;
+
+    const songFile = await FileSystem.StorageAccessFramework.createFileAsync(
+      directoryUri,
+      songName,
+      "audio/mp4",
+    );
+
+    await FileSystem.writeAsStringAsync(songFile, songBase64, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+
+    const imageFile = await FileSystem.StorageAccessFramework.createFileAsync(
+      directoryUri,
+      imageName,
+      "image/jpeg",
+    );
+
+    await FileSystem.writeAsStringAsync(imageFile, imageBase64, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Export failed:", error);
+    return false;
+  }
+};
+
+export const exportDownloadedSongs = async () => {
+  try {
+    // 1. Get downloaded songs
+    const songs: any = await getDownloadedSongs();
+
+    if (!songs.length) {
+      console.log("No downloaded songs found");
+      return false;
+    }
+
+    // 2. Ask user to select a folder
+    const permission =
+      await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+
+    if (!permission.granted) {
+      console.log("Folder permission cancelled");
+      return false;
+    }
+
+    const directoryUri = permission.directoryUri;
+
+    // 3. Export every song + image
+    for (const song of songs) {
+      const songUri = song.downloadUrl?.[4]?.url;
+      const imageUri = song.image?.[2]?.url;
+
+      if (!songUri) {
+        continue;
+      }
+
+      const songName = songUri.split("/").pop();
+
+      if (!songName) {
+        continue;
+      }
+
+      // Read song
+      const songBase64 = await FileSystem.readAsStringAsync(songUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Create song in selected folder
+      const exportedSong =
+        await FileSystem.StorageAccessFramework.createFileAsync(
+          directoryUri,
+          songName,
+          songName.endsWith(".mp3") ? "audio/mpeg" : "audio/mp4",
+        );
+
+      // Write song
+      await FileSystem.writeAsStringAsync(exportedSong, songBase64, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // 4. Export corresponding image
+      if (imageUri) {
+        const imageName = imageUri.split("/").pop();
+
+        if (imageName) {
+          const imageBase64 = await FileSystem.readAsStringAsync(imageUri, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+
+          const exportedImage =
+            await FileSystem.StorageAccessFramework.createFileAsync(
+              directoryUri,
+              imageName,
+              "image/jpeg",
+            );
+
+          await FileSystem.writeAsStringAsync(exportedImage, imageBase64, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+        }
+      }
+    }
+
+    console.log("All songs exported successfully");
+
+    return true;
+  } catch (error) {
+    console.error("Error exporting downloaded songs:", error);
+
+    return false;
+  }
+};
+
+export const importDownloadedSongs = async () => {
+  try {
+    const permission =
+      await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+
+    if (!permission.granted) {
+      console.log("Folder selection cancelled");
+      return false;
+    }
+
+    const directoryUri = permission.directoryUri;
+
+    const files =
+      await FileSystem.StorageAccessFramework.readDirectoryAsync(directoryUri);
+
+    console.log("FILES:", files);
+
+    let importedCount = 0;
+
+    for (const fileUri of files) {
+      try {
+        /**
+         * SAF returns something like:
+         *
+         * primary%3ADownload%2Fsongs%2FRaahi%20Manwa...m4a
+         *
+         * Decode it first.
+         */
+        const decodedUri = decodeURIComponent(fileUri);
+
+        console.log("DECODED URI:", decodedUri);
+
+        /**
+         * Get everything after the last /
+         */
+        const fileName = decodedUri.split("/").pop();
+
+        if (!fileName) {
+          continue;
+        }
+
+        console.log("REAL FILE NAME:", fileName);
+
+        const lowerName = fileName.toLowerCase();
+
+        const isAudio =
+          lowerName.endsWith(".m4a") || lowerName.endsWith(".mp3");
+
+        const isImage =
+          lowerName.endsWith(".jpg") ||
+          lowerName.endsWith(".jpeg") ||
+          lowerName.endsWith(".png");
+
+        if (!isAudio && !isImage) {
+          continue;
+        }
+
+        /**
+         * IMPORTANT:
+         * Use the REAL filename, not the encoded SAF path.
+         */
+        const destination = `${FileSystem.documentDirectory}${fileName}`;
+
+        console.log("DESTINATION:", destination);
+
+        const existing = await FileSystem.getInfoAsync(destination);
+
+        if (existing.exists) {
+          console.log("Already exists:", fileName);
+          continue;
+        }
+
+        /**
+         * Copy the original SAF URI.
+         * Do NOT use decodedUri here.
+         *
+         * fileUri is the actual SAF URI that Android
+         * understands.
+         */
+        await FileSystem.copyAsync({
+          from: fileUri,
+          to: destination,
+        });
+
+        const verify = await FileSystem.getInfoAsync(destination);
+
+        if (verify.exists) {
+          console.log("Successfully imported:", fileName);
+
+          importedCount++;
+        }
+      } catch (fileError) {
+        console.error("Error importing file:", fileUri, fileError);
+      }
+    }
+
+    console.log(`Imported ${importedCount} files`);
+
+    return importedCount > 0;
+  } catch (error) {
+    console.error("Error importing downloaded songs:", error);
+
+    return false;
   }
 };
 
@@ -212,7 +465,7 @@ export const exportToDownloads = async (
 export const handleDownload = async (
   url: string,
   image: string,
-  fileName: string
+  fileName: string,
 ) => {
   try {
     Toast.show({

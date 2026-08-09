@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 
-import { FlatList, Pressable, StyleSheet, View } from "react-native";
+import { Alert, FlatList, Pressable, StyleSheet, View } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -15,11 +15,16 @@ import { colors } from "@/src/constants/theme";
 import { Text } from "@/src/providers/CustomText";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Header from "@/src/container/dashboard/common/header";
+import {
+  exportDownloadedSongs,
+  exportSongToFolder,
+  importDownloadedSongs,
+} from "@/src/utilities/helpers";
 
 const LIMIT = 100;
 
 const Files = () => {
-  const { localFilesAfterSearch } = useGlobalContext();
+  const { localFilesAfterSearch, setImportCount } = useGlobalContext();
 
   const { setCurrentSong, setCurrentSongList, currentSong } = useAudioContext();
 
@@ -161,18 +166,62 @@ const Files = () => {
                 </View>
 
                 {/* Download icon */}
+                <View style={styles.actionContainer}>
+                  {/* Import */}
+                  <Pressable
+                    onPress={async () => {
+                      const success = await importDownloadedSongs();
 
-                <View style={styles.downloadIcon}>
-                  <LinearGradient
-                    colors={["rgba(168,85,247,0.16)", "rgba(168,85,247,0.04)"]}
-                    style={styles.downloadIconGradient}
+                      setImportCount((prev: any) => prev + 1);
+
+                      if (success) {
+                        Alert.alert("Success", "Songs imported successfully");
+                      }
+                    }}
                   >
-                    <Ionicons
-                      name="download-outline"
-                      size={moderateScale(19)}
-                      color={colors.primary}
-                    />
-                  </LinearGradient>
+                    <View style={styles.downloadIcon}>
+                      <LinearGradient
+                        colors={[
+                          "rgba(168,85,247,0.16)",
+                          "rgba(168,85,247,0.04)",
+                        ]}
+                        style={styles.downloadIconGradient}
+                      >
+                        <Ionicons
+                          name="cloud-download-outline"
+                          size={moderateScale(19)}
+                          color={colors.primary}
+                        />
+                      </LinearGradient>
+                    </View>
+                  </Pressable>
+
+                  {/* Export */}
+                  <Pressable
+                    onPress={async () => {
+                      const success = await exportDownloadedSongs();
+
+                      if (success) {
+                        Alert.alert("Success", "Songs exported successfully");
+                      }
+                    }}
+                  >
+                    <View style={styles.downloadIcon}>
+                      <LinearGradient
+                        colors={[
+                          "rgba(168,85,247,0.16)",
+                          "rgba(168,85,247,0.04)",
+                        ]}
+                        style={styles.downloadIconGradient}
+                      >
+                        <Ionicons
+                          name="cloud-upload-outline"
+                          size={moderateScale(19)}
+                          color={colors.primary}
+                        />
+                      </LinearGradient>
+                    </View>
+                  </Pressable>
                 </View>
               </View>
             </View>
@@ -277,6 +326,11 @@ const EmptyState = () => {
 /* ================================================================== */
 
 const styles = StyleSheet.create({
+  actionContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: moderateScale(8),
+  },
   /* ================================================================ */
   /* CONTAINER                                                         */
   /* ================================================================ */

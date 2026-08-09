@@ -11,6 +11,7 @@ import AudioPlayer from "@/src/container/dashboard/common/audio-player";
 import GlobalProvider from "@/src/providers/GlobalProvider";
 import SocketProvider from "@/src/providers/socketProvider";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { PlayerProvider } from "@/src/providers/PlaterProvider";
 
 const DashboardLayout = () => {
   return (
@@ -19,18 +20,20 @@ const DashboardLayout = () => {
         <BackgroundImageWrapper>
           <AudioProvider>
             <GlobalProvider>
-              {/* <Toast /> */}
-              {/* <RightDrawer /> */}
-              <View
-                style={{
-                  flex: 1,
-                  backgroundColor: "rgba(0,0,0,.91)",
-                }}
-              >
-                <Slot />
-                <AudioPlayer />
-                <BottomHeader />
-              </View>
+              <PlayerProvider>
+                {/* <Toast /> */}
+                {/* <RightDrawer /> */}
+                <View
+                  style={{
+                    flex: 1,
+                    backgroundColor: "rgba(0,0,0,.91)",
+                  }}
+                >
+                  <Slot />
+                  <AudioPlayer />
+                  <BottomHeader />
+                </View>
+              </PlayerProvider>
             </GlobalProvider>
           </AudioProvider>
         </BackgroundImageWrapper>

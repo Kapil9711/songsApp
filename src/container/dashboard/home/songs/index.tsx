@@ -66,74 +66,66 @@ const Songs = () => {
       style={[
         styles.container,
         {
-          paddingTop: insets.top,
+          // paddingTop: insets.top,
         },
       ]}
     >
       {/* ============================================================ */}
-      {/* HEADER                                                       */}
-      {/* ============================================================ */}
-
-      <Header />
-
-      {/* ============================================================ */}
-      {/* PAGE INTRO                                                    */}
-      {/* ============================================================ */}
-
-      <View style={styles.pageHeader}>
-        <View>
-          <View style={styles.titleRow}>
-            <Text style={styles.title}>Songs</Text>
-
-            <View style={styles.titleDot} />
-          </View>
-
-          <Text style={styles.subtitle}>
-            {songListToRender?.length ?? 0} songs
-          </Text>
-        </View>
-
-        <View style={styles.musicIcon}>
-          <Ionicons
-            name="musical-notes"
-            size={moderateScale(18)}
-            color={colors.primary}
-          />
-        </View>
-      </View>
-
-      {/* ============================================================ */}
-      {/* LIST HEADER                                                    */}
-      {/* ============================================================ */}
-
-      <View style={styles.listHeader}>
-        <View style={styles.listTitleContainer}>
-          <Text style={styles.listTitle}>Your collection</Text>
-
-          <View style={styles.countBadge}>
-            <Text style={styles.countText}>
-              {songListToRender?.length ?? 0}
-            </Text>
-          </View>
-        </View>
-
-        <Pressable
-          style={({ pressed }) => [
-            styles.filterButton,
-            pressed && styles.filterButtonPressed,
-          ]}
-        >
-          <Ionicons
-            name="options-outline"
-            size={moderateScale(16)}
-            color={colors.textSecondary}
-          />
-        </Pressable>
-      </View>
-
-      {/* ============================================================ */}
       {/* SONG LIST                                                     */}
       {/* ============================================================ */}
+
+      {isLoading && (
+        <View style={{ paddingTop: insets.top }}>
+          <Header />
+
+          <View style={styles.pageHeader}>
+            <View>
+              <View style={styles.titleRow}>
+                <Text style={styles.title}>Songs</Text>
+
+                <View style={styles.titleDot} />
+              </View>
+
+              <Text style={styles.subtitle}>
+                {songListToRender?.length ?? 0} songs
+              </Text>
+            </View>
+
+            <View style={styles.musicIcon}>
+              <Ionicons
+                name="musical-notes"
+                size={moderateScale(18)}
+                color={colors.primary}
+              />
+            </View>
+          </View>
+
+          <View style={styles.listHeader}>
+            <View style={styles.listTitleContainer}>
+              <Text style={styles.listTitle}>Your collection</Text>
+
+              <View style={styles.countBadge}>
+                <Text style={styles.countText}>
+                  {songListToRender?.length ?? 0}
+                </Text>
+              </View>
+            </View>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.filterButton,
+                pressed && styles.filterButtonPressed,
+              ]}
+            >
+              <Ionicons
+                name="options-outline"
+                size={moderateScale(16)}
+                color={colors.textSecondary}
+              />
+            </Pressable>
+          </View>
+        </View>
+      )}
 
       {isLoading ? (
         <LoadingState />
@@ -159,6 +151,58 @@ const Songs = () => {
           }}
           onEndReached={fetchData}
           onEndReachedThreshold={0.25}
+          ListHeaderComponent={
+            <View style={{ paddingTop: insets.top }}>
+              <Header />
+
+              <View style={styles.pageHeader}>
+                <View>
+                  <View style={styles.titleRow}>
+                    <Text style={styles.title}>Songs</Text>
+
+                    <View style={styles.titleDot} />
+                  </View>
+
+                  <Text style={styles.subtitle}>
+                    {songListToRender?.length ?? 0} songs
+                  </Text>
+                </View>
+
+                <View style={styles.musicIcon}>
+                  <Ionicons
+                    name="musical-notes"
+                    size={moderateScale(18)}
+                    color={colors.primary}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.listHeader}>
+                <View style={styles.listTitleContainer}>
+                  <Text style={styles.listTitle}>Your collection</Text>
+
+                  <View style={styles.countBadge}>
+                    <Text style={styles.countText}>
+                      {songListToRender?.length ?? 0}
+                    </Text>
+                  </View>
+                </View>
+
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.filterButton,
+                    pressed && styles.filterButtonPressed,
+                  ]}
+                >
+                  <Ionicons
+                    name="options-outline"
+                    size={moderateScale(16)}
+                    color={colors.textSecondary}
+                  />
+                </Pressable>
+              </View>
+            </View>
+          }
           ListFooterComponent={() =>
             isLoadingSongListToRender ? (
               <View style={styles.footerLoader}>

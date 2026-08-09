@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { ScrollView, Spinner } from "tamagui";
 import { Ionicons } from "@expo/vector-icons";
@@ -138,50 +138,42 @@ const Home = () => {
 /* -------------------------------------------------------------------------- */
 
 const HomeHeader = ({ showHeader = true }: any) => {
+  const greeting = useMemo(() => {
+    // IST (Asia/Kolkata)
+    const now = new Date();
+
+    const istTime = new Intl.DateTimeFormat("en-IN", {
+      timeZone: "Asia/Kolkata",
+      hour: "numeric",
+      hour12: false,
+    }).formatToParts(now);
+
+    const hour = Number(
+      istTime.find((part) => part.type === "hour")?.value ?? 0,
+    );
+
+    if (hour >= 5 && hour < 12) {
+      return "Good morning";
+    }
+
+    if (hour >= 12 && hour < 17) {
+      return "Good afternoon";
+    }
+
+    if (hour >= 17 && hour < 21) {
+      return "Good evening";
+    }
+
+    return "Good night";
+  }, []);
+
   return (
-    <View style={styles.header}>
-      {/* <View style={styles.headerTop}>
-        <View style={styles.profileContainer}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>M</Text>
-          </View>
-
-          <View style={styles.onlineDot} />
-        </View>
-
-        <Pressable style={styles.searchContainer}>
-          <Ionicons
-            name="search-outline"
-            size={moderateScale(22)}
-            color={colors.textMuted}
-          />
-
-          <TextInput
-            placeholder="Search songs, artists..."
-            placeholderTextColor={colors.textMuted}
-            style={styles.searchInput}
-          />
-        </Pressable>
-
-        <Pressable
-          hitSlop={10}
-          style={({ pressed }) => [
-            styles.menuButton,
-            pressed && styles.pressed,
-          ]}
-        >
-          <Ionicons
-            name="menu-outline"
-            size={moderateScale(30)}
-            color={colors.text}
-          />
-        </Pressable>
-      </View> */}
-      {showHeader && <Header />}
-
+    <View style={[styles.container, { paddingHorizontal: moderateScale(5) }]}>
       {/* Small greeting */}
+
+      {showHeader && <Header />}
       <View style={styles.greetingContainer}>
-        <Text style={styles.greeting}>Good morning</Text>
+        <Text style={styles.greeting}>{greeting}</Text>
 
         <Text style={styles.subtitle}>Your music, your mood.</Text>
       </View>
@@ -382,7 +374,7 @@ const styles = StyleSheet.create({
 
   greetingContainer: {
     // marginTop: moderateScale(16),
-    paddingHorizontal: moderateScale(2),
+    paddingHorizontal: moderateScale(5),
   },
 
   greeting: {

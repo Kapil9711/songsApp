@@ -18,7 +18,12 @@ const Album = () => {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, borderWidth: 1, borderColor: "white" },
+      ]}
+    >
       {/* ============================================================ */}
       {/* HEADER                                                       */}
       {/* ============================================================ */}
@@ -381,7 +386,7 @@ const styles = StyleSheet.create({
 
     paddingHorizontal: moderateScale(8),
 
-    paddingBottom: moderateScale(175),
+    // paddingBottom: moderateScale(175),
   },
 
   /* ================================================================ */

@@ -1,13 +1,18 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   FlatList,
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { moderateScale } from "react-native-size-matters";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { Text } from "@/src/providers/CustomText";
+import { colors } from "@/src/constants/theme";
 
 import { getValueInAsync } from "@/src/utilities/helpers";
 import { useGlobalContext } from "@/src/providers/GlobalProvider";
@@ -15,7 +20,6 @@ import { useAudioContext } from "@/src/providers/AudioProvider";
 import { useSocket } from "@/src/providers/socketProvider";
 
 import SongsSmollCard from "@/src/container/dashboard/common/song-card/SongsSmollCard";
-import { colors } from "@/src/constants/theme";
 
 const Favorite = () => {
   const { setCurrentSong, setCurrentSongList, currentSong } = useAudioContext();
@@ -26,32 +30,42 @@ const Favorite = () => {
 
   const insets = useSafeAreaInsets();
 
-  const [page, setPage] = useState(1);
   const [active, setActive] = useState("my");
 
-  let finaleData: any[] = [];
+  /* ================================================================ */
+  /* FAVORITE DATA                                                     */
+  /* ================================================================ */
 
-  if (active === "my") {
-    finaleData = favorite ?? [];
-  } else {
-    const item = friends.find((item: any) => item?.user?.name === active);
+  const finaleData = useMemo(() => {
+    if (active === "my") {
+      return favorite ?? [];
+    }
 
-    finaleData = item?.user?.favorite ?? [];
-  }
+    const friend = friends?.find((item: any) => item?.user?.name === active);
+
+    return friend?.user?.favorite ?? [];
+  }, [active, favorite, friends]);
+
+  /* ================================================================ */
+  /* SONG PRESS                                                        */
+  /* ================================================================ */
 
   const handleSongPress = async (item: any) => {
     setCurrentSong(item);
-
-    const user: any = await getValueInAsync("user");
-
-    const userId = JSON.parse(user)?._id;
-
-    socket?.emit("songPlaying", {
-      senderId: userId,
-      song: item,
-    });
-
     setCurrentSongList(finaleData);
+
+    try {
+      const user: any = await getValueInAsync("user");
+
+      const userId = JSON.parse(user || "{}")?._id;
+
+      socket?.emit("songPlaying", {
+        senderId: userId,
+        song: item,
+      });
+    } catch (error) {
+      console.error("Failed to emit songPlaying:", error);
+    }
   };
 
   return (
@@ -63,26 +77,48 @@ const Favorite = () => {
         },
       ]}
     >
-      {/* Header */}
+      {/* ============================================================ */}
+      {/* HEADER                                                        */}
+      {/* ============================================================ */}
+
       <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>
-            Favorites<Text style={styles.dot}>.</Text>
-          </Text>
+        <View style={styles.headerLeft}>
+          <View style={styles.titleRow}>
+            <Text style={styles.title}>Favorites</Text>
+
+            <View style={styles.titleDot} />
+          </View>
 
           <Text style={styles.subtitle}>Songs you never want to lose</Text>
         </View>
 
-        <View style={styles.countContainer}>
+        {/* Count */}
+
+        <View style={styles.countCard}>
           <Text style={styles.count}>{finaleData.length}</Text>
 
           <Text style={styles.countLabel}>songs</Text>
         </View>
       </View>
 
-      {/* User Filter */}
+      {/* ============================================================ */}
+      {/* FILTER                                                        */}
+      {/* ============================================================ */}
+
       <View style={styles.filterSection}>
-        <Text style={styles.filterTitle}>FAVORITES FROM</Text>
+        <View style={styles.filterHeader}>
+          <View style={styles.filterTitleRow}>
+            <Ionicons
+              name="people-outline"
+              size={moderateScale(13)}
+              color={colors.primary}
+            />
+
+            <Text style={styles.filterTitle}>FAVORITES FROM</Text>
+          </View>
+
+          <Text style={styles.filterCount}>{friends?.length ?? 0} friends</Text>
+        </View>
 
         <ScrollView
           horizontal
@@ -90,13 +126,21 @@ const Favorite = () => {
           contentContainerStyle={styles.filterContent}
         >
           {/* My Favorites */}
+
           <Pressable
             onPress={() => setActive("my")}
-            style={[
+            style={({ pressed }) => [
               styles.filterButton,
               active === "my" && styles.filterButtonActive,
+              pressed && styles.filterPressed,
             ]}
           >
+            <Ionicons
+              name={active === "my" ? "heart" : "heart-outline"}
+              size={moderateScale(14)}
+              color={active === "my" ? colors.text : colors.textSecondary}
+            />
+
             <Text
               style={[
                 styles.filterText,
@@ -108,23 +152,37 @@ const Favorite = () => {
           </Pressable>
 
           {/* Friends */}
-          {friends.map((item: any) => {
+
+          {friends?.map((item: any) => {
             const name = item?.user?.name;
+
+            if (!name) return null;
+
+            const isActive = active === name;
 
             return (
               <Pressable
-                key={item._id}
+                key={item?._id ?? name}
                 onPress={() => setActive(name)}
-                style={[
+                style={({ pressed }) => [
                   styles.filterButton,
-                  active === name && styles.filterButtonActive,
+                  isActive && styles.filterButtonActive,
+                  pressed && styles.filterPressed,
                 ]}
               >
+                <View
+                  style={[styles.friendDot, isActive && styles.friendDotActive]}
+                >
+                  <Text style={styles.friendInitial}>
+                    {name.charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+
                 <Text
                   numberOfLines={1}
                   style={[
                     styles.filterText,
-                    active === name && styles.filterTextActive,
+                    isActive && styles.filterTextActive,
                   ]}
                 >
                   {name}
@@ -135,50 +193,78 @@ const Favorite = () => {
         </ScrollView>
       </View>
 
-      {/* Songs */}
+      {/* ============================================================ */}
+      {/* DIVIDER                                                       */}
+      {/* ============================================================ */}
+
+      <View style={styles.divider} />
+
+      {/* ============================================================ */}
+      {/* SONG LIST                                                     */}
+      {/* ============================================================ */}
+
       <FlatList
         data={finaleData}
-        keyExtractor={(item: any, index) => `${item.id}-${index}`}
+        keyExtractor={(item: any, index) =>
+          `${item?.id ?? item?.name}-${index}`
+        }
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.listContent,
           finaleData.length === 0 && styles.emptyListContent,
         ]}
-        renderItem={({ item, index }) => {
-          return (
-            <Pressable
+        renderItem={({ item, index }) => (
+          <Pressable
+            // onPress={() => handleSongPress(item)}
+            style={({ pressed }) => [
+              styles.songItem,
+              pressed && styles.songItemPressed,
+            ]}
+          >
+            <SongsSmollCard
+              isActive={currentSong?.id === item?.id}
+              title={item?.name ?? ""}
+              image={item?.image?.[2]?.url}
+              number={index + 1}
+              song={item}
               onPress={() => handleSongPress(item)}
-              style={({ pressed }) => [
-                styles.songItem,
-                pressed && styles.songItemPressed,
-              ]}
-            >
-              <SongsSmollCard
-                isActive={currentSong?.id === item.id}
-                title={item.name}
-                image={item?.image?.[2]?.url}
-                number={index + 1}
-                song={item}
-              />
-            </Pressable>
-          );
-        }}
-        onEndReached={() => {
-          setPage((prev) => prev + 1);
-        }}
-        onEndReachedThreshold={0.2}
+            />
+          </Pressable>
+        )}
         ListEmptyComponent={<EmptyFavorites />}
+      />
+
+      {/* ============================================================ */}
+      {/* TOP FADE                                                      */}
+      {/* ============================================================ */}
+
+      <LinearGradient
+        pointerEvents="none"
+        colors={[colors.background, "rgba(8,0,3,0.78)", "rgba(8,0,3,0)"]}
+        locations={[0, 0.45, 1]}
+        style={styles.topFade}
       />
     </View>
   );
 };
 
+/* ================================================================== */
+/* EMPTY STATE                                                        */
+/* ================================================================== */
+
 const EmptyFavorites = () => {
   return (
     <View style={styles.emptyContainer}>
-      <View style={styles.emptyIcon}>
-        <Text style={styles.emptyIconText}>♡</Text>
-      </View>
+      <LinearGradient
+        colors={["rgba(168,85,247,0.16)", "rgba(168,85,247,0.04)"]}
+        style={styles.emptyIcon}
+      >
+        <Ionicons
+          name="heart-outline"
+          size={moderateScale(30)}
+          color={colors.primary}
+        />
+      </LinearGradient>
 
       <Text style={styles.emptyTitle}>No favorites yet</Text>
 
@@ -189,98 +275,226 @@ const EmptyFavorites = () => {
   );
 };
 
+/* ================================================================== */
+/* STYLES                                                             */
+/* ================================================================== */
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+
     backgroundColor: colors.background,
+
+    position: "relative",
   },
 
+  /* ================================================================ */
+  /* HEADER                                                            */
+  /* ================================================================ */
+
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 14,
-    paddingBottom: 20,
+    paddingHorizontal: moderateScale(16),
+
+    paddingTop: moderateScale(14),
+
+    paddingBottom: moderateScale(15),
+
     flexDirection: "row",
+
     alignItems: "center",
+
     justifyContent: "space-between",
   },
 
-  title: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: colors.text,
-    letterSpacing: -0.6,
+  headerLeft: {
+    flex: 1,
+
+    minWidth: 0,
   },
 
-  dot: {
-    color: colors.primary,
+  titleRow: {
+    flexDirection: "row",
+
+    alignItems: "center",
+  },
+
+  title: {
+    fontSize: moderateScale(26),
+
+    lineHeight: moderateScale(31),
+
+    fontWeight: "800",
+
+    letterSpacing: -0.8,
+
+    color: colors.text,
+  },
+
+  titleDot: {
+    width: moderateScale(6),
+
+    height: moderateScale(6),
+
+    borderRadius: moderateScale(3),
+
+    marginLeft: moderateScale(5),
+
+    marginTop: moderateScale(12),
+
+    backgroundColor: colors.primary,
   },
 
   subtitle: {
-    marginTop: 4,
-    fontSize: 13,
-    color: colors.textSecondary,
+    marginTop: moderateScale(3),
+
+    fontSize: moderateScale(10.5),
+
+    color: colors.textMuted,
   },
 
-  countContainer: {
-    minWidth: 55,
-    height: 55,
-    borderRadius: 16,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
+  /* ================================================================ */
+  /* COUNT                                                             */
+  /* ================================================================ */
+
+  countCard: {
+    width: moderateScale(58),
+
+    height: moderateScale(58),
+
+    marginLeft: moderateScale(12),
+
+    borderRadius: moderateScale(17),
+
     alignItems: "center",
+
     justifyContent: "center",
+
+    backgroundColor: colors.surface,
+
+    borderWidth: 1,
+
+    borderColor: colors.border,
   },
 
   count: {
-    fontSize: 17,
-    fontWeight: "700",
+    fontSize: moderateScale(18),
+
+    lineHeight: moderateScale(21),
+
+    fontWeight: "800",
+
     color: colors.text,
   },
 
   countLabel: {
-    marginTop: 1,
-    fontSize: 10,
+    marginTop: moderateScale(2),
+
+    fontSize: moderateScale(8.5),
+
+    fontWeight: "500",
+
     color: colors.textMuted,
   },
 
+  /* ================================================================ */
+  /* FILTER                                                            */
+  /* ================================================================ */
+
   filterSection: {
-    marginBottom: 8,
+    marginBottom: moderateScale(10),
+  },
+
+  filterHeader: {
+    paddingHorizontal: moderateScale(16),
+
+    marginBottom: moderateScale(9),
+
+    flexDirection: "row",
+
+    alignItems: "center",
+
+    justifyContent: "space-between",
+  },
+
+  filterTitleRow: {
+    flexDirection: "row",
+
+    alignItems: "center",
+
+    gap: moderateScale(6),
   },
 
   filterTitle: {
-    paddingHorizontal: 20,
-    marginBottom: 10,
-    fontSize: 10,
-    fontWeight: "700",
-    letterSpacing: 1.2,
+    fontSize: moderateScale(9),
+
+    fontWeight: "800",
+
+    letterSpacing: 1.1,
+
+    color: colors.textMuted,
+  },
+
+  filterCount: {
+    fontSize: moderateScale(8.5),
+
+    fontWeight: "500",
+
     color: colors.textMuted,
   },
 
   filterContent: {
-    paddingHorizontal: 20,
-    gap: 8,
+    paddingHorizontal: moderateScale(16),
+
+    gap: moderateScale(7),
   },
 
   filterButton: {
-    minHeight: 38,
-    paddingHorizontal: 15,
-    borderRadius: 13,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
+    minHeight: moderateScale(38),
+
+    maxWidth: moderateScale(150),
+
+    paddingHorizontal: moderateScale(12),
+
+    borderRadius: moderateScale(13),
+
+    flexDirection: "row",
+
     alignItems: "center",
+
     justifyContent: "center",
+
+    gap: moderateScale(6),
+
+    backgroundColor: colors.surface,
+
+    borderWidth: 1,
+
+    borderColor: colors.border,
   },
 
   filterButtonActive: {
     backgroundColor: colors.primary,
+
     borderColor: colors.primary,
   },
 
+  filterPressed: {
+    opacity: 0.72,
+
+    transform: [
+      {
+        scale: 0.96,
+      },
+    ],
+  },
+
   filterText: {
-    fontSize: 13,
+    maxWidth: moderateScale(110),
+
+    fontSize: moderateScale(11),
+
     fontWeight: "600",
+
     color: colors.textSecondary,
   },
 
@@ -288,20 +502,77 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
 
+  friendDot: {
+    width: moderateScale(22),
+
+    height: moderateScale(22),
+
+    borderRadius: moderateScale(8),
+
+    alignItems: "center",
+
+    justifyContent: "center",
+
+    backgroundColor: colors.surfaceElevated,
+  },
+
+  friendDotActive: {
+    backgroundColor: "rgba(255,255,255,0.18)",
+  },
+
+  friendInitial: {
+    fontSize: moderateScale(8),
+
+    fontWeight: "800",
+
+    color: colors.text,
+  },
+
+  /* ================================================================ */
+  /* DIVIDER                                                           */
+  /* ================================================================ */
+
+  divider: {
+    height: 1,
+
+    marginHorizontal: moderateScale(16),
+
+    marginBottom: moderateScale(5),
+
+    backgroundColor: "rgba(255,255,255,0.045)",
+  },
+
+  /* ================================================================ */
+  /* LIST                                                              */
+  /* ================================================================ */
+
   listContent: {
-    paddingTop: 8,
-    paddingHorizontal: 8,
-    paddingBottom: 180,
+    paddingTop: moderateScale(4),
+
+    paddingHorizontal: moderateScale(5),
+
+    paddingBottom: moderateScale(190),
   },
 
   songItem: {
-    marginTop: 5,
-    borderRadius: 14,
+    marginVertical: moderateScale(4),
+
+    borderRadius: moderateScale(17),
   },
 
   songItemPressed: {
-    opacity: 0.7,
+    opacity: 0.72,
+
+    transform: [
+      {
+        scale: 0.985,
+      },
+    ],
   },
+
+  /* ================================================================ */
+  /* EMPTY                                                             */
+  /* ================================================================ */
 
   emptyListContent: {
     flexGrow: 1,
@@ -309,41 +580,74 @@ const styles = StyleSheet.create({
 
   emptyContainer: {
     flex: 1,
-    minHeight: 350,
+
+    minHeight: moderateScale(350),
+
     alignItems: "center",
+
     justifyContent: "center",
-    paddingHorizontal: 40,
+
+    paddingHorizontal: moderateScale(45),
   },
 
   emptyIcon: {
-    width: 68,
-    height: 68,
-    borderRadius: 22,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 16,
-  },
+    width: moderateScale(72),
 
-  emptyIconText: {
-    fontSize: 32,
-    color: colors.primary,
+    height: moderateScale(72),
+
+    borderRadius: moderateScale(24),
+
+    alignItems: "center",
+
+    justifyContent: "center",
+
+    overflow: "hidden",
+
+    borderWidth: 1,
+
+    borderColor: "rgba(168,85,247,0.18)",
   },
 
   emptyTitle: {
-    fontSize: 17,
-    fontWeight: "700",
+    marginTop: moderateScale(16),
+
+    fontSize: moderateScale(17),
+
+    fontWeight: "800",
+
     color: colors.text,
   },
 
   emptyDescription: {
-    marginTop: 7,
-    fontSize: 13,
-    lineHeight: 19,
+    maxWidth: moderateScale(260),
+
+    marginTop: moderateScale(7),
+
+    fontSize: moderateScale(11),
+
+    lineHeight: moderateScale(17),
+
     textAlign: "center",
+
     color: colors.textMuted,
+  },
+
+  /* ================================================================ */
+  /* TOP FADE                                                          */
+  /* ================================================================ */
+
+  topFade: {
+    position: "absolute",
+
+    top: 0,
+
+    left: 0,
+
+    right: 0,
+
+    height: moderateScale(42),
+
+    zIndex: 20,
   },
 });
 

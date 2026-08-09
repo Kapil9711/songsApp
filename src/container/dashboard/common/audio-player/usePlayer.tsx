@@ -30,13 +30,8 @@ async function setupAudio() {
   });
 }
 export const usePlayer = () => {
-  const {
-    sound,
-
-    currentSong,
-    setCurrentSong,
-    currentSongList,
-  } = useAudioContext();
+  const { sound, currentSong, setCurrentSong, currentSongList } =
+    useAudioContext();
   const { user, saveRecentlyPlayedSong } = useGlobalContext();
   const [isPlaying, setIsPlaying] = useState(false);
   const { setImage } = useBackgroudImage();

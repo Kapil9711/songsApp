@@ -40,6 +40,7 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingSongListToRender, setIsLoadingSongListToRender] =
     useState(false);
+  const [importCount, setImportCount] = useState(0);
   const {
     user,
     handleFavorite,
@@ -227,7 +228,7 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
         setIsLoadingSongListToRender(false);
       }
     })();
-  }, []);
+  }, [importCount]);
   const handleSingleAlbumOrPlalist = useCallback(
     async (id: string, type: string) => {
       try {
@@ -411,6 +412,7 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
       setActive,
       recentlyPlayed,
       saveRecentlyPlayedSong,
+      setImportCount,
     };
   }, [
     hindi,
@@ -432,6 +434,7 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
     favorite,
     recentlyPlayed,
     saveRecentlyPlayedSong,
+    setImportCount,
   ]);
   return (
     <GlobalContext.Provider value={value}>{children}</GlobalContext.Provider>

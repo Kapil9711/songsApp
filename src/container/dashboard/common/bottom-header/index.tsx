@@ -10,7 +10,7 @@ import { moderateScale } from "react-native-size-matters";
 
 const { width } = Dimensions.get("window");
 
-const NAV_HEIGHT = moderateScale(62);
+const NAV_HEIGHT = moderateScale(50);
 
 type TabItem = {
   key: string;
@@ -65,6 +65,12 @@ const BottomHeader = () => {
     return currentPath.includes(tab.activePath);
   };
 
+  const pathname = usePathname();
+
+  if (pathname.includes("/songs-details")) {
+    return null;
+  }
+
   return (
     <View
       pointerEvents="box-none"
@@ -113,14 +119,14 @@ const BottomHeader = () => {
               >
                 {/* Active pill */}
 
-                {active && (
+                {/* {active && (
                   <LinearGradient
                     colors={["rgba(168,85,247,0.24)", "rgba(126,61,190,0.08)"]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 0, y: 1 }}
                     style={styles.activePill}
                   />
-                )}
+                )} */}
 
                 <View style={styles.tabContent}>
                   <View
@@ -188,7 +194,7 @@ const styles = StyleSheet.create({
 
     padding: 1,
 
-    borderRadius: moderateScale(20),
+    borderRadius: moderateScale(8),
 
     shadowColor: colors.primary,
 
@@ -220,7 +226,7 @@ const styles = StyleSheet.create({
 
     paddingHorizontal: moderateScale(3),
 
-    borderRadius: moderateScale(19),
+    borderRadius: moderateScale(8),
 
     overflow: "hidden",
   },
@@ -302,6 +308,7 @@ const styles = StyleSheet.create({
 
   activeIconContainer: {
     backgroundColor: "rgba(168,85,247,0.12)",
+    borderRadius: moderateScale(8),
   },
 
   /* ================================================================ */
@@ -338,6 +345,7 @@ const styles = StyleSheet.create({
     position: "absolute",
 
     bottom: moderateScale(3),
+    left: moderateScale(-8),
 
     width: moderateScale(3.5),
     height: moderateScale(3.5),

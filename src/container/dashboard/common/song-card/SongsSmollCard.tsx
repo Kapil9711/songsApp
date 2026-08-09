@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
   row: {
     width: "100%",
 
-    minHeight: moderateScale(80),
+    minHeight: moderateScale(63),
 
     flexDirection: "row",
 
@@ -449,9 +449,9 @@ const styles = StyleSheet.create({
   /* ================================================================ */
 
   artwork: {
-    width: moderateScale(62),
+    width: moderateScale(50),
 
-    height: moderateScale(62),
+    height: moderateScale(50),
 
     flexShrink: 0,
 
@@ -459,7 +459,7 @@ const styles = StyleSheet.create({
 
     overflow: "hidden",
 
-    borderRadius: moderateScale(16),
+    borderRadius: moderateScale(8),
 
     backgroundColor: colors.surfaceElevated,
 
