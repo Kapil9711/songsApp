@@ -14,7 +14,7 @@ const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <KeyboardView>
+    <View style={{ flex: 1 }}>
       <View style={styles.content}>
         {/* Header */}
         <View style={styles.header}>
@@ -132,7 +132,7 @@ const SignIn = () => {
           </Pressable>
         </View>
       </View>
-    </KeyboardView>
+    </View>
   );
 };
 

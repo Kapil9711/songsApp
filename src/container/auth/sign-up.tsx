@@ -16,7 +16,7 @@ const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <KeyboardView>
+    <View style={{ flex: 1 }}>
       <View style={styles.container}>
         <View style={styles.content}>
           {/* Header */}
@@ -147,7 +147,7 @@ const SignUp = () => {
           </View>
         </View>
       </View>
-    </KeyboardView>
+    </View>
   );
 };
 
