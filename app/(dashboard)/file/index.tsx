@@ -20,6 +20,7 @@ import {
   exportSongToFolder,
   importDownloadedSongs,
 } from "@/src/utilities/helpers";
+import { SearchBar } from "@/src/container/dashboard/common/search-bar";
 
 const LIMIT = 100;
 
@@ -91,8 +92,10 @@ const Files = () => {
       {/* ============================================================ */}
 
       <View style={styles.header}>
-        <Header />
-        {/* <View style={styles.headerContent}>
+        {/* <Header /> */}
+        <SearchBar />
+        {/* <View styl
+        e={styles.headerContent}>
           <View>
             <View style={styles.titleRow}>
               <Text style={styles.title}>Downloads</Text>
