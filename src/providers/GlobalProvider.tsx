@@ -37,9 +37,13 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
   const [localFiles, setLocalFiles] = useState([]);
   const [localFilesAfterSearch, setLocalFilesAfterSearch] = useState([]);
   const [page, setPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState("arijit singh");
+  const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingSongListToRender, setIsLoadingSongListToRender] =
+    useState(false);
+  const [isLoadingAlbumListToRender, setIsLoadingAlbumListToRender] =
+    useState(false);
+  const [isLoadingPlaylistListToRender, setIsLoadingPlaylistListToRender] =
     useState(false);
   const [importCount, setImportCount] = useState(0);
   const {
@@ -325,7 +329,7 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
           (item: any) => item.language == "hindi",
         );
 
-        console.log("results", r);
+        // console.log("results", r);
 
         // console.log(r, "data");
         // songListToRender.concat(r);
@@ -338,6 +342,57 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
       setPage(999);
     }
   }, [page, isLoadingSongListToRender, searchQuery]);
+
+  const fetchAlbumData = useCallback(async () => {
+    if (page >= 30) return;
+    if (isLoadingAlbumListToRender) return;
+    setIsLoadingAlbumListToRender(true);
+    try {
+      const { data }: any = await axios.get(
+        `${jioApi}/api/search/albums?limit=50&query=${searchQuery}&page=${page + 1}`,
+      );
+      setPage(page + 1);
+      if (data?.data?.results) {
+        // const r: any = data.data.results?.filter(
+        //   (item: any) => item.language == "hindi",
+        // );
+
+        // console.log("results", data?.data?.results);
+
+        // console.log(r, "data");
+        // songListToRender.concat(r);
+        // console.log(songListToRender, "list");
+        setAlbumListToRender(
+          (prev: any) => [...prev, ...data?.data?.results] as any,
+        );
+        setIsLoadingAlbumListToRender(false);
+      }
+    } catch (error) {
+      setIsLoadingAlbumListToRender(false);
+      setPage(999);
+    }
+  }, [page, isLoadingAlbumListToRender, searchQuery]);
+
+  const fetchPlaylistData = useCallback(async () => {
+    if (page >= 30) return;
+    if (isLoadingPlaylistListToRender) return;
+    setIsLoadingPlaylistListToRender(true);
+    try {
+      const { data }: any = await axios.get(
+        `${jioApi}/api/search/playlists?limit=50&query=${searchQuery}&page=${page + 1}`,
+      );
+      setPage(page + 1);
+      if (data?.data?.results) {
+        setPlaListToRender(
+          (prev: any) => [...prev, ...data?.data?.results] as any,
+        );
+        setIsLoadingPlaylistListToRender(false);
+      }
+    } catch (error) {
+      setIsLoadingPlaylistListToRender(false);
+      setPage(999);
+    }
+  }, [page, isLoadingPlaylistListToRender, searchQuery]);
 
   const handleDownload = useCallback(
     async (url: string, image: string, fileName: string) => {
@@ -380,6 +435,7 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
 
   const value = useMemo(() => {
     return {
+      page,
       favorite,
       handleFavorite,
       songListToRender,
@@ -414,6 +470,10 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
       recentlyPlayed,
       saveRecentlyPlayedSong,
       setImportCount,
+      fetchAlbumData,
+      isLoadingAlbumListToRender,
+      fetchPlaylistData,
+      isLoadingPlaylistListToRender,
     };
   }, [
     hindi,
@@ -436,6 +496,10 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
     recentlyPlayed,
     saveRecentlyPlayedSong,
     setImportCount,
+    fetchAlbumData,
+    isLoadingAlbumListToRender,
+    fetchPlaylistData,
+    isLoadingPlaylistListToRender,
   ]);
 
   return (

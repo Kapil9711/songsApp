@@ -45,11 +45,13 @@ const ShowData = ({
 
     if (type === "album") {
       router.push("/(dashboard)/home/album");
+      setPage(2);
       return;
     }
 
     if (type === "playlist") {
       router.push("/(dashboard)/home/playlist");
+      setPage(2);
     }
   };
 

@@ -11,7 +11,7 @@ import { Text } from "@/src/providers/CustomText";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const PlaylistPage = () => {
-  const { playListToRender } = useGlobalContext();
+  const { playListToRender, page } = useGlobalContext();
 
   const count = playListToRender?.length ?? 0;
   const insets = useSafeAreaInsets();
@@ -51,6 +51,9 @@ const PlaylistPage = () => {
 
           <View style={styles.countBadge}>
             <Text style={styles.count}>{count}</Text>
+          </View>
+          <View style={styles.countBadge}>
+            <Text style={styles.count}>{page}</Text>
           </View>
         </View>
 

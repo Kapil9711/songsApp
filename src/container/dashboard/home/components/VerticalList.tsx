@@ -17,6 +17,7 @@ import { useAudioContext } from "@/src/providers/AudioProvider";
 import { useGlobalContext } from "@/src/providers/GlobalProvider";
 import { colors } from "@/src/constants/theme";
 import { Text } from "@/src/providers/CustomText";
+import { Spinner } from "tamagui";
 
 type VerticalListProps = {
   data: any[];
@@ -28,7 +29,15 @@ const VerticalList = ({ data = [], type = "song" }: VerticalListProps) => {
 
   const { setCurrentSong, setCurrentSongList } = useAudioContext();
 
-  const { handleSingleAlbumOrPlalist, setPage } = useGlobalContext();
+  const {
+    handleSingleAlbumOrPlalist,
+
+    setPage,
+    fetchAlbumData,
+    isLoadingAlbumListToRender,
+    fetchPlaylistData,
+    isLoadingPlaylistListToRender,
+  } = useGlobalContext();
 
   const router = useRouter();
 
@@ -72,9 +81,14 @@ const VerticalList = ({ data = [], type = "song" }: VerticalListProps) => {
       if (type === "album" || type === "playlist") {
         handleSingleAlbumOrPlalist(item.id, type);
 
-        setPage(999);
+        // setPage(999);
 
-        router.push("/(dashboard)/home/songs");
+        router.push({
+          pathname: "/(dashboard)/home/songs",
+          params: {
+            isNotFetch: "true",
+          },
+        });
       }
     },
     [
@@ -209,7 +223,28 @@ const VerticalList = ({ data = [], type = "song" }: VerticalListProps) => {
           </Pressable>
         );
       }}
-      ListFooterComponent={<View style={styles.footerSpace} />}
+      // ListFooterComponent={<View style={styles.footerSpace} />}
+      onEndReached={
+        type == "album"
+          ? fetchAlbumData
+          : type == "playlist"
+            ? fetchPlaylistData
+            : () => {}
+      }
+      onEndReachedThreshold={0.25}
+      ListFooterComponent={() =>
+        isLoadingAlbumListToRender || isLoadingPlaylistListToRender ? (
+          <View style={styles.footerLoader}>
+            <View style={styles.loaderCircle}>
+              <Spinner size="small" color={colors.primary} />
+            </View>
+
+            <Text style={styles.loadingText}>Loading more</Text>
+          </View>
+        ) : (
+          <View style={styles.footerSpace} />
+        )
+      }
     />
   );
 };
@@ -218,6 +253,35 @@ const styles = StyleSheet.create({
   /* ================================================================ */
   /* LIST                                                              */
   /* ================================================================ */
+
+  footerLoader: {
+    height: moderateScale(75),
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    flexDirection: "row",
+
+    gap: moderateScale(8),
+  },
+
+  loaderCircle: {
+    width: moderateScale(28),
+    height: moderateScale(28),
+
+    borderRadius: moderateScale(14),
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: "rgba(168,85,247,0.08)",
+  },
+
+  loadingText: {
+    fontSize: moderateScale(9.5),
+
+    color: colors.textMuted,
+  },
 
   listContent: {
     paddingTop: moderateScale(8),

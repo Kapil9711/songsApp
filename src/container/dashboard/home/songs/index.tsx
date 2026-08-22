@@ -16,6 +16,7 @@ import { Text } from "@/src/providers/CustomText";
 import SongsSmollCard from "../../common/song-card/SongsSmollCard";
 import Header from "../../common/header";
 import { saveDebugJson } from "@/src/utilities/saveFiles";
+import { useLocalSearchParams } from "expo-router";
 
 const Songs = () => {
   const { songListToRender, isLoadingSongListToRender, fetchData, isLoading } =
@@ -55,6 +56,8 @@ const Songs = () => {
     },
     [setCurrentSong, setCurrentSongList, songListToRender, socket],
   );
+
+  const { isNotFetch } = useLocalSearchParams();
 
   /* ================================================================ */
   /* LOADING                                                           */
@@ -152,7 +155,7 @@ const Songs = () => {
               />
             );
           }}
-          onEndReached={fetchData}
+          onEndReached={isNotFetch == "true" ? () => {} : fetchData}
           onEndReachedThreshold={0.25}
           ListHeaderComponent={
             <View style={{ paddingTop: insets.top }}>

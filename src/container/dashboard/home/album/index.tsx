@@ -12,7 +12,7 @@ import { Text } from "@/src/providers/CustomText";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Album = () => {
-  const { albumListToRender } = useGlobalContext();
+  const { albumListToRender, page } = useGlobalContext();
 
   const albumCount = albumListToRender?.length ?? 0;
   const insets = useSafeAreaInsets();
@@ -62,6 +62,9 @@ const Album = () => {
 
           <View style={styles.countBadge}>
             <Text style={styles.countText}>{albumCount}</Text>
+          </View>
+          <View style={styles.countBadge}>
+            <Text style={styles.countText}>{page}</Text>
           </View>
         </View>
 
