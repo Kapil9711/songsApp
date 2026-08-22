@@ -18,12 +18,7 @@ const Album = () => {
   const insets = useSafeAreaInsets();
 
   return (
-    <View
-      style={[
-        styles.container,
-        { paddingTop: insets.top, borderWidth: 1, borderColor: "white" },
-      ]}
-    >
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* ============================================================ */}
       {/* HEADER                                                       */}
       {/* ============================================================ */}

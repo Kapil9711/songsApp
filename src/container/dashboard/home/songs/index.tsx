@@ -15,6 +15,7 @@ import { Text } from "@/src/providers/CustomText";
 
 import SongsSmollCard from "../../common/song-card/SongsSmollCard";
 import Header from "../../common/header";
+import { saveDebugJson } from "@/src/utilities/saveFiles";
 
 const Songs = () => {
   const { songListToRender, isLoadingSongListToRender, fetchData, isLoading } =
@@ -29,6 +30,8 @@ const Songs = () => {
   /* ================================================================ */
   /* PLAY SONG                                                         */
   /* ================================================================ */
+
+  // saveDebugJson(songListToRender);
 
   const handleSongPress = useCallback(
     async (item: any) => {

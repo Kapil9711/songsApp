@@ -21,6 +21,7 @@ import {
 import { debounce, rangeRight } from "lodash";
 import Toast from "react-native-toast-message";
 import { usePathname } from "expo-router";
+import { saveDebugJson } from "../utilities/saveFiles";
 
 const jioApi = "https://saavn-api-mocha.vercel.app";
 
@@ -436,6 +437,7 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
     saveRecentlyPlayedSong,
     setImportCount,
   ]);
+
   return (
     <GlobalContext.Provider value={value}>{children}</GlobalContext.Provider>
   );

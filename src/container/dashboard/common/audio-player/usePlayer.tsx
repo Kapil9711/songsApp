@@ -15,8 +15,11 @@ import TrackPlayer, {
   Capability,
   Event,
   useTrackPlayerEvents,
+  AppKilledPlaybackBehavior,
 } from "react-native-track-player";
 import service from "@/src/utilities/service";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+const PLAYER_STATE_KEY = "@player_state";
 
 const BackgroundFetch: any = BackgroundFetch1;
 
@@ -30,8 +33,13 @@ async function setupAudio() {
   });
 }
 export const usePlayer = () => {
-  const { sound, currentSong, setCurrentSong, currentSongList } =
-    useAudioContext();
+  const {
+    sound,
+    currentSong,
+    setCurrentSong,
+    currentSongList,
+    setCurrentSongList,
+  } = useAudioContext();
   const { user, saveRecentlyPlayedSong } = useGlobalContext();
   const [isPlaying, setIsPlaying] = useState(false);
   const { setImage } = useBackgroudImage();
@@ -63,17 +71,15 @@ export const usePlayer = () => {
   }
 
   useEffect(() => {
-    (async () => await setupAudio())();
-    // Run this once to set the audio mode and register the background task
-    registerBackgroundFetch();
-
-    // Cleanup when the component is unmounted
+    // (async () => await setupAudio())();
 
     async function setupPlayer() {
       try {
         // Run in correct thread
 
-        await TrackPlayer.setupPlayer({ autoHandleInterruptions: true }); // Initialize Track Player
+        await TrackPlayer.setupPlayer({
+          autoHandleInterruptions: true,
+        }); // Initialize Track Player
         console.log("✅ Track Player Initialized");
 
         // Register playback service (only needs to be called once)
@@ -81,6 +87,10 @@ export const usePlayer = () => {
         console.log("✅ Track Player Service Registered");
 
         await TrackPlayer.updateOptions({
+          android: {
+            appKilledPlaybackBehavior:
+              AppKilledPlaybackBehavior.StopPlaybackAndRemoveNotification,
+          },
           capabilities: [
             Capability.Play,
             Capability.Pause,
@@ -103,7 +113,17 @@ export const usePlayer = () => {
       }
     }
 
-    setupPlayer();
+    // setupPlayer();
+
+    const initializePlayer = async () => {
+      await setupAudio();
+
+      await restorePlayerState();
+
+      await setupPlayer();
+    };
+
+    initializePlayer();
 
     return () => {
       if (sound) {
@@ -148,57 +168,101 @@ export const usePlayer = () => {
   // Send song details to a friend
 
   useEffect(() => {
-    (async () => {
-      if (setImage) {
-        if (currentSong?.id)
-          setImage(currentSong?.image[user?.imageQuality]?.url);
-        else setImage(currentSong?.image[2]?.url);
-      }
-      // if (sound) {
-      //   await sound.unloadAsync();
-      // }
-      // If a sound is playing, stop it before loading a new one
-      if (sound && sound.stopAsync) {
-        await sound.stopAsync();
-      }
+    if (!currentSong?.id) return;
 
-      if (Audio && currentSong?.id) {
+    const loadSong = async () => {
+      try {
         await TrackPlayer.reset();
-        // const { sound: newSound } = await Audio?.Sound?.createAsync(
-        //   {
-        //     uri: currentSong?.id
-        //       ? currentSong?.downloadUrl[4]?.url
-        //       : currentSong?.downloadUrl[4],
-        //   },
-        //   { shouldPlay: true }
-        // );
 
-        // setSound(newSound);
         await TrackPlayer.add({
           id: currentSong._id || "",
-          url: currentSong?.id
-            ? currentSong?.downloadUrl[4]?.url
-            : currentSong?.downloadUrl[4],
+          url: currentSong?.downloadUrl[4]?.url,
           title: currentSong.name,
-          // artist: "Artist Name",
-          artwork: currentSong?.image[2]?.url, // Optional artwork image
+          artwork: currentSong?.image[2]?.url,
         });
 
+        if (isRestoringRef.current) {
+          const savedPosition = restoredPositionRef.current;
+
+          if (savedPosition > 0) {
+            await TrackPlayer.seekTo(savedPosition / 1000);
+            setPosition(savedPosition);
+          }
+
+          // IMPORTANT:
+          // Do NOT call TrackPlayer.play() here.
+
+          setIsPlaying(false);
+
+          isRestoringRef.current = false;
+          restoredPositionRef.current = 0;
+
+          return;
+        }
+
+        // Normal song change
         await TrackPlayer.play();
         setIsPlaying(true);
-        const title = currentSong.name;
-        const imageUrl = currentSong?.image[2]?.url;
-        // showNowPlayingNotification(title, imageUrl);
+      } catch (error) {
+        console.error("Error loading song:", error);
       }
-      if (currentSong?.type || currentSong?.downloadUrl[0]?.url) {
-        try {
-          const user: any = await getValueInAsync("user");
-          const userId = JSON.parse(user)?._id;
-          saveRecentlyPlayedSong(userId, currentSong);
-        } catch (error) {}
-      }
-    })();
+    };
+
+    loadSong();
   }, [currentSong]);
+
+  // useEffect(() => {
+  //   (async () => {
+  //     if (setImage) {
+  //       if (currentSong?.id)
+  //         setImage(currentSong?.image[user?.imageQuality]?.url);
+  //       else setImage(currentSong?.image[2]?.url);
+  //     }
+  //     // if (sound) {
+  //     //   await sound.unloadAsync();
+  //     // }
+  //     // If a sound is playing, stop it before loading a new one
+  //     if (sound && sound.stopAsync) {
+  //       await sound.stopAsync();
+  //     }
+
+  //     if (Audio && currentSong?.id) {
+  //       await TrackPlayer.reset();
+  //       // const { sound: newSound } = await Audio?.Sound?.createAsync(
+  //       //   {
+  //       //     uri: currentSong?.id
+  //       //       ? currentSong?.downloadUrl[4]?.url
+  //       //       : currentSong?.downloadUrl[4],
+  //       //   },
+  //       //   { shouldPlay: true }
+  //       // );
+
+  //       // setSound(newSound);
+  //       await TrackPlayer.add({
+  //         id: currentSong._id || "",
+  //         url: currentSong?.id
+  //           ? currentSong?.downloadUrl[4]?.url
+  //           : currentSong?.downloadUrl[4],
+  //         title: currentSong.name,
+  //         // artist: "Artist Name",
+  //         artwork: currentSong?.image[2]?.url, // Optional artwork image
+  //       });
+
+  //       await TrackPlayer.play();
+  //       setIsPlaying(true);
+  //       const title = currentSong.name;
+  //       const imageUrl = currentSong?.image[2]?.url;
+  //       // showNowPlayingNotification(title, imageUrl);
+  //     }
+  //     if (currentSong?.type || currentSong?.downloadUrl[0]?.url) {
+  //       try {
+  //         const user: any = await getValueInAsync("user");
+  //         const userId = JSON.parse(user)?._id;
+  //         saveRecentlyPlayedSong(userId, currentSong);
+  //       } catch (error) {}
+  //     }
+  //   })();
+  // }, [currentSong]);
 
   useEffect(() => {
     socket?.on("syncSong", async ({ song, receiverId }: any) => {
@@ -225,6 +289,57 @@ export const usePlayer = () => {
       }
     });
   }, [socket, currentSong, sound]);
+
+  const savePlayerState = async () => {
+    try {
+      const state = {
+        currentSong,
+        currentSongList,
+        position,
+        isPlaying: false,
+      };
+
+      await AsyncStorage.setItem(PLAYER_STATE_KEY, JSON.stringify(state));
+    } catch (error) {
+      console.error("Failed to save player state:", error);
+    }
+  };
+
+  const isRestoringRef = useRef(false);
+  const restoredPositionRef = useRef(0);
+
+  const restorePlayerState = async () => {
+    try {
+      const savedState = await AsyncStorage.getItem("@player_state");
+
+      if (!savedState) return;
+
+      const {
+        currentSong: savedSong,
+        currentSongList: savedSongList,
+        position: savedPosition,
+      } = JSON.parse(savedState);
+
+      if (Array.isArray(savedSongList)) {
+        setCurrentSongList(savedSongList);
+      }
+
+      if (savedSong) {
+        isRestoringRef.current = true;
+        restoredPositionRef.current = savedPosition || 0;
+
+        setCurrentSong(savedSong);
+      }
+    } catch (error) {
+      console.error("Restore player state error:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (!currentSong) return;
+
+    savePlayerState();
+  }, [currentSong, currentSongList, position]);
 
   const handleNext = () => {
     let currenIndex = null;
@@ -299,26 +414,60 @@ export const usePlayer = () => {
   };
 
   const handlePlay = async () => {
-    setIsPlaying(true);
-    const user: any = await getValueInAsync("user");
-    const userId = JSON.parse(user)._id;
-    socket.emit("playPauseSong", { senderId: userId, isPlaying: true });
-    await TrackPlayer.play();
-    if (sound) {
-      await sound.playAsync();
-    }
-  };
+    try {
+      await TrackPlayer.play();
 
-  const handlePause = async () => {
-    setIsPlaying(false);
-    const user: any = await getValueInAsync("user");
-    const userId = JSON.parse(user)._id;
-    socket.emit("playPauseSong", { senderId: userId, isPlaying: false });
-    await TrackPlayer.pause();
-    if (sound) {
-      await sound.pauseAsync();
+      setIsPlaying(true);
+
+      const user: any = await getValueInAsync("user");
+      const userId = JSON.parse(user)._id;
+
+      socket.emit("playPauseSong", {
+        senderId: userId,
+        isPlaying: true,
+      });
+    } catch (error) {
+      console.error("Play error:", error);
     }
   };
+  const handlePause = async () => {
+    try {
+      await TrackPlayer.pause();
+
+      setIsPlaying(false);
+
+      const user: any = await getValueInAsync("user");
+      const userId = JSON.parse(user)._id;
+
+      socket.emit("playPauseSong", {
+        senderId: userId,
+        isPlaying: false,
+      });
+    } catch (error) {
+      console.error("Pause error:", error);
+    }
+  };
+  // const handlePlay = async () => {
+  //   setIsPlaying(true);
+  //   const user: any = await getValueInAsync("user");
+  //   const userId = JSON.parse(user)._id;
+  //   socket.emit("playPauseSong", { senderId: userId, isPlaying: true });
+  //   await TrackPlayer.play();
+  //   if (sound) {
+  //     await sound.playAsync();
+  //   }
+  // };
+
+  // const handlePause = async () => {
+  //   setIsPlaying(false);
+  //   const user: any = await getValueInAsync("user");
+  //   const userId = JSON.parse(user)._id;
+  //   socket.emit("playPauseSong", { senderId: userId, isPlaying: false });
+  //   await TrackPlayer.pause();
+  //   if (sound) {
+  //     await sound.pauseAsync();
+  //   }
+  // };
 
   // Register event listeners for remote controls
   useTrackPlayerEvents(

@@ -10,6 +10,7 @@ import { colors } from "@/src/constants/theme";
 import { moderateScale } from "react-native-size-matters";
 import Header from "../common/header";
 import TopFade from "../../shared/topFade";
+import Radio from "./components/RadioList";
 
 const Home = () => {
   const {
@@ -47,6 +48,15 @@ const Home = () => {
             <HomeHeader />
 
             <SearchModeSwitch active={active} setActive={setActive} />
+
+            <View style={{ flex: 1 }}>
+              <Radio
+                onCategoryPress={(category) => {
+                  console.log("Selected:", category.id);
+                  console.log("Title:", category.title);
+                }}
+              />
+            </View>
 
             {isLoadingSongListToRender ? (
               <Loading />

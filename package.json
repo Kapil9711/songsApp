@@ -9,7 +9,8 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "test": "jest --watchAll",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "save-debug-server": "node scripts/save-debug.js"
   },
   "jest": {
     "preset": "jest-expo"
