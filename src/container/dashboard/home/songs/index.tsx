@@ -17,6 +17,7 @@ import SongsSmollCard from "../../common/song-card/SongsSmollCard";
 import Header from "../../common/header";
 import { saveDebugJson } from "@/src/utilities/saveFiles";
 import { useLocalSearchParams } from "expo-router";
+import { SearchBar } from "../../common/search-bar";
 
 const Songs = () => {
   const { songListToRender, isLoadingSongListToRender, fetchData, isLoading } =
@@ -82,7 +83,8 @@ const Songs = () => {
 
       {isLoading && (
         <View style={{ paddingTop: insets.top }}>
-          <Header />
+          <SearchBar />
+          {/* <Header /> */}
 
           <View style={styles.pageHeader}>
             <View>
@@ -159,7 +161,8 @@ const Songs = () => {
           onEndReachedThreshold={0.25}
           ListHeaderComponent={
             <View style={{ paddingTop: insets.top }}>
-              <Header />
+              {/* <Header /> */}
+              <SearchBar />
 
               <View style={styles.pageHeader}>
                 <View>
@@ -276,7 +279,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
 
-    backgroundColor: colors.background,
+    backgroundColor: "transparent",
 
     position: "relative",
   },

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Avatar } from "tamagui";
 import { usePathname } from "expo-router";
@@ -10,6 +10,7 @@ import { moderateScale } from "react-native-size-matters";
 import { SearchBar } from "../search-bar";
 import { colors } from "@/src/constants/theme";
 import { RightDrawer } from "./rightDrawer";
+import { HomeHeader } from "../../home";
 
 const Header = () => {
   const currentPath = usePathname();
@@ -109,11 +110,15 @@ const Header = () => {
           {/* SEARCH                                                */}
           {/* ---------------------------------------------------- */}
 
-          <View style={styles.searchContainer}>
+          <Greetings />
+
+          {/* <HomeHeader /> */}
+
+          {/* <View style={styles.searchContainer}>
             <View style={styles.searchBackground}>
               <SearchBar />
             </View>
-          </View>
+          </View> */}
 
           {/* ---------------------------------------------------- */}
           {/* MENU                                                  */}
@@ -169,10 +174,77 @@ const Header = () => {
   );
 };
 
+const Greetings = ({ showHeader = true }: any) => {
+  const greeting = useMemo(() => {
+    // IST (Asia/Kolkata)
+    const now = new Date();
+
+    const istTime = new Intl.DateTimeFormat("en-IN", {
+      timeZone: "Asia/Kolkata",
+      hour: "numeric",
+      hour12: false,
+    }).formatToParts(now);
+
+    const hour = Number(
+      istTime.find((part) => part.type === "hour")?.value ?? 0,
+    );
+
+    if (hour >= 5 && hour < 12) {
+      return "Good morning";
+    }
+
+    if (hour >= 12 && hour < 17) {
+      return "Good afternoon";
+    }
+
+    if (hour >= 17 && hour < 21) {
+      return "Good evening";
+    }
+
+    return "Good night";
+  }, []);
+
+  return (
+    <View style={[styles.container, { paddingHorizontal: moderateScale(5) }]}>
+      {/* Small greeting */}
+
+      <View style={styles.greetingContainer}>
+        <Text style={styles.greeting}>{greeting}</Text>
+
+        {/* <Text style={styles.subtitle}>Your music, your mood.</Text> */}
+      </View>
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   /* ================================================================ */
   /* HEADER                                                           */
   /* ================================================================ */
+
+  container: {
+    flex: 1,
+    // backgroundColor: ,
+    position: "relative",
+  },
+
+  greetingContainer: {
+    // marginTop: moderateScale(16),
+    paddingHorizontal: moderateScale(5),
+  },
+
+  greeting: {
+    fontSize: moderateScale(25),
+    fontWeight: "800",
+    letterSpacing: -0.6,
+    color: colors.text,
+  },
+
+  subtitle: {
+    marginTop: moderateScale(3),
+    fontSize: moderateScale(12),
+    color: colors.textSecondary,
+  },
 
   header: {
     width: "100%",

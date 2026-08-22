@@ -1,6 +1,7 @@
 export const saveDebugJson = async (data: unknown, fileName = "debug.json") => {
+  console.log("calling");
   try {
-    await fetch("http://10.0.2.2:5050/save", {
+    await fetch("http://localhost:5050/save", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -181,6 +181,8 @@ export const usePlayer = () => {
           artwork: currentSong?.image[2]?.url,
         });
 
+        setImage(currentSong?.image[2]?.url);
+
         if (isRestoringRef.current) {
           const savedPosition = restoredPositionRef.current;
 

@@ -20,6 +20,7 @@ import { useAudioContext } from "@/src/providers/AudioProvider";
 import { useSocket } from "@/src/providers/socketProvider";
 
 import SongsSmollCard from "@/src/container/dashboard/common/song-card/SongsSmollCard";
+import { saveDebugJson } from "@/src/utilities/saveFiles";
 
 const Favorite = () => {
   const { setCurrentSong, setCurrentSongList, currentSong } = useAudioContext();
@@ -53,6 +54,7 @@ const Favorite = () => {
   const handleSongPress = async (item: any) => {
     setCurrentSong(item);
     setCurrentSongList(finaleData);
+    // saveDebugJson(finaleData);
 
     try {
       const user: any = await getValueInAsync("user");
@@ -283,7 +285,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
 
-    backgroundColor: colors.background,
+    backgroundColor: "transparent",
 
     position: "relative",
   },

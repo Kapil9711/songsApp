@@ -11,6 +11,9 @@ import { moderateScale } from "react-native-size-matters";
 import Header from "../common/header";
 import TopFade from "../../shared/topFade";
 import Radio from "./components/RadioList";
+import HandpickedEraSection from "./components/handpickedEra";
+import { SearchBar } from "../common/search-bar";
+import { useAudioContext } from "@/src/providers/AudioProvider";
 
 const Home = () => {
   const {
@@ -46,18 +49,32 @@ const Home = () => {
           <View
             style={{ flex: 1, paddingTop: insets.top, gap: moderateScale(20) }}
           >
-            <HomeHeader />
+            <View>
+              <HomeHeader />
+
+              <SearchBar />
+              {/* <View style={styles.searchContainer}>
+                <SearchBar />
+              </View> */}
+
+              {!searchQuery && (
+                <HandpickedEraSection
+                  onPress={(item) => {
+                    console.log("Selected:", item.id);
+
+                    // Example:
+                    // router.push({
+                    //   pathname: "/songs",
+                    //   params: {
+                    //     category: item.id,
+                    //   },
+                    // });
+                  }}
+                />
+              )}
+            </View>
 
             {/* <SearchModeSwitch active={active} setActive={setActive} /> */}
-
-            <View style={{ flex: 1 }}>
-              <Radio
-                onCategoryPress={(category) => {
-                  console.log("Selected:", category.id);
-                  console.log("Title:", category.title);
-                }}
-              />
-            </View>
 
             {isLoadingSongListToRender ? (
               <Loading />
@@ -96,6 +113,22 @@ const Home = () => {
                     renderData={recentlyPlayed}
                     heading="Recently Played"
                     type="song"
+                  />
+                )}
+
+                {searchQuery && (
+                  <HandpickedEraSection
+                    onPress={(item) => {
+                      console.log("Selected:", item.id);
+
+                      // Example:
+                      // router.push({
+                      //   pathname: "/songs",
+                      //   params: {
+                      //     category: item.id,
+                      //   },
+                      // });
+                    }}
                   />
                 )}
 
@@ -151,6 +184,32 @@ const Home = () => {
                     />
                   </>
                 </View>
+
+                <View style={{ flex: 1 }}>
+                  <View
+                    style={[
+                      styles.container,
+                      {
+                        paddingHorizontal: moderateScale(5),
+                        marginBottom: moderateScale(12),
+                      },
+                    ]}
+                  >
+                    <View style={styles.greetingContainer}>
+                      <Text style={styles.greeting}>Radio</Text>
+
+                      <Text style={styles.subtitle}>
+                        Tune In to Handpicked Songs
+                      </Text>
+                    </View>
+                  </View>
+                  <Radio
+                    onCategoryPress={(category) => {
+                      console.log("Selected:", category.id);
+                      console.log("Title:", category.title);
+                    }}
+                  />
+                </View>
               </>
             )}
           </View>
@@ -205,46 +264,12 @@ const Home = () => {
 /* Header                                                                     */
 /* -------------------------------------------------------------------------- */
 
-const HomeHeader = ({ showHeader = true }: any) => {
-  const greeting = useMemo(() => {
-    // IST (Asia/Kolkata)
-    const now = new Date();
-
-    const istTime = new Intl.DateTimeFormat("en-IN", {
-      timeZone: "Asia/Kolkata",
-      hour: "numeric",
-      hour12: false,
-    }).formatToParts(now);
-
-    const hour = Number(
-      istTime.find((part) => part.type === "hour")?.value ?? 0,
-    );
-
-    if (hour >= 5 && hour < 12) {
-      return "Good morning";
-    }
-
-    if (hour >= 12 && hour < 17) {
-      return "Good afternoon";
-    }
-
-    if (hour >= 17 && hour < 21) {
-      return "Good evening";
-    }
-
-    return "Good night";
-  }, []);
-
+export const HomeHeader = ({ showHeader = true }: any) => {
   return (
-    <View style={[styles.container, { paddingHorizontal: moderateScale(5) }]}>
+    <View style={[styles.container, { paddingHorizontal: moderateScale(10) }]}>
       {/* Small greeting */}
 
       {showHeader && <Header />}
-      <View style={styles.greetingContainer}>
-        <Text style={styles.greeting}>{greeting}</Text>
-
-        <Text style={styles.subtitle}>Your music, your mood.</Text>
-      </View>
     </View>
   );
 };
@@ -401,18 +426,12 @@ const styles = StyleSheet.create({
 
   searchContainer: {
     flex: 1,
-
     height: moderateScale(48),
-
     flexDirection: "row",
     alignItems: "center",
-
     paddingHorizontal: moderateScale(14),
-
     borderRadius: moderateScale(24),
-
     backgroundColor: colors.surface,
-
     borderWidth: 1,
     borderColor: colors.border,
   },

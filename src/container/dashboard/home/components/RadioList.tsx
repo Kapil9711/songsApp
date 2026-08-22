@@ -68,20 +68,6 @@ const Radio = ({ onCategoryPress }: RadioProps) => {
     const item = list?.[0];
     setCurrentSong(item);
     setCurrentSongList(list);
-    // if (item.type || item.downloadUrl?.[0]?.url) {
-    //   try {
-    //     const user: any = await getValueInAsync("user");
-
-    //     const userId = JSON.parse(user || "{}")?._id;
-
-    //     socket?.emit("songPlaying", {
-    //       senderId: userId,
-    //       song: item,
-    //     });
-    //   } catch (error) {
-    //     console.log("Unable to play song:", error);
-    //   }
-    // }
   };
 
   const handlePress = (category: RadioCategory) => {

@@ -564,8 +564,9 @@ const styles = StyleSheet.create({
     zIndex: 200,
     elevation: 20,
     padding: moderateScale(2),
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.primary,
+    opacity: 0.9,
     borderRadius: moderateScale(6),
   },
 
