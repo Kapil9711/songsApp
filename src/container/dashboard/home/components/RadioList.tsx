@@ -178,7 +178,7 @@ const Radio = ({ onCategoryPress }: RadioProps) => {
                       backgroundColor: colors.surface,
                       borderRadius: moderateScale(8),
                       borderWidth: 1,
-                      borderColor: "white",
+                      borderColor: colors.border,
                       paddingHorizontal: moderateScale(20),
                       paddingVertical: moderateScale(2),
                       alignItems: "center",

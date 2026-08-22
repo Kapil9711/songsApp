@@ -130,7 +130,7 @@ const Header = () => {
             <Ionicons
               name="notifications-outline"
               size={moderateScale(23)}
-              color={colors.text}
+              color={"grey"}
             />
           </Pressable>
         </View>

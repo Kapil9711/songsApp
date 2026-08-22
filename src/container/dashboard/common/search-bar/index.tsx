@@ -40,9 +40,9 @@ export const SearchBar = () => {
         flex={1}
         style={{
           fontSize: 15,
-          backgroundColor: colors.background,
-          opacity: 0.7,
-          borderColor: "gray",
+          backgroundColor: colors.surfaceElevated,
+
+          borderColor: colors.border,
           // borderWidth: 1,
           // borderColor: "gray",
           color: "white",

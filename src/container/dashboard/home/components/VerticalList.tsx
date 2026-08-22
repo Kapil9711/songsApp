@@ -47,12 +47,12 @@ const VerticalList = ({ data = [], type = "song" }: VerticalListProps) => {
 
   const columnGap = moderateScale(14);
 
-  const columnCount = isLargeCard ? 1 : 2;
+  const columnCount = isLargeCard ? 2 : 2;
 
   const cardWidth = useMemo(() => {
-    if (isLargeCard) {
-      return width - horizontalPadding * 2;
-    }
+    // if (isLargeCard) {
+    //   return width - horizontalPadding * 2;
+    // }
 
     return (width - horizontalPadding * 2 - columnGap) / 2;
   }, [width, horizontalPadding, columnGap, isLargeCard]);
@@ -140,7 +140,13 @@ const VerticalList = ({ data = [], type = "song" }: VerticalListProps) => {
           paddingHorizontal: horizontalPadding,
         },
       ]}
-      columnWrapperStyle={!isLargeCard ? styles.columnWrapper : undefined}
+      columnWrapperStyle={
+        !isLargeCard
+          ? { ...styles.columnWrapper }
+          : {
+              ...styles.columnWrapper,
+            }
+      }
       renderItem={({ item, index }) => {
         const image =
           item?.image?.[2]?.url ||
@@ -163,12 +169,21 @@ const VerticalList = ({ data = [], type = "song" }: VerticalListProps) => {
             {/* ==================================================== */}
 
             {isLargeCard && (
-              <PlaylistCard
-                image={image}
-                title={item?.name ?? ""}
-                index={index}
-                type={type === "album" ? "album" : "playlist"}
-              />
+              <View
+                style={[
+                  styles.songArtwork,
+                  {
+                    width: cardWidth,
+                  },
+                ]}
+              >
+                <PlaylistCard
+                  image={image}
+                  title={item?.name ?? ""}
+                  index={index}
+                  type={type === "album" ? "album" : "playlist"}
+                />
+              </View>
             )}
 
             {/* ==================================================== */}

@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
   listContainer: {
     flex: 1,
 
-    paddingHorizontal: moderateScale(8),
+    // paddingHorizontal: moderateScale(8),
 
     // paddingBottom: moderateScale(175),
   },

@@ -24,6 +24,7 @@ const Home = () => {
     punjabi,
     haryanvi,
     recentlyPlayed,
+    searchQuery,
   } = useGlobalContext();
 
   const insets = useSafeAreaInsets();
@@ -47,7 +48,7 @@ const Home = () => {
           >
             <HomeHeader />
 
-            <SearchModeSwitch active={active} setActive={setActive} />
+            {/* <SearchModeSwitch active={active} setActive={setActive} /> */}
 
             <View style={{ flex: 1 }}>
               <Radio
@@ -62,27 +63,31 @@ const Home = () => {
               <Loading />
             ) : (
               <>
-                <ShowData
-                  data={searchedSongList.slice(0, 6)}
-                  heading="Songs"
-                  type="song"
-                />
+                {searchQuery && (
+                  <>
+                    <ShowData
+                      data={searchedSongList.slice(0, 6)}
+                      heading="Songs"
+                      type="song"
+                    />
 
-                <ShowData
-                  isTrending
-                  data={albumListToRender.slice(0, 6)}
-                  renderData={albumListToRender}
-                  heading="Albums"
-                  type="album"
-                />
+                    <ShowData
+                      isTrending
+                      data={albumListToRender.slice(0, 6)}
+                      renderData={albumListToRender}
+                      heading="Albums"
+                      type="album"
+                    />
 
-                <ShowData
-                  isTrending
-                  data={playListToRender.slice(0, 6)}
-                  renderData={playListToRender}
-                  heading="Playlists"
-                  type="playlist"
-                />
+                    <ShowData
+                      isTrending
+                      data={playListToRender.slice(0, 6)}
+                      renderData={playListToRender}
+                      heading="Playlists"
+                      type="playlist"
+                    />
+                  </>
+                )}
 
                 {recentlyPlayed.length > 0 && (
                   <ShowData
@@ -93,6 +98,59 @@ const Home = () => {
                     type="song"
                   />
                 )}
+
+                <View
+                  style={{
+                    flex: 1,
+                    paddingTop: insets.top,
+                    gap: moderateScale(20),
+                  }}
+                >
+                  {/* <HomeHeader showHeader={false} />
+
+            <SearchModeSwitch active={active} setActive={setActive} /> */}
+
+                  <View
+                    style={[
+                      styles.container,
+                      { paddingHorizontal: moderateScale(5) },
+                    ]}
+                  >
+                    <View style={styles.greetingContainer}>
+                      <Text style={styles.greeting}>Trending Songs</Text>
+
+                      <Text style={styles.subtitle}>
+                        Currently Trending Songs
+                      </Text>
+                    </View>
+                  </View>
+
+                  <>
+                    <ShowData
+                      isTrending
+                      data={hindi.slice(0, 6)}
+                      renderData={hindi}
+                      heading="Hindi"
+                      type="song"
+                    />
+
+                    <ShowData
+                      isTrending
+                      data={haryanvi.slice(0, 6)}
+                      renderData={haryanvi}
+                      heading="Haryanvi"
+                      type="song"
+                    />
+
+                    <ShowData
+                      isTrending
+                      data={punjabi.slice(0, 6)}
+                      renderData={punjabi}
+                      heading="Punjabi"
+                      type="song"
+                    />
+                  </>
+                </View>
               </>
             )}
           </View>
@@ -105,9 +163,9 @@ const Home = () => {
           <View
             style={{ flex: 1, paddingTop: insets.top, gap: moderateScale(20) }}
           >
-            <HomeHeader showHeader={false} />
+            {/* <HomeHeader showHeader={false} />
 
-            <SearchModeSwitch active={active} setActive={setActive} />
+            <SearchModeSwitch active={active} setActive={setActive} /> */}
 
             <>
               <ShowData
