@@ -11,6 +11,7 @@ import io from "socket.io-client";
 import { Alert } from "react-native";
 import { useGlobalContext } from "./GlobalProvider";
 import { getValueInAsync } from "../utilities/helpers";
+import axiosInstance from "@/src/network/api";
 const SocketProvder = createContext(null as any);
 export const useSocket = () => useContext(SocketProvder);
 // "http://192.168.106.102:5000"
@@ -29,9 +30,14 @@ const SocketProvider = ({ children }: any) => {
       }
       const user: any = await getValueInAsync("user");
       const userId = JSON.parse(user)?._id;
+      const { data } = await axiosInstance.get("/user/" + friendId);
+      const friend = data?.user;
 
       socket.emit("requestSync", { senderId: userId, receiverId: friendId });
-      Alert.alert("Request Sent", `Waiting for ${friendId} to accept...`);
+      Alert.alert(
+        "Request Sent",
+        `Waiting for ${friend?.name || friendId} to accept...`,
+      );
     },
     [socket],
   );
@@ -66,10 +72,13 @@ const SocketProvider = ({ children }: any) => {
       socket.emit("rejectSync", { senderId, receiverId: userId });
     };
     //syncRequest
-    newSocket.on("syncRequest", ({ senderId }: { senderId: string }) => {
+    newSocket.on("syncRequest", async ({ senderId }: { senderId: string }) => {
+      const { data } = await axiosInstance.get("/user/" + senderId);
+      const friend = data?.user;
+      console.log(data, "user-data");
       Alert.alert(
         "Sync Request",
-        `User ${senderId} wants to sync with your music. Accept?`,
+        `User ${friend?.name || senderId} wants to sync with your music. Accept?`,
         [
           { text: "Reject", onPress: () => rejectSync(senderId) },
           { text: "Accept", onPress: () => acceptSync(senderId) },

@@ -364,7 +364,8 @@ export const ProgressBarComponent = ({
         const userId = JSON.parse(user)?._id;
 
         if (receiverId === userId) {
-          await sound?.setPositionAsync(Number(newTime));
+          await TrackPlayer.seekTo(newTime / 1000);
+          // await sound?.setPositionAsync(Number(newTime));
 
           setPosition(Number(newTime));
         }
