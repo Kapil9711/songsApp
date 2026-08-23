@@ -19,7 +19,7 @@ const DashboardLayout = () => {
             <GlobalProvider>
               <PlayerProvider>
                 {/* <Toast /> */}
-                {/* <RightDrawer /> */}
+                <RightDrawer />
                 <View
                   style={{
                     flex: 1,
@@ -61,6 +61,7 @@ import { StyleSheet } from "react-native";
 import Svg, { Defs, RadialGradient, Stop, Rect } from "react-native-svg";
 import ImageColors from "react-native-image-colors";
 import BackgroundImageWrapper from "@/src/container/dashboard/common/background";
+import { RightDrawer } from "@/src/container/dashboard/common/header/rightDrawer";
 
 const DEFAULT_BACKGROUND = "#0A0A0B";
 

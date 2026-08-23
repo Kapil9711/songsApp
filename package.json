@@ -6,6 +6,8 @@
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
+    "build": "cd android && ./gradlew assembleRelease && cd ..",
+    "dev": "yarn run android",
     "ios": "expo run:ios",
     "web": "expo start --web",
     "test": "jest --watchAll",

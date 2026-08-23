@@ -34,20 +34,20 @@ const ERA_CARDS: EraCard[] = [
     image:
       "https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?auto=format&fit=crop&w=1200&q=85",
   },
-  {
-    id: "90s",
-    title: "90s For You",
-    subtitle: "The soundtrack of a golden generation.",
-    image:
-      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1200&q=85",
-  },
-  {
-    id: "modern",
-    title: "Modern For You",
-    subtitle: "Today's hits. Tomorrow's classics.",
-    image:
-      "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1200&q=85",
-  },
+  // {
+  //   id: "90s",
+  //   title: "90s For You",
+  //   subtitle: "The soundtrack of a golden generation.",
+  //   image:
+  //     "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1200&q=85",
+  // },
+  // {
+  //   id: "modern",
+  //   title: "Modern For You",
+  //   subtitle: "Today's hits. Tomorrow's classics.",
+  //   image:
+  //     "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1200&q=85",
+  // },
 ];
 
 type Props = {

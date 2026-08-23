@@ -30,6 +30,7 @@ const GlobalContext = createContext(null as any);
 export const useGlobalContext = () => useContext(GlobalContext);
 
 const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [songListToRender, setSongListToRender] = useState([]);
   const [searchedSongList, setSearchedSongList] = useState([]);
   const [albumListToRender, setAlbumListToRender] = useState([]);
@@ -474,6 +475,8 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
       isLoadingAlbumListToRender,
       fetchPlaylistData,
       isLoadingPlaylistListToRender,
+      drawerOpen,
+      setDrawerOpen,
     };
   }, [
     hindi,
@@ -500,6 +503,8 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
     isLoadingAlbumListToRender,
     fetchPlaylistData,
     isLoadingPlaylistListToRender,
+    drawerOpen,
+    setDrawerOpen,
   ]);
 
   return (

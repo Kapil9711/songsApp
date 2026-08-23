@@ -11,13 +11,14 @@ import { SearchBar } from "../search-bar";
 import { colors } from "@/src/constants/theme";
 import { RightDrawer } from "./rightDrawer";
 import { HomeHeader } from "../../home";
+import { useGlobalContext } from "@/src/providers/GlobalProvider";
 // import DrawerButton from "@/src/container/shared/drawerButton";
 
 const Header = () => {
   const currentPath = usePathname();
   const insets = useSafeAreaInsets();
 
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const { drawerOpen, setDrawerOpen } = useGlobalContext();
 
   const shouldShowHeader =
     (currentPath.includes("home") || currentPath.includes("file")) &&
@@ -136,7 +137,7 @@ const Header = () => {
             ]}
           >
             <Ionicons
-              name="notifications-outline"
+              name="menu-outline"
               size={moderateScale(23)}
               color={"grey"}
             />
@@ -168,11 +169,6 @@ const Header = () => {
       {/* ========================================================== */}
       {/* DRAWER                                                     */}
       {/* ========================================================== */}
-      {/* 
-      <RightDrawer
-        open={drawerOpen as any}
-        onClose={() => setDrawerOpen(false)}
-      /> */}
     </>
   );
 };

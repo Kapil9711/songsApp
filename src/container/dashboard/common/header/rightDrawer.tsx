@@ -25,7 +25,10 @@ type RightDrawerProps = {
   onClose: () => void;
 };
 
-export const RightDrawer = ({ open, onClose }: RightDrawerProps) => {
+export const RightDrawer = () => {
+  const { drawerOpen: open, setDrawerOpen } = useGlobalContext();
+  const onClose = () => setDrawerOpen(false);
+
   const translateX = useSharedValue(DRAWER_WIDTH);
 
   const router = useRouter();
@@ -198,7 +201,7 @@ export const RightDrawer = ({ open, onClose }: RightDrawerProps) => {
         </View>
 
         {/* Actions */}
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <Text style={styles.sectionTitle}>ACTIONS</Text>
 
           <Pressable
@@ -224,7 +227,7 @@ export const RightDrawer = ({ open, onClose }: RightDrawerProps) => {
               color={colors.textMuted}
             />
           </Pressable>
-        </View>
+        </View> */}
 
         {/* Logout */}
         <View style={styles.logoutContainer}>
