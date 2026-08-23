@@ -16,6 +16,7 @@ import { useGlobalContext } from "@/src/providers/GlobalProvider";
 import FriendCard from "@/src/container/dashboard/common/song-card/friendCard";
 import { colors } from "@/src/constants/theme";
 import { moderateScale } from "react-native-size-matters";
+import LogoutButton from "@/src/container/shared/logout";
 
 const Friends = () => {
   const {
@@ -58,19 +59,20 @@ const Friends = () => {
         </View>
 
         <View style={styles.headerIcon}>
-          <Ionicons name="people-outline" size={22} color={colors.primary} />
+          <LogoutButton />
+          {/* <Ionicons name="people-outline" size={22} color={colors.primary} /> */}
         </View>
       </View>
 
       {/* Tabs */}
-      {/* <FriendsTabs
+      <FriendsTabs
         active={active}
         setActive={setActive}
         getFriends={getFriends}
         getRequest={getRequest}
         getUsers={getUsers}
         requestCount={requests?.length ?? 0}
-      /> */}
+      />
 
       {/* Content */}
       {isLoading ? (
@@ -158,42 +160,126 @@ const FriendsTabs = ({
   ];
 
   return (
-    <View style={styles.tabsWrapper}>
-      <View style={styles.tabs}>
-        {tabs.map((tab) => {
-          const isActive = active === tab.key;
+    <View
+      style={{
+        width: "100%",
+        flexDirection: "row",
+        gap: moderateScale(20),
+        paddingHorizontal: 12,
+        marginVertical: 10,
+      }}
+    >
+      {tabs.map((tab) => {
+        const isActive = active === tab.key;
 
-          return (
-            <Pressable
-              key={tab.key}
-              onPress={tab.onPress}
-              style={({ pressed }) => [
-                styles.tab,
-                isActive && styles.activeTab,
-                pressed && styles.tabPressed,
-              ]}
+        return (
+          <Pressable
+            key={tab.key}
+            onPress={tab.onPress}
+            style={({ pressed }) => ({
+              flex: 1,
+
+              height: 64,
+
+              borderRadius: 16,
+
+              alignItems: "center",
+              justifyContent: "center",
+
+              backgroundColor: isActive
+                ? colors.primary
+                : colors.surfaceElevated,
+
+              borderWidth: 1,
+
+              borderColor: isActive ? "#C084FC" : colors.border,
+
+              opacity: pressed ? 0.85 : 1,
+
+              transform: [
+                {
+                  scale: pressed ? 0.97 : 1,
+                },
+              ],
+
+              shadowColor: isActive ? colors.primary : "#000",
+
+              shadowOffset: {
+                width: 0,
+                height: 4,
+              },
+
+              shadowOpacity: isActive ? 0.35 : 0.2,
+
+              shadowRadius: 6,
+
+              elevation: isActive ? 6 : 3,
+
+              position: "relative",
+            })}
+          >
+            <Ionicons
+              name={isActive ? (tab.activeIcon as any) : (tab.icon as any)}
+              size={21}
+              color={isActive ? colors.text : colors.textSecondary}
+            />
+
+            <Text
+              style={{
+                marginTop: 4,
+
+                fontSize: 11,
+
+                fontWeight: "700",
+
+                color: isActive ? colors.text : colors.textSecondary,
+              }}
             >
-              <Ionicons
-                name={isActive ? tab.activeIcon : (tab.icon as any)}
-                size={18}
-                color={isActive ? colors.primary : colors.textMuted}
-              />
+              {tab.label}
+            </Text>
 
-              <Text style={[styles.tabText, isActive && styles.activeTabText]}>
-                {tab.label}
-              </Text>
+            {tab.key === "requests" && requestCount > 0 && (
+              <View
+                style={{
+                  position: "absolute",
 
-              {tab.key === "requests" && requestCount > 0 && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>
-                    {requestCount > 9 ? "9+" : requestCount}
-                  </Text>
-                </View>
-              )}
-            </Pressable>
-          );
-        })}
-      </View>
+                  top: 7,
+                  right: 8,
+
+                  minWidth: 19,
+                  height: 19,
+
+                  paddingHorizontal: 5,
+
+                  borderRadius: 10,
+
+                  alignItems: "center",
+                  justifyContent: "center",
+
+                  backgroundColor: colors.error,
+
+                  borderWidth: 2,
+                  borderColor: isActive
+                    ? colors.primary
+                    : colors.surfaceElevated,
+                }}
+              >
+                <Text
+                  style={{
+                    color: colors.text,
+
+                    fontSize: 9,
+
+                    fontWeight: "800",
+                  }}
+                >
+                  {requestCount > 9 ? "9+" : requestCount}
+                </Text>
+              </View>
+            )}
+          </Pressable>
+        );
+      })}
     </View>
   );
 };
@@ -242,6 +328,7 @@ const ShowFriend = ({
             style={styles.friendCardWrapper}
           >
             <FriendCard
+              index={idx}
               item={item}
               type={type}
               sendFriendRequest={sendFriendRequest}
@@ -481,6 +568,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "transparent",
+    paddingHorizontal: moderateScale(8),
   },
 
   header: {
@@ -609,6 +697,7 @@ const styles = StyleSheet.create({
 
   friendCardWrapper: {
     borderRadius: 16,
+    paddingHorizontal: moderateScale(5),
     overflow: "hidden",
   },
 

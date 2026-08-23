@@ -11,6 +11,7 @@ import { SearchBar } from "../search-bar";
 import { colors } from "@/src/constants/theme";
 import { RightDrawer } from "./rightDrawer";
 import { HomeHeader } from "../../home";
+// import DrawerButton from "@/src/container/shared/drawerButton";
 
 const Header = () => {
   const currentPath = usePathname();
@@ -73,6 +74,8 @@ const Header = () => {
             ]}
           >
             {/* Purple ring */}
+
+            {/* <DrawerButton /> */}
 
             <LinearGradient
               colors={["rgba(168,85,247,0.95)", "rgba(112,56,180,0.35)"]}

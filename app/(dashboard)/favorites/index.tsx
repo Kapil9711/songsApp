@@ -137,20 +137,32 @@ const Favorite = () => {
               pressed && styles.filterPressed,
             ]}
           >
-            <Ionicons
-              name={active === "my" ? "heart" : "heart-outline"}
-              size={moderateScale(14)}
-              color={active === "my" ? colors.text : colors.textSecondary}
-            />
-
-            <Text
-              style={[
-                styles.filterText,
-                active === "my" && styles.filterTextActive,
-              ]}
+            <View
+              style={{
+                flexDirection: "row",
+                gap: moderateScale(2),
+                padding: moderateScale(6),
+                backgroundColor: colors.surfaceElevated,
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}
             >
-              My Favorites
-            </Text>
+              <Ionicons
+                name={active === "my" ? "heart" : "heart-outline"}
+                size={moderateScale(14)}
+                color={active === "my" ? colors.text : colors.textSecondary}
+              />
+
+              <Text
+                style={[
+                  styles.filterText,
+                  active === "my" && styles.filterTextActive,
+                ]}
+              >
+                My Favorites
+              </Text>
+            </View>
           </Pressable>
 
           {/* Friends */}
@@ -173,22 +185,38 @@ const Favorite = () => {
                 ]}
               >
                 <View
-                  style={[styles.friendDot, isActive && styles.friendDotActive]}
+                  style={{
+                    flexDirection: "row",
+                    gap: moderateScale(6),
+                    alignItems: "center",
+                    padding: moderateScale(6),
+                    backgroundColor: colors.surfaceElevated,
+                    borderRadius: 8,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                  }}
                 >
-                  <Text style={styles.friendInitial}>
-                    {name.charAt(0).toUpperCase()}
+                  <View
+                    style={[
+                      styles.friendDot,
+                      isActive && styles.friendDotActive,
+                    ]}
+                  >
+                    <Text style={styles.friendInitial}>
+                      {name.charAt(0).toUpperCase()}
+                    </Text>
+                  </View>
+
+                  <Text
+                    numberOfLines={1}
+                    style={[
+                      styles.filterText,
+                      isActive && styles.filterTextActive,
+                    ]}
+                  >
+                    {name}
                   </Text>
                 </View>
-
-                <Text
-                  numberOfLines={1}
-                  style={[
-                    styles.filterText,
-                    isActive && styles.filterTextActive,
-                  ]}
-                >
-                  {name}
-                </Text>
               </Pressable>
             );
           })}
@@ -447,7 +475,7 @@ const styles = StyleSheet.create({
   filterContent: {
     paddingHorizontal: moderateScale(16),
 
-    gap: moderateScale(7),
+    gap: moderateScale(16),
   },
 
   filterButton: {
@@ -505,9 +533,9 @@ const styles = StyleSheet.create({
   },
 
   friendDot: {
-    width: moderateScale(22),
+    width: moderateScale(14),
 
-    height: moderateScale(22),
+    height: moderateScale(14),
 
     borderRadius: moderateScale(8),
 

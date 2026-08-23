@@ -1,10 +1,17 @@
 import React, { useState } from "react";
+
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+
 import { Spinner } from "tamagui";
+
 import { useRouter } from "expo-router";
 
+import { LinearGradient } from "expo-linear-gradient";
+
 import { useAuthContext } from "@/src/providers/AuthProvider";
+
 import { colors } from "@/src/constants/theme";
+
 import KeyboardView from "../shared/keyboardView";
 
 const SignUp = () => {
@@ -16,13 +23,57 @@ const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <View style={{ flex: 1 }}>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: colors.background,
+      }}
+    >
+      {/* Top purple glow */}
+      <LinearGradient
+        colors={[
+          "rgba(168,85,247,0.22)",
+          "rgba(168,85,247,0.08)",
+          "transparent",
+        ]}
+        start={{ x: 1, y: 0 }}
+        end={{ x: 0.25, y: 0.7 }}
+        style={{
+          position: "absolute",
+          top: 0,
+          right: 0,
+          width: "100%",
+          height: "55%",
+        }}
+        pointerEvents="none"
+      />
+
+      {/* Bottom purple glow */}
+      <LinearGradient
+        colors={[
+          "transparent",
+          "rgba(168,85,247,0.04)",
+          "rgba(168,85,247,0.12)",
+        ]}
+        start={{ x: 0.8, y: 0.2 }}
+        end={{ x: 0, y: 1 }}
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          width: "80%",
+          height: "45%",
+        }}
+        pointerEvents="none"
+      />
+
       <View style={styles.container}>
         <View style={styles.content}>
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>
-              Create account<Text style={styles.dot}>.</Text>
+              Create account
+              <Text style={styles.dot}>.</Text>
             </Text>
 
             <Text style={styles.subtitle}>
@@ -154,7 +205,6 @@ const SignUp = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
 
   content: {
@@ -200,19 +250,27 @@ const styles = StyleSheet.create({
 
   inputContainer: {
     height: 56,
+
     flexDirection: "row",
     alignItems: "center",
+
     backgroundColor: colors.surface,
+
     borderWidth: 1,
     borderColor: colors.border,
+
     borderRadius: 16,
+
     paddingHorizontal: 16,
   },
 
   input: {
     flex: 1,
+
     fontSize: 15,
+
     color: colors.text,
+
     paddingVertical: 0,
   },
 
@@ -220,60 +278,94 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: colors.primary,
+
     marginLeft: 10,
   },
 
   registerButton: {
     height: 56,
+
     borderRadius: 16,
+
     backgroundColor: colors.primary,
+
     alignItems: "center",
     justifyContent: "center",
+
     marginTop: 4,
+
+    shadowColor: colors.primary,
+
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+
+    elevation: 5,
   },
 
   registerButtonDisabled: {
     backgroundColor: colors.surfaceElevated,
+
+    shadowOpacity: 0,
+
+    elevation: 0,
   },
 
   registerButtonText: {
     fontSize: 15,
+
     fontWeight: "700",
+
     color: colors.text,
   },
 
   dividerContainer: {
     flexDirection: "row",
+
     alignItems: "center",
+
     marginVertical: 28,
   },
 
   divider: {
     flex: 1,
+
     height: 1,
+
     backgroundColor: colors.border,
   },
 
   orText: {
     fontSize: 13,
+
     color: colors.textMuted,
+
     marginHorizontal: 14,
   },
 
   loginContainer: {
     flexDirection: "row",
+
     justifyContent: "center",
+
     alignItems: "center",
   },
 
   loginText: {
     fontSize: 14,
+
     color: colors.textSecondary,
   },
 
   loginButton: {
     fontSize: 14,
+
     fontWeight: "700",
+
     color: colors.primary,
   },
 });

@@ -1,10 +1,8 @@
-import { View, ImageBackground, Image, Animated, Easing } from "react-native";
-import React, { useMemo, useRef } from "react";
+import { View } from "react-native";
+import React from "react";
 import { Slot } from "expo-router";
-import BackgroundImageProvider, {
-  useBackgroudImage,
-} from "@/src/providers/BackgroundImage";
-import Header from "@/src/container/dashboard/common/header";
+import BackgroundImageProvider from "@/src/providers/BackgroundImage";
+
 import BottomHeader from "@/src/container/dashboard/common/bottom-header";
 import AudioProvider from "@/src/providers/AudioProvider";
 import AudioPlayer from "@/src/container/dashboard/common/audio-player";
