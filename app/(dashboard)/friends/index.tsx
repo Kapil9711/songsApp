@@ -15,6 +15,7 @@ import axiosInstance from "@/src/network/api";
 import { useGlobalContext } from "@/src/providers/GlobalProvider";
 import FriendCard from "@/src/container/dashboard/common/song-card/friendCard";
 import { colors } from "@/src/constants/theme";
+import { moderateScale } from "react-native-size-matters";
 
 const Friends = () => {
   const {
@@ -483,7 +484,7 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    paddingHorizontal: 20,
+    paddingHorizontal: moderateScale(8),
     paddingTop: 14,
     paddingBottom: 18,
 

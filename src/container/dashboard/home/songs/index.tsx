@@ -81,59 +81,66 @@ const Songs = () => {
       {/* SONG LIST                                                     */}
       {/* ============================================================ */}
 
-      {isLoading && (
-        <View style={{ paddingTop: insets.top }}>
-          <SearchBar />
-          {/* <Header /> */}
+      <View
+        style={{
+          paddingTop: insets.top + moderateScale(4),
+          paddingHorizontal: moderateScale(5),
+        }}
+      >
+        <SearchBar />
+        {/* <Header /> */}
 
-          <View style={styles.pageHeader}>
-            <View>
-              <View style={styles.titleRow}>
-                <Text style={styles.title}>Songs</Text>
+        {isLoading && (
+          <>
+            <View style={styles.pageHeader}>
+              <View>
+                <View style={styles.titleRow}>
+                  <Text style={styles.title}>Songs</Text>
 
-                <View style={styles.titleDot} />
-              </View>
+                  <View style={styles.titleDot} />
+                </View>
 
-              <Text style={styles.subtitle}>
-                {songListToRender?.length ?? 0} songs
-              </Text>
-            </View>
-
-            <View style={styles.musicIcon}>
-              <Ionicons
-                name="musical-notes"
-                size={moderateScale(18)}
-                color={colors.primary}
-              />
-            </View>
-          </View>
-
-          <View style={styles.listHeader}>
-            <View style={styles.listTitleContainer}>
-              <Text style={styles.listTitle}>Your collection</Text>
-
-              <View style={styles.countBadge}>
-                <Text style={styles.countText}>
-                  {songListToRender?.length ?? 0}
+                <Text style={styles.subtitle}>
+                  {songListToRender?.length ?? 0} songs
                 </Text>
               </View>
+
+              <View style={styles.musicIcon}>
+                <Ionicons
+                  name="musical-notes"
+                  size={moderateScale(18)}
+                  color={colors.primary}
+                />
+              </View>
             </View>
 
-            <Pressable
-              style={({ pressed }) => [
-                styles.filterButton,
-                pressed && styles.filterButtonPressed,
-              ]}
-            >
-              <Ionicons
-                name="options-outline"
-                size={moderateScale(16)}
-                color={colors.textSecondary}
-              />
-            </Pressable>
-          </View>
-        </View>
-      )}
+            <View style={styles.listHeader}>
+              <View style={styles.listTitleContainer}>
+                <Text style={styles.listTitle}>Your collection</Text>
+
+                <View style={styles.countBadge}>
+                  <Text style={styles.countText}>
+                    {songListToRender?.length ?? 0}
+                  </Text>
+                </View>
+              </View>
+
+              <Pressable
+                style={({ pressed }) => [
+                  styles.filterButton,
+                  pressed && styles.filterButtonPressed,
+                ]}
+              >
+                <Ionicons
+                  name="options-outline"
+                  size={moderateScale(16)}
+                  color={colors.textSecondary}
+                />
+              </Pressable>
+            </View>
+          </>
+        )}
+      </View>
 
       {isLoading ? (
         <LoadingState />
@@ -162,7 +169,6 @@ const Songs = () => {
           ListHeaderComponent={
             <View style={{ paddingTop: insets.top }}>
               {/* <Header /> */}
-              <SearchBar />
 
               <View style={styles.pageHeader}>
                 <View>
@@ -289,7 +295,7 @@ const styles = StyleSheet.create({
   /* ================================================================ */
 
   pageHeader: {
-    paddingHorizontal: moderateScale(16),
+    paddingHorizontal: moderateScale(8),
 
     paddingTop: moderateScale(14),
 
@@ -455,7 +461,7 @@ const styles = StyleSheet.create({
   /* ================================================================ */
 
   listContent: {
-    paddingHorizontal: moderateScale(10),
+    paddingHorizontal: moderateScale(6),
 
     paddingTop: moderateScale(2),
 
@@ -522,7 +528,7 @@ const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
 
-    backgroundColor: colors.background,
+    backgroundColor: "transparent",
 
     alignItems: "center",
     paddingTop: moderateScale(100),

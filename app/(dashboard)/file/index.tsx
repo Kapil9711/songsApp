@@ -351,9 +351,9 @@ const styles = StyleSheet.create({
   /* ================================================================ */
 
   header: {
-    paddingHorizontal: moderateScale(16),
+    paddingHorizontal: moderateScale(8),
 
-    // paddingTop: moderateScale(15),
+    paddingTop: moderateScale(5),
 
     paddingBottom: moderateScale(12),
   },

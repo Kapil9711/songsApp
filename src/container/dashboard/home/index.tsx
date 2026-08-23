@@ -135,14 +135,10 @@ const Home = () => {
                 <View
                   style={{
                     flex: 1,
-                    paddingTop: insets.top,
+
                     gap: moderateScale(20),
                   }}
                 >
-                  {/* <HomeHeader showHeader={false} />
-
-            <SearchModeSwitch active={active} setActive={setActive} /> */}
-
                   <View
                     style={[
                       styles.container,
