@@ -1,4 +1,4 @@
-package com.kapil9711.songsProCleint
+package com.kapil9711.sargam
 
 import android.app.Application
 import android.content.res.Configuration

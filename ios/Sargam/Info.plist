@@ -7,7 +7,7 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>$(DEVELOPMENT_LANGUAGE)</string>
     <key>CFBundleDisplayName</key>
-    <string>songsProCleint</string>
+    <string>Sargam</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -28,13 +28,13 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>myapp</string>
-          <string>com.kapil9711.songsProCleint</string>
+          <string>com.kapil9711.sargam</string>
         </array>
       </dict>
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>exp+songsprocleint</string>
+          <string>exp+sargam</string>
         </array>
       </dict>
     </array>
@@ -61,9 +61,10 @@
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
     </array>
+    <key>RCTRootViewBackgroundColor</key>
+    <integer>4278714371</integer>
     <key>UIBackgroundModes</key>
     <array>
-      <string>audio</string>
       <string>audio</string>
       <string>fetch</string>
     </array>
@@ -90,7 +91,7 @@
       <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
     <key>UIUserInterfaceStyle</key>
-    <string>Automatic</string>
+    <string>Dark</string>
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
   </dict>

@@ -175,18 +175,7 @@ const Header = () => {
 
 const Greetings = ({ showHeader = true }: any) => {
   const greeting = useMemo(() => {
-    // IST (Asia/Kolkata)
-    const now = new Date();
-
-    const istTime = new Intl.DateTimeFormat("en-IN", {
-      timeZone: "Asia/Kolkata",
-      hour: "numeric",
-      hour12: false,
-    }).formatToParts(now);
-
-    const hour = Number(
-      istTime.find((part) => part.type === "hour")?.value ?? 0,
-    );
+    const hour = new Date().getHours();
 
     if (hour >= 5 && hour < 12) {
       return "Good morning";
@@ -205,12 +194,8 @@ const Greetings = ({ showHeader = true }: any) => {
 
   return (
     <View style={[styles.container, { paddingHorizontal: moderateScale(5) }]}>
-      {/* Small greeting */}
-
       <View style={styles.greetingContainer}>
         <Text style={styles.greeting}>{greeting}</Text>
-
-        {/* <Text style={styles.subtitle}>Your music, your mood.</Text> */}
       </View>
     </View>
   );

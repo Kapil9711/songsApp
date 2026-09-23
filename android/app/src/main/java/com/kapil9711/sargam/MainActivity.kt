@@ -1,4 +1,4 @@
-package com.kapil9711.songsProCleint
+package com.kapil9711.sargam
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

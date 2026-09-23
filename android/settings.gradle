@@ -21,7 +21,7 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
   }
 }
 
-rootProject.name = 'songsProCleint'
+rootProject.name = 'Sargam'
 
 dependencyResolutionManagement {
   versionCatalogs {
