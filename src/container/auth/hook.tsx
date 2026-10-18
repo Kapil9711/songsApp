@@ -1,55 +1,57 @@
+import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import { createUser, LoginPayload, loginUser } from "./api";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getValueInAsync, setValueInAsync } from "@/src/utilities/helpers";
-
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
+import * as SecureStore from "expo-secure-store";
+
+import { createUser, LoginPayload, loginUser } from "./api";
+import { useAuthStore } from "@/src/store/authStore";
 
 const useAuth = () => {
-  // **********************states section*************************
-  const [form, setForm] = useState({} as any);
-  const [isCheckingUserLogin, setIsCheckingUserLogin] = useState(true);
+  const [form, setForm] = useState<Record<string, any>>({});
   const router = useRouter();
-
-  // **********************states section*************************
-
-  // useEffect(() => {
-  //   const checkIsLogin = async () => {
-  //     const value = await getValueInAsync("token");
-  //     if (value) {
-  //       router.replace("/(dashboard)/home");
-  //     } else router.push("/(auth)/sign-in");
-  //     setIsCheckingUserLogin(false);
-  //   };
-  //   checkIsLogin();
-  // }, []);
-
-  //   ************************queries*****************************
-
+  const setSession = useAuthStore((state) => state.setSession);
   const { mutate: userLoginMutation, isPending: isUserLoginPending } =
     useMutation({
       mutationFn: loginUser,
+
       onSuccess: async ({ data }) => {
-        if (data.success) {
+        if (!data.success || !data.token || !data.user) {
           Toast.show({
-            type: "success", // success | error | info
-            text1: "Login SuccessFull",
-            // text2: "File is Deleted Successfully",
+            type: "error",
+            text1: "Login Failed",
+            text2: "Invalid response from server",
+          });
+          return;
+        }
+
+        try {
+          // Persist the token securely before changing screens.
+          await SecureStore.setItemAsync("auth_token", data.token);
+
+          // Update the in-memory auth state.
+          setSession(data.token, data.user);
+
+          Toast.show({
+            type: "success",
+            text1: "Login Successful",
             visibilityTime: 1500,
             autoHide: true,
           });
-          await setValueInAsync("token", data.token);
-          await setValueInAsync("user", JSON.stringify(data?.user));
+
           router.replace("/(dashboard)/home");
+        } catch {
+          Toast.show({
+            type: "error",
+            text1: "Could not save your session",
+          });
         }
       },
-      onError: (data) => {
+
+      onError: () => {
         Toast.show({
-          type: "error", // success | error | info
+          type: "error",
           text1: "Login Failed",
-          // text2: "File is Deleted Successfully",
           visibilityTime: 1500,
           autoHide: true,
         });
@@ -59,70 +61,100 @@ const useAuth = () => {
   const { mutate: userRegisterMutation, isPending: isUserRegisterPending } =
     useMutation({
       mutationFn: createUser,
-      onSuccess: async ({ data }) => {
-        if (data.success) {
-          setForm({});
+
+      onSuccess: ({ data }) => {
+        if (!data.success) {
           Toast.show({
-            type: "success", // success | error | info
-            text1: "SignUp  SuccessFull",
-            // text2: "File is Deleted Successfully",
-            visibilityTime: 1500,
-            autoHide: true,
+            type: "error",
+            text1: "Registration Failed",
           });
-          // await setValueInAsync("token", data.token);
-          router.replace("/(auth)/sign-in");
+          return;
         }
-      },
-      onError: (data) => {
+
+        setForm({});
+
         Toast.show({
-          type: "error", // success | error | info
-          text1: "SignUp Failed",
-          // text2: "File is Deleted Successfully",
+          type: "success",
+          text1: "Signup Successful",
+          visibilityTime: 1500,
+          autoHide: true,
+        });
+
+        router.replace("/(auth)/sign-in");
+      },
+
+      onError: () => {
+        Toast.show({
+          type: "error",
+          text1: "Signup Failed",
           visibilityTime: 1500,
           autoHide: true,
         });
       },
     });
 
-  //   ************************handlers*****************************
-
-  const handleLogin = async () => {
+  const handleLogin = () => {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
     const { password, userId } = form;
 
-    if (password && userId) {
-      const isEmail = emailRegex.test(userId);
-      const payload: LoginPayload = { password };
-      if (isEmail) payload.email = userId.trim();
-      else payload.name = userId.trim();
-      userLoginMutation(payload);
+    if (
+      typeof password !== "string" ||
+      !password.trim() ||
+      typeof userId !== "string" ||
+      !userId.trim()
+    ) {
+      Toast.show({
+        type: "error",
+        text1: "Enter your login details",
+      });
+      return;
     }
+
+    const identifier = userId.trim();
+    const payload: LoginPayload = { password };
+
+    if (emailRegex.test(identifier)) {
+      payload.email = identifier;
+    } else {
+      payload.name = identifier;
+    }
+
+    userLoginMutation(payload);
   };
 
-  const handleRegister = async () => {
+  const handleRegister = () => {
     const { password, name, email } = form;
 
-    if (password && name && email) {
-      const payload = {
-        password: password.trim(),
-        name: name.trim(),
-        email: email.trim(),
-      };
-
-      userRegisterMutation(payload);
+    if (
+      typeof password !== "string" ||
+      !password.trim() ||
+      typeof name !== "string" ||
+      !name.trim() ||
+      typeof email !== "string" ||
+      !email.trim()
+    ) {
+      Toast.show({
+        type: "error",
+        text1: "Complete all registration fields",
+      });
+      return;
     }
-  };
 
-  //   ************************utility functions*****************************
+    userRegisterMutation({
+      password: password.trim(),
+      name: name.trim(),
+      email: email.trim(),
+    });
+  };
 
   return {
     form,
     setForm,
     handleLogin,
-    isCheckingUserLogin,
+    handleRegister,
     isUserLoginPending,
     isUserRegisterPending,
-    handleRegister,
   };
 };
 

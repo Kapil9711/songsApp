@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { memo, useMemo } from "react";
 import { Alert, Image, Pressable, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -8,6 +8,7 @@ import { Text } from "@/src/providers/CustomText";
 import { useGlobalContext } from "@/src/providers/GlobalProvider";
 import { getValueInAsync } from "@/src/utilities/helpers";
 import { colors } from "@/src/constants/theme";
+import { useFavoriteStore } from "@/src/store/useFavorite";
 
 const showAlert = (deleteFile: any, fileName: string) => {
   Alert.alert(
@@ -59,9 +60,9 @@ const SongsSmollCard = ({
   isShowButton = true,
   onPress,
 }: SongsSmollCardProps) => {
-  const { deleteFile, handleFavorite, handleDownload, favorite } =
-    useGlobalContext();
-
+  const { deleteFile, handleDownload } = useGlobalContext();
+  const favorite = useFavoriteStore((state) => state.favorite);
+  const handleFavorite = useFavoriteStore((state) => state.handleFavorite);
   const isFav = useMemo(() => {
     return favorite.some((item: any) => song?.id === item.id);
   }, [favorite, song]);
@@ -677,4 +678,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SongsSmollCard;
+export default memo(SongsSmollCard);

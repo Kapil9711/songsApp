@@ -18,6 +18,8 @@ import { useGlobalContext } from "@/src/providers/GlobalProvider";
 import { colors } from "@/src/constants/theme";
 import { Text } from "@/src/providers/CustomText";
 import { Spinner } from "tamagui";
+import { usePlayerStore } from "@/src/store/playerStore";
+import { useSongList } from "@/src/store/songListStore";
 
 type VerticalListProps = {
   data: any[];
@@ -27,7 +29,13 @@ type VerticalListProps = {
 const VerticalList = ({ data = [], type = "song" }: VerticalListProps) => {
   const { width } = useWindowDimensions();
 
-  const { setCurrentSong, setCurrentSongList } = useAudioContext();
+  // const { setCurrentSong, setCurrentSongList } = useAudioContext();
+
+  const setCurrentSong = usePlayerStore((state) => state.setCurrentSong);
+
+  const setCurrentSongList = usePlayerStore(
+    (state) => state.setCurrentSongList,
+  );
 
   const {
     handleSingleAlbumOrPlalist,
@@ -66,6 +74,8 @@ const VerticalList = ({ data = [], type = "song" }: VerticalListProps) => {
     return (width - horizontalPadding * 2 - columnGap) / 2;
   }, [width, horizontalPadding, columnGap, isLargeCard]);
 
+  const setRenderType = useSongList((state) => state.setRenderType);
+
   /* ================================================================ */
   /* HANDLE PRESS                                                      */
   /* ================================================================ */
@@ -79,9 +89,8 @@ const VerticalList = ({ data = [], type = "song" }: VerticalListProps) => {
       }
 
       if (type === "album" || type === "playlist") {
+        setRenderType("songList");
         handleSingleAlbumOrPlalist(item.id, type);
-
-        // setPage(999);
 
         router.push({
           pathname: "/(dashboard)/home/songs",

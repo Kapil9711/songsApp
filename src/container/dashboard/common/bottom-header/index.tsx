@@ -77,7 +77,7 @@ const BottomHeader = () => {
       style={[
         styles.wrapper,
         {
-          paddingBottom: Math.max(insets.bottom, moderateScale(6)),
+          paddingBottom: Math.max(insets.bottom, moderateScale(14)),
         },
       ]}
     >

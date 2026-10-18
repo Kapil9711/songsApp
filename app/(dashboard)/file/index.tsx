@@ -21,13 +21,21 @@ import {
   importDownloadedSongs,
 } from "@/src/utilities/helpers";
 import { SearchBar } from "@/src/container/dashboard/common/search-bar";
+import { usePlayerStore } from "@/src/store/playerStore";
 
 const LIMIT = 100;
 
 const Files = () => {
   const { localFilesAfterSearch, setImportCount } = useGlobalContext();
 
-  const { setCurrentSong, setCurrentSongList, currentSong } = useAudioContext();
+  // const { setCurrentSong, setCurrentSongList, currentSong } = useAudioContext();
+
+  const currentSong = usePlayerStore((state) => state.currentSong);
+  const setCurrentSong = usePlayerStore((state) => state.setCurrentSong);
+
+  const setCurrentSongList = usePlayerStore(
+    (state) => state.setCurrentSongList,
+  );
 
   const [page, setPage] = useState(1);
 
@@ -58,7 +66,9 @@ const Files = () => {
   const handleSongPress = useCallback(
     (item: any) => {
       setCurrentSong(item);
-      setCurrentSongList(filterData);
+      setTimeout(() => {
+        setCurrentSongList(filterData);
+      }, 100);
     },
     [setCurrentSong, setCurrentSongList, filterData],
   );

@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
@@ -22,6 +28,7 @@ import { useGlobalContext } from "@/src/providers/GlobalProvider";
 
 import { ProgressBarComponent } from "../../common/audio-player";
 import { usePlayerContext } from "@/src/providers/PlaterProvider";
+import { shareAudio } from "@/src/utilities/shareSong";
 
 const SongsDetails = () => {
   const router = useRouter();
@@ -161,6 +168,19 @@ const SongsDetails = () => {
 
   const artist =
     activeSong?.artist || activeSong?.artists?.[0]?.name || "Unknown Artist";
+
+  const [sharing, setSharing] = useState(false);
+
+  const handleShare = async () => {
+    try {
+      setSharing(true);
+      await shareAudio(activeSong?.downloadUrl?.[4]?.url, title);
+      setSharing(false);
+    } catch {
+      setSharing(false);
+      Alert.alert("Error", "Unable to download or share audio.");
+    }
+  };
 
   return (
     <View
@@ -457,20 +477,27 @@ const SongsDetails = () => {
         </Pressable>
 
         <Pressable
+          onPress={handleShare}
           style={({ pressed }) => [
             styles.extraAction,
             pressed && styles.buttonPressed,
           ]}
         >
-          <View style={styles.extraIcon}>
-            <Ionicons
-              name="share-outline"
-              size={moderateScale(17)}
-              color={colors.textSecondary}
-            />
-          </View>
+          {sharing ? (
+            <ActivityIndicator />
+          ) : (
+            <>
+              <View style={styles.extraIcon}>
+                <Ionicons
+                  name="share-outline"
+                  size={moderateScale(17)}
+                  color={colors.textSecondary}
+                />
+              </View>
 
-          <Text style={styles.extraText}>Share</Text>
+              <Text style={styles.extraText}>Share</Text>
+            </>
+          )}
         </Pressable>
       </View>
     </View>

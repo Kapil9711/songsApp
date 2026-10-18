@@ -1,22 +1,22 @@
-import React, { useMemo } from "react";
+import React, { memo, useEffect, useMemo } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { ScrollView, Spinner } from "tamagui";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
 import ShowData from "./components/ShowData";
 import { useGlobalContext } from "@/src/providers/GlobalProvider";
 import { colors } from "@/src/constants/theme";
 import { moderateScale } from "react-native-size-matters";
 import Header from "../common/header";
 import TopFade from "../../shared/topFade";
-import Radio from "./components/RadioList";
-import HandpickedEraSection from "./components/handpickedEra";
 import { SearchBar } from "../common/search-bar";
-import { useAudioContext } from "@/src/providers/AudioProvider";
+import { useLoading } from "@/src/hooks/useLoading";
+import { useRecentlyPlayedStore } from "@/src/store/recentlyPlayedStore";
+import { getValueInAsync } from "@/src/utilities/helpers";
+import { useAuthStore } from "@/src/store/authStore";
 
 const Home = () => {
-  const {
+  let {
     searchedSongList,
     albumListToRender,
     playListToRender,
@@ -26,11 +26,38 @@ const Home = () => {
     hindi,
     punjabi,
     haryanvi,
-    recentlyPlayed,
+    // recentlyPlayed,
     searchQuery,
   } = useGlobalContext();
 
+  // const loading = useLoading();
+
+  const user = useAuthStore((authStore) => authStore.user);
+
   const insets = useSafeAreaInsets();
+
+  const recentlyPlayed = useRecentlyPlayedStore(
+    (state) => state.recentlyPlayed,
+  );
+
+  const loadRecentlyPlayed = useRecentlyPlayedStore(
+    (state) => state.loadRecentlyPlayed,
+  );
+
+  useEffect(() => {
+    const load = async () => {
+      const userString = await getValueInAsync("user");
+      if (!userString) return;
+
+      const user = JSON.parse(userString);
+
+      if (user?._id) {
+        await loadRecentlyPlayed(user._id);
+      }
+    };
+
+    void load();
+  }, [loadRecentlyPlayed]);
 
   return (
     <View
@@ -57,21 +84,13 @@ const Home = () => {
                 <SearchBar />
               </View> */}
 
-              {!searchQuery && (
+              {/* {!searchQuery && (
                 <HandpickedEraSection
                   onPress={(item) => {
                     console.log("Selected:", item.id);
-
-                    // Example:
-                    // router.push({
-                    //   pathname: "/songs",
-                    //   params: {
-                    //     category: item.id,
-                    //   },
-                    // });
                   }}
                 />
-              )}
+              )} */}
             </View>
 
             {/* <SearchModeSwitch active={active} setActive={setActive} /> */}
@@ -116,21 +135,13 @@ const Home = () => {
                   />
                 )}
 
-                {searchQuery && (
+                {/* {searchQuery && (
                   <HandpickedEraSection
                     onPress={(item) => {
                       console.log("Selected:", item.id);
-
-                      // Example:
-                      // router.push({
-                      //   pathname: "/songs",
-                      //   params: {
-                      //     category: item.id,
-                      //   },
-                      // });
                     }}
                   />
-                )}
+                )} */}
 
                 <View
                   style={{
@@ -180,7 +191,7 @@ const Home = () => {
                     />
                   </>
                 </View>
-
+                {/* 
                 <View style={{ flex: 1 }}>
                   <View
                     style={[
@@ -205,7 +216,7 @@ const Home = () => {
                       console.log("Title:", category.title);
                     }}
                   />
-                </View>
+                </View> */}
               </>
             )}
           </View>
@@ -585,4 +596,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Home;
+export default memo(Home);

@@ -2,9 +2,7 @@ import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import Svg, { Defs, RadialGradient, Stop, Rect } from "react-native-svg";
 import ImageColors from "react-native-image-colors";
-
 import { useBackgroudImage } from "@/src/providers/BackgroundImage";
-
 const DEFAULT_BACKGROUND = "#0A0A0B";
 
 type GradientColors = {

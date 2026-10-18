@@ -7,6 +7,7 @@ import HorizontalList from "./HorizontalList";
 import { useGlobalContext } from "@/src/providers/GlobalProvider";
 import { colors } from "@/src/constants/theme";
 import { moderateScale } from "react-native-size-matters";
+import { useSongList } from "@/src/store/songListStore";
 
 type ShowDataProps = {
   data: any;
@@ -25,21 +26,33 @@ const ShowData = ({
 }: ShowDataProps) => {
   const router = useRouter();
 
-  const { searchedSongList, setSongListToRender, setPage } = useGlobalContext();
+  const { searchedSongList, setPage } = useGlobalContext();
+
+  const setSongListToRender = useSongList(
+    (state) => state.setSongsLIstToRender,
+  );
+
+  const setRenderType = useSongList((state) => state.setRenderType);
 
   const length = data?.length ?? 0;
 
   const handleSeeMore = () => {
     if (type === "song") {
+      router.push("/(dashboard)/home/songs");
       if (isTrending) {
-        setSongListToRender(renderData);
         setPage(999);
       } else {
-        setSongListToRender(searchedSongList);
         setPage(1);
       }
-
-      router.push("/(dashboard)/home/songs");
+      setTimeout(() => {
+        if (isTrending) {
+          setRenderType(heading);
+          // setSongListToRender(renderData);
+        } else {
+          setRenderType(heading);
+          // setSongListToRender(searchedSongList);
+        }
+      }, 0);
       return;
     }
 

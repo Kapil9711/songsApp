@@ -1,11 +1,13 @@
 import { colors } from "@/src/constants/theme";
 import { useGlobalContext } from "@/src/providers/GlobalProvider";
 import { usePathname } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Input } from "tamagui";
 import { moderateScale } from "react-native-size-matters";
+import { useDebounce } from "@/src/hooks/useDebounce";
+import { useSearchStore } from "@/src/store/searchStore";
 
 export const SearchBar = () => {
   const {
@@ -15,7 +17,9 @@ export const SearchBar = () => {
     setSearchQuery,
     setPage,
   } = useGlobalContext();
-
+  const search = useSearchStore((state) => state.search);
+  const setSearch = useSearchStore((state) => state.setSearchString);
+  const debouncedSearch = useDebounce(search, 500);
   const pathname = usePathname();
 
   const handleChange = (value: string) => {

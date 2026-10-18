@@ -110,13 +110,9 @@ const SignIn = () => {
               <View style={styles.passwordHeader}>
                 <Text style={styles.label}>Password</Text>
 
-                <Pressable
-                  onPress={() => {
-                    // Forgot password
-                  }}
-                >
+                {/* <Pressable onPress={() => {}}>
                   <Text style={styles.forgotPassword}>Forgot password?</Text>
-                </Pressable>
+                </Pressable> */}
               </View>
 
               <View style={styles.inputContainer}>

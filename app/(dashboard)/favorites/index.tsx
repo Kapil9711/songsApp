@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FlatList,
   Pressable,
@@ -14,61 +14,96 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "@/src/providers/CustomText";
 import { colors } from "@/src/constants/theme";
 
-import { getValueInAsync } from "@/src/utilities/helpers";
-import { useGlobalContext } from "@/src/providers/GlobalProvider";
-import { useAudioContext } from "@/src/providers/AudioProvider";
 import { useSocket } from "@/src/providers/socketProvider";
 
 import SongsSmollCard from "@/src/container/dashboard/common/song-card/SongsSmollCard";
 import { saveDebugJson } from "@/src/utilities/saveFiles";
+import { usePlayerStore } from "@/src/store/playerStore";
+import { useFavoriteStore } from "@/src/store/useFavorite";
+import { useAuthStore } from "@/src/store/authStore";
+import { usePaginatedData } from "@/src/hooks/usePaginatedData";
+import { Spinner } from "tamagui";
+import { CLoading } from "@/src/components/loader";
 
 const Favorite = () => {
-  const { setCurrentSong, setCurrentSongList, currentSong } = useAudioContext();
-
-  const { favorite, friends } = useGlobalContext();
-
+  const currentSong = usePlayerStore((state) => state.currentSong);
+  const setCurrentSong = usePlayerStore((state) => state.setCurrentSong);
+  const setCurrentSongList = usePlayerStore(
+    (state) => state.setCurrentSongList,
+  );
+  const favorite = useFavoriteStore((state) => state.favorite);
+  const friends = useFavoriteStore((state) => state.friends);
+  const loadFavorites = useFavoriteStore((state) => state.loadFavorites);
+  const loadFriends = useFavoriteStore((state) => state.loadFriends);
   const { socket } = useSocket();
-
   const insets = useSafeAreaInsets();
-
   const [active, setActive] = useState("my");
-
-  /* ================================================================ */
-  /* FAVORITE DATA                                                     */
-  /* ================================================================ */
-
-  const finaleData = useMemo(() => {
+  const user = useAuthStore((state) => state.user);
+  const finalData = useMemo(() => {
     if (active === "my") {
       return favorite ?? [];
     }
-
-    const friend = friends?.find((item: any) => item?.user?.name === active);
+    const friend: any = friends?.find(
+      (item: any) => item?.user?.name === active,
+    );
 
     return friend?.user?.favorite ?? [];
   }, [active, favorite, friends]);
-
-  /* ================================================================ */
-  /* SONG PRESS                                                        */
-  /* ================================================================ */
+  const [paginatedFavorite, loadMore, loading] = usePaginatedData(
+    finalData,
+    24,
+  );
 
   const handleSongPress = async (item: any) => {
     setCurrentSong(item);
-    setCurrentSongList(finaleData);
-    // saveDebugJson(finaleData);
-
+    // setTimeout(() => {
+    //   setCurrentSongList(finalData);
+    // }, 100);
     try {
-      const user: any = await getValueInAsync("user");
-
-      const userId = JSON.parse(user || "{}")?._id;
-
       socket?.emit("songPlaying", {
-        senderId: userId,
+        senderId: user?._id,
         song: item,
       });
     } catch (error) {
       console.error("Failed to emit songPlaying:", error);
     }
   };
+
+  useEffect(() => {
+    loadFavorites();
+    loadFriends();
+  }, [loadFavorites, loadFriends]);
+
+  const RenderItem = useCallback(
+    ({ item, index }: any) => (
+      <Pressable
+        style={({ pressed }) => [
+          styles.songItem,
+          pressed && styles.songItemPressed,
+        ]}
+      >
+        <SongsSmollCard
+          isActive={currentSong?.id === item?.id}
+          title={item?.name ?? ""}
+          image={item?.image?.[2]?.url}
+          number={index + 1}
+          song={item}
+          onPress={() => handleSongPress(item)}
+        />
+      </Pressable>
+    ),
+    [favorite, friends],
+  );
+
+  const RenderFooter = useMemo(() => {
+    const Item = loading ? (
+      <CLoading />
+    ) : (
+      <View style={{ height: moderateScale(30) }} />
+    );
+
+    return Item;
+  }, [loading]);
 
   return (
     <View
@@ -97,7 +132,7 @@ const Favorite = () => {
         {/* Count */}
 
         <View style={styles.countCard}>
-          <Text style={styles.count}>{finaleData.length}</Text>
+          <Text style={styles.count}>{paginatedFavorite.length}</Text>
 
           <Text style={styles.countLabel}>songs</Text>
         </View>
@@ -234,34 +269,28 @@ const Favorite = () => {
       {/* ============================================================ */}
 
       <FlatList
-        data={finaleData}
-        keyExtractor={(item: any, index) =>
-          `${item?.id ?? item?.name}-${index}`
-        }
+        data={paginatedFavorite}
+        keyExtractor={(item) => String(item.id ?? item.name)}
+        renderItem={RenderItem}
+        // Virtualization
+        initialNumToRender={12}
+        maxToRenderPerBatch={12}
+        updateCellsBatchingPeriod={50}
+        windowSize={7}
+        // Reduce unnecessary work
+        removeClippedSubviews={true}
+        // Scroll behavior
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.listContent,
-          finaleData.length === 0 && styles.emptyListContent,
+          paginatedFavorite.length === 0 && styles.emptyListContent,
         ]}
-        renderItem={({ item, index }) => (
-          <Pressable
-            // onPress={() => handleSongPress(item)}
-            style={({ pressed }) => [
-              styles.songItem,
-              pressed && styles.songItemPressed,
-            ]}
-          >
-            <SongsSmollCard
-              isActive={currentSong?.id === item?.id}
-              title={item?.name ?? ""}
-              image={item?.image?.[2]?.url}
-              number={index + 1}
-              song={item}
-              onPress={() => handleSongPress(item)}
-            />
-          </Pressable>
-        )}
-        ListEmptyComponent={<EmptyFavorites />}
+        // Pagination
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.4}
+        // Components
+        ListFooterComponent={RenderFooter}
+        ListEmptyComponent={EmptyFavorites}
       />
 
       {/* ============================================================ */}

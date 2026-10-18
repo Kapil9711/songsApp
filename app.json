@@ -49,14 +49,15 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-screen.png",
+          "image": "./assets/images/icon3.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#080003"
         }
       ],
       "expo-font",
-      "expo-asset"
+      "expo-asset",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true

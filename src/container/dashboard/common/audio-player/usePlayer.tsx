@@ -19,6 +19,9 @@ import TrackPlayer, {
 } from "react-native-track-player";
 import service from "@/src/utilities/service";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { usePlayerStore } from "@/src/store/playerStore";
+import { useUser } from "@/src/hooks/useUser";
+import { useRecentlyPlayedStore } from "@/src/store/recentlyPlayedStore";
 const PLAYER_STATE_KEY = "@player_state";
 
 const BackgroundFetch: any = BackgroundFetch1;
@@ -33,14 +36,27 @@ async function setupAudio() {
   });
 }
 export const usePlayer = () => {
-  const {
-    sound,
-    currentSong,
-    setCurrentSong,
-    currentSongList,
-    setCurrentSongList,
-  } = useAudioContext();
-  const { user, saveRecentlyPlayedSong } = useGlobalContext();
+  // const {
+  //   sound,
+  //   currentSong,
+  //   setCurrentSong,
+  //   currentSongList,
+  //   setCurrentSongList,
+  // } = useAudioContext();
+
+  const sound = usePlayerStore((state) => state.sound);
+  const currentSong = usePlayerStore((state) => state.currentSong);
+  const setCurrentSong = usePlayerStore((state) => state.setCurrentSong);
+  const currentSongList = usePlayerStore((state) => state.currentSongList);
+  const setCurrentSongList = usePlayerStore(
+    (state) => state.setCurrentSongList,
+  );
+
+  const user = useUser();
+  const saveRecentlyPlayedSong = useRecentlyPlayedStore(
+    (state) => state.saveRecentlyPlayedSong,
+  );
+
   const [isPlaying, setIsPlaying] = useState(false);
   const { setImage } = useBackgroudImage();
   const [position, setPosition] = useState(0); // Current playback time (ms)
@@ -48,12 +64,6 @@ export const usePlayer = () => {
   const [isLoop, setIsLoop] = useState(false);
   const [isShuffle, setIsShuffle] = useState(false);
   const { socket } = useSocket();
-  const { showNowPlayingNotification } = useNotification();
-  const [originalList, setOriginalList] = useState([]);
-
-  const [shuffledList, setShuffledList] = useState([]);
-
-  // const isLoop = useRef(false);
 
   let imageUrl = "";
   let songUrl = "";
@@ -205,6 +215,14 @@ export const usePlayer = () => {
         // Normal song change
         await TrackPlayer.play();
         setIsPlaying(true);
+
+        if (currentSong?.type || currentSong?.downloadUrl[0]?.url) {
+          try {
+            const user: any = await getValueInAsync("user");
+            const userId = JSON.parse(user)?._id;
+            saveRecentlyPlayedSong(userId, currentSong);
+          } catch (error) {}
+        }
       } catch (error) {
         console.error("Error loading song:", error);
       }
@@ -212,59 +230,6 @@ export const usePlayer = () => {
 
     loadSong();
   }, [currentSong]);
-
-  // useEffect(() => {
-  //   (async () => {
-  //     if (setImage) {
-  //       if (currentSong?.id)
-  //         setImage(currentSong?.image[user?.imageQuality]?.url);
-  //       else setImage(currentSong?.image[2]?.url);
-  //     }
-  //     // if (sound) {
-  //     //   await sound.unloadAsync();
-  //     // }
-  //     // If a sound is playing, stop it before loading a new one
-  //     if (sound && sound.stopAsync) {
-  //       await sound.stopAsync();
-  //     }
-
-  //     if (Audio && currentSong?.id) {
-  //       await TrackPlayer.reset();
-  //       // const { sound: newSound } = await Audio?.Sound?.createAsync(
-  //       //   {
-  //       //     uri: currentSong?.id
-  //       //       ? currentSong?.downloadUrl[4]?.url
-  //       //       : currentSong?.downloadUrl[4],
-  //       //   },
-  //       //   { shouldPlay: true }
-  //       // );
-
-  //       // setSound(newSound);
-  //       await TrackPlayer.add({
-  //         id: currentSong._id || "",
-  //         url: currentSong?.id
-  //           ? currentSong?.downloadUrl[4]?.url
-  //           : currentSong?.downloadUrl[4],
-  //         title: currentSong.name,
-  //         // artist: "Artist Name",
-  //         artwork: currentSong?.image[2]?.url, // Optional artwork image
-  //       });
-
-  //       await TrackPlayer.play();
-  //       setIsPlaying(true);
-  //       const title = currentSong.name;
-  //       const imageUrl = currentSong?.image[2]?.url;
-  //       // showNowPlayingNotification(title, imageUrl);
-  //     }
-  //     if (currentSong?.type || currentSong?.downloadUrl[0]?.url) {
-  //       try {
-  //         const user: any = await getValueInAsync("user");
-  //         const userId = JSON.parse(user)?._id;
-  //         saveRecentlyPlayedSong(userId, currentSong);
-  //       } catch (error) {}
-  //     }
-  //   })();
-  // }, [currentSong]);
 
   useEffect(() => {
     socket?.on("syncSong", async ({ song, receiverId }: any) => {
@@ -352,8 +317,10 @@ export const usePlayer = () => {
       let prev1 = {};
       setCurrentSong((prev: any) => {
         prev1 = prev;
-        return { ...prev };
-      })(async () => {
+        return prev ? { ...prev } : null;
+      });
+
+      (async () => {
         const user: any = await getValueInAsync("user");
         const userId = JSON.parse(user)?._id;
         socket?.emit("songPlaying", { senderId: userId, song: prev1 });
@@ -637,8 +604,16 @@ export const usePlayer = () => {
 };
 
 export const usePlayerOld = () => {
-  const { sound, currentSong, setCurrentSong, currentSongList } =
-    useAudioContext();
+  // const { sound, currentSong, setCurrentSong, currentSongList } =
+  //   useAudioContext();
+
+  const sound = usePlayerStore((state) => state.sound);
+
+  const currentSong = usePlayerStore((state) => state.currentSong);
+  const setCurrentSong = usePlayerStore((state) => state.setCurrentSong);
+
+  const currentSongList = usePlayerStore((state) => state.currentSongList);
+
   const { user, saveRecentlyPlayedSong } = useGlobalContext();
   const [isPlaying, setIsPlaying] = useState(false);
   const { setImage } = useBackgroudImage();
@@ -840,8 +815,10 @@ export const usePlayerOld = () => {
       let prev1 = {};
       setCurrentSong((prev: any) => {
         prev1 = prev;
-        return { ...prev };
-      })(async () => {
+        return prev ? { ...prev } : null;
+      });
+
+      (async () => {
         const user: any = await getValueInAsync("user");
         const userId = JSON.parse(user)?._id;
         socket?.emit("songPlaying", { senderId: userId, song: prev1 });

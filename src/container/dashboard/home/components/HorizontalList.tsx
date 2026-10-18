@@ -9,6 +9,7 @@ import { useAudioContext } from "@/src/providers/AudioProvider";
 import { useGlobalContext } from "@/src/providers/GlobalProvider";
 import { useSocket } from "@/src/providers/socketProvider";
 import { getValueInAsync } from "@/src/utilities/helpers";
+import { usePlayerStore } from "@/src/store/playerStore";
 
 const HorizontalList = ({
   data,
@@ -17,7 +18,13 @@ const HorizontalList = ({
   data: any[];
   type?: string;
 }) => {
-  const { setCurrentSong, setCurrentSongList } = useAudioContext();
+  // const { setCurrentSong, setCurrentSongList } = useAudioContext();
+
+  const setCurrentSong = usePlayerStore((state) => state.setCurrentSong);
+
+  const setCurrentSongList = usePlayerStore(
+    (state) => state.setCurrentSongList,
+  );
 
   const { handleSingleAlbumOrPlalist, setPage } = useGlobalContext();
 

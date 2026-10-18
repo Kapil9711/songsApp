@@ -1,139 +1,464 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const api = axios.create({
-  baseURL: "https://song-backend-two.vercel.app",
-  // baseURL: "http://localhost:8001",
+import {
+  setupCache,
+  buildStorage,
+  type StorageValue,
+} from "axios-cache-interceptor";
 
-  headers: {
-    "Content-Type": "application/json",
+import { vh } from "../utilities/vhClient";
+import { useAuthStore } from "../store/authStore";
+
+// ============================================================
+// TYPES
+// ============================================================
+
+interface ApiMetadata {
+  requestId: string;
+  startTime: number;
+}
+
+declare module "axios" {
+  export interface AxiosRequestConfig {
+    metadata?: ApiMetadata;
+  }
+
+  export interface InternalAxiosRequestConfig {
+    metadata?: ApiMetadata;
+  }
+}
+
+// ============================================================
+// CONFIGURATION
+// ============================================================
+
+const BASE_URL = "https://song-backend-two.vercel.app";
+
+const CACHE_PREFIX = "@api-cache:";
+const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+/**
+ * Requests matching these URLs will never be cached.
+ *
+ * You can use relative paths or full URLs.
+ * Query strings and trailing slashes are ignored.
+ *
+ * Examples:
+ * "/auth/login"
+ * "/user/profile"
+ * "/song/stream"
+ * "https://song-backend-two.vercel.app/song/download"
+ */
+export const CACHE_EXCLUDED_URLS: string[] = [
+  "/auth/login",
+  "/auth/logout",
+  "/auth/refresh",
+  "/user/profile",
+  "/song/stream",
+  "/song/download",
+  "https://song-backend-two.vercel.app/friend",
+  "https://song-backend-two.vercel.app/user/all",
+  "https://song-backend-two.vercel.app/friend/request",
+];
+
+// ============================================================
+// REQUEST ID
+// ============================================================
+
+const createRequestId = (): string => {
+  return `${Date.now().toString(36)}-${Math.random()
+    .toString(36)
+    .slice(2)}-${Math.random().toString(36).slice(2)}`;
+};
+
+// ============================================================
+// URL MATCHING
+// ============================================================
+
+/**
+ * Convert a relative or absolute URL into a normalized pathname.
+ */
+const getPathname = (url: string, baseURL = BASE_URL): string => {
+  try {
+    const parsed = new URL(url, baseURL);
+    return parsed.pathname.replace(/\/+$/, "") || "/";
+  } catch {
+    const pathname = url.split(/[?#]/)[0];
+    return pathname.replace(/\/+$/, "") || "/";
+  }
+};
+
+/**
+ * Returns true when a request matches an excluded URL.
+ *
+ * Matches paths exactly:
+ * /song/stream?id=123 -> /song/stream
+ *
+ * Does not match:
+ * /song/streaming -> /song/stream
+ */
+const shouldSkipCache = (url?: string, baseURL?: string): boolean => {
+  if (!url) return false;
+
+  const requestPath = getPathname(url, baseURL);
+
+  return CACHE_EXCLUDED_URLS.some((excludedUrl) => {
+    const excludedPath = getPathname(excludedUrl, baseURL);
+    return requestPath === excludedPath;
+  });
+};
+
+// ============================================================
+// PERSISTENT CACHE STORAGE
+// ============================================================
+
+/**
+ * Cache entries are persisted in AsyncStorage.
+ * They survive app restarts.
+ */
+const persistentStorage = buildStorage({
+  async find(key) {
+    const storageKey = `${CACHE_PREFIX}${key}`;
+    const value = await AsyncStorage.getItem(storageKey);
+
+    if (!value) {
+      return undefined;
+    }
+
+    try {
+      return JSON.parse(value) as StorageValue;
+    } catch {
+      // Remove corrupted cache entries.
+      await AsyncStorage.removeItem(storageKey);
+      return undefined;
+    }
+  },
+
+  async set(key, value) {
+    await AsyncStorage.setItem(`${CACHE_PREFIX}${key}`, JSON.stringify(value));
+  },
+
+  async remove(key) {
+    await AsyncStorage.removeItem(`${CACHE_PREFIX}${key}`);
+  },
+
+  async clear() {
+    const keys = await AsyncStorage.getAllKeys();
+
+    const cacheKeys = keys.filter((key) => key.startsWith(CACHE_PREFIX));
+
+    if (cacheKeys.length > 0) {
+      await AsyncStorage.multiRemove(cacheKeys);
+    }
   },
 });
 
-/**
- * Get token and set Authorization header
- */
-export const setAuthHeader = async () => {
+// ============================================================
+// AXIOS INSTANCE + CACHE
+// ============================================================
+
+const api = setupCache(
+  axios.create({
+    baseURL: BASE_URL,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  }),
+  {
+    storage: persistentStorage,
+    ttl: CACHE_TTL,
+    methods: ["get"],
+    interpretHeader: false,
+    debug: (log) => console.log("[AXIOS CACHE DEBUG]", log),
+  },
+);
+
+// ============================================================
+// AUTHENTICATION
+// ============================================================
+
+export const setAuthHeader = async (): Promise<void> => {
   try {
-    const token = await AsyncStorage.getItem("token");
+    const token = useAuthStore.getState().token;
 
     if (token) {
       api.defaults.headers.common.Authorization = `Bearer ${token}`;
     } else {
       delete api.defaults.headers.common.Authorization;
     }
-  } catch (error) {
-    console.error("❌ [AUTH] Failed to retrieve token", error);
+  } catch (error: unknown) {
+    console.error("[AUTH] Failed to retrieve token", error);
   }
 };
 
-/**
- * Request interceptor
- */
+// ============================================================
+// HELPERS
+// ============================================================
+
+const getHeaders = (
+  headers: InternalAxiosRequestConfig["headers"],
+): Record<string, string> => {
+  if (!headers) return {};
+
+  const result: Record<string, string> = {};
+
+  Object.entries(headers.toJSON()).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      result[key] = String(value);
+    }
+  });
+
+  // Never expose authentication credentials in logs.
+  for (const key of Object.keys(result)) {
+    if (["authorization", "cookie", "set-cookie"].includes(key.toLowerCase())) {
+      delete result[key];
+    }
+  }
+
+  return result;
+};
+
+const sanitizeBody = (body: unknown): unknown => {
+  if (body === null || body === undefined) {
+    return body;
+  }
+
+  let parsedBody: any = body;
+
+  if (typeof parsedBody === "string") {
+    try {
+      parsedBody = JSON.parse(parsedBody);
+    } catch {
+      return parsedBody.length > 5000
+        ? `${parsedBody.slice(0, 5000)}... [truncated]`
+        : parsedBody;
+    }
+  }
+
+  if (typeof parsedBody !== "object" || Array.isArray(parsedBody)) {
+    return parsedBody;
+  }
+
+  const sensitiveKeys = new Set([
+    "password",
+    "token",
+    "accesstoken",
+    "refreshtoken",
+    "authorization",
+    "cookie",
+    "secret",
+    "email",
+    "phone",
+  ]);
+
+  const sanitized: Record<string, unknown> = {
+    ...(parsedBody as Record<string, unknown>),
+  };
+
+  for (const key of Object.keys(sanitized)) {
+    if (sensitiveKeys.has(key.toLowerCase())) {
+      sanitized[key] = "[REDACTED]";
+    }
+  }
+
+  return sanitized;
+};
+
+// ============================================================
+// REQUEST INTERCEPTOR
+// ============================================================
+
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
+    const requestId = createRequestId();
     const startTime = Date.now();
 
-    // Store request start time so we can calculate duration
-    (config as any).metadata = {
+    config.metadata = {
+      requestId,
       startTime,
     };
 
-    console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log("🚀 [API REQUEST]");
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    const method = config.method?.toUpperCase() ?? "GET";
+    const url = api.getUri(config);
 
-    console.log("➡️ Method:", config.method?.toUpperCase());
-    console.log("🌐 URL:", `${config.baseURL}${config.url}`);
+    // Important: set this before the cache interceptor runs.
+    const skipCache = shouldSkipCache(config.url, config.baseURL);
 
-    if (config.params) {
-      console.log("🔎 Params:", config.params);
+    if (skipCache) {
+      (config as any).cache = { enabled: false };
+
+      console.log("⚪ [CACHE BYPASS]", {
+        requestId,
+        method,
+        url,
+        message: "URL is excluded from caching",
+      });
     }
 
-    if (config.data) {
-      console.log("📦 Body:", config.data);
-    }
+    const headers = getHeaders(config.headers);
 
-    if (config.headers) {
-      console.log("📋 Headers:", config.headers);
-    }
+    const params = config.params;
+    const body = sanitizeBody(config.data);
 
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+    console.log("🚀 [API REQUEST]", {
+      requestId,
+      method,
+      url,
+      params: params ?? {},
+      body: body ?? {},
+      headers,
+      cacheExcluded: skipCache,
+    });
+
+    // Optional monitoring integration.
+    // vh.network.req({
+    //   requestId,
+    //   method,
+    //   url,
+    //   params,
+    //   headers,
+    //   body,
+    // });
 
     return config;
   },
-  (error) => {
-    console.error("❌ [API REQUEST ERROR]");
-    console.error(error);
-
+  (error: unknown) => {
+    console.error("[API REQUEST ERROR]", error);
     return Promise.reject(error);
   },
 );
 
-/**
- * Response interceptor
- */
+// ============================================================
+// RESPONSE INTERCEPTOR
+// ============================================================
+
 api.interceptors.response.use(
-  (response: any) => {
-    const startTime = response.config.metadata?.startTime;
-    const duration = startTime ? `${Date.now() - startTime}ms` : "N/A";
+  (response) => {
+    const config = response.config;
+    const metadata = config.metadata;
 
-    console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log("✅ [API RESPONSE]");
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    const durationMs = metadata ? Date.now() - metadata.startTime : undefined;
 
-    console.log("➡️ Method:", response.config.method?.toUpperCase());
-    console.log("🌐 URL:", `${response.config.baseURL}${response.config.url}`);
-    console.log("📊 Status:", response.status);
-    console.log("⏱️ Duration:", duration);
-    console.log("📦 Data:", response.data);
+    const method = config.method?.toUpperCase() ?? "GET";
+    const url = api.getUri(config);
 
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+    const skipCache = shouldSkipCache(config.url, config.baseURL);
+
+    if (skipCache) {
+      console.log("⚪ [CACHE BYPASS RESPONSE]", {
+        requestId: metadata?.requestId,
+        method,
+        url,
+        status: response.status,
+        durationMs,
+      });
+    } else if (response.cached === true) {
+      console.log("🟢 [CACHE HIT]", {
+        requestId: metadata?.requestId,
+        method,
+        url,
+        status: response.status,
+        durationMs,
+        message: "Response served from cache",
+      });
+    } else {
+      console.log("🔵 [CACHE MISS]", {
+        requestId: metadata?.requestId,
+        method,
+        url,
+        status: response.status,
+        durationMs,
+        message: "Response received from network",
+      });
+    }
+
+    const headers = getHeaders(config.headers);
+    const body = sanitizeBody(response.data);
+
+    console.log("✅ [API RESPONSE]", {
+      requestId: metadata?.requestId ?? "UNKNOWN",
+      method,
+      url,
+      status: response.status,
+      durationMs,
+      headers,
+      data: body,
+    });
+
+    // Optional monitoring integration.
+    // vh.network.res({
+    //   requestId: metadata?.requestId,
+    //   method,
+    //   url,
+    //   status: response.status,
+    //   statusText: response.statusText,
+    //   body,
+    //   durationMs,
+    // });
 
     return response;
   },
 
   (error: AxiosError) => {
     const config = error.config;
+    const metadata = config?.metadata;
 
-    const startTime = (config as any)?.metadata?.startTime;
-    const duration = startTime ? `${Date.now() - startTime}ms` : "N/A";
+    const durationMs = metadata ? Date.now() - metadata.startTime : undefined;
 
-    console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log("❌ [API ERROR]");
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    const method = config?.method?.toUpperCase() ?? "UNKNOWN";
+    const url = config ? api.getUri(config) : "UNKNOWN";
+    const responseBody = sanitizeBody(error.response?.data);
 
-    console.log("➡️ Method:", config?.method?.toUpperCase() ?? "UNKNOWN");
+    console.error("❌ [API ERROR]", {
+      requestId: metadata?.requestId ?? "UNKNOWN",
+      method,
+      url,
+      durationMs,
+      status: error.response?.status,
+      response: responseBody,
+      message: error.message,
+    });
 
-    console.log(
-      "🌐 URL:",
-      config ? `${config.baseURL}${config.url}` : "UNKNOWN",
-    );
-
-    console.log("⏱️ Duration:", duration);
-
-    if (error.response) {
-      // Server responded with an error status
-      console.log("📊 Status:", error.response.status);
-      console.log("📊 Status Text:", error.response.statusText);
-      console.log("📦 Response:", error.response.data);
-      console.log("📋 Headers:", error.response.headers);
-    } else if (error.request) {
-      // Request was made but no response received
-      console.log("📡 No response received from server");
-      console.log("📦 Request:", error.request);
-    } else {
-      // Something went wrong before request was sent
-      console.log("⚠️ Error Message:", error.message);
-    }
-
-    console.log("🔴 Axios Error:", error.message);
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+    // Optional monitoring integration.
+    // vh.network.res({
+    //   requestId: metadata?.requestId,
+    //   method,
+    //   url,
+    //   status: error.response?.status,
+    //   statusText: error.response?.statusText,
+    //   body: responseBody,
+    //   durationMs,
+    //   error: error.message,
+    // });
 
     return Promise.reject(error);
   },
 );
 
-setAuthHeader();
+// ============================================================
+// CACHE UTILITIES
+// ============================================================
+
+/**
+ * Clear all persisted API cache entries.
+ */
+export const clearApiCache = async (): Promise<void> => {
+  await (persistentStorage as any)?.clear();
+  console.log("[CACHE] All API cache entries cleared");
+};
+
+/**
+ * Call after login/logout or when you need to refresh a
+ * particular resource manually.
+ *
+ * Clears the entire API cache for simplicity.
+ */
+export const refreshApiCache = async (): Promise<void> => {
+  await clearApiCache();
+};
+
+void setAuthHeader();
 
 export default api;

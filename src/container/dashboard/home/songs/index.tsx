@@ -18,27 +18,87 @@ import Header from "../../common/header";
 import { saveDebugJson } from "@/src/utilities/saveFiles";
 import { useLocalSearchParams } from "expo-router";
 import { SearchBar } from "../../common/search-bar";
+import { useLoading } from "@/src/hooks/useLoading";
+import { useSongList } from "@/src/store/songListStore";
+import { usePlayerStore } from "@/src/store/playerStore";
+import { useRecentlyPlayedStore } from "@/src/store/recentlyPlayedStore";
 
 const Songs = () => {
-  const { songListToRender, isLoadingSongListToRender, fetchData, isLoading } =
-    useGlobalContext();
-
-  const { currentSong, setCurrentSong, setCurrentSongList } = useAudioContext();
-
+  let {
+    isLoadingSongListToRender,
+    fetchData,
+    isLoading,
+    hindi,
+    punjabi,
+    haryanvi,
+    searchedSongList,
+    // recentlyPlayed,
+  } = useGlobalContext();
+  const songList = useSongList((state) => state.songsListToRender);
+  const recentlyPlayed = useRecentlyPlayedStore(
+    (state) => state.recentlyPlayed,
+  );
+  const currentSong = usePlayerStore((state) => state.currentSong);
+  const setCurrentSong = usePlayerStore((state) => state.setCurrentSong);
+  const setCurrentSongList = usePlayerStore(
+    (state) => state.setCurrentSongList,
+  );
+  const renderType = useSongList((state) => state.renderType);
   const { socket } = useSocket();
-
   const insets = useSafeAreaInsets();
 
-  /* ================================================================ */
-  /* PLAY SONG                                                         */
-  /* ================================================================ */
+  const { isNotFetch } = useLocalSearchParams();
 
-  // saveDebugJson(songListToRender);
+  const loading = useLoading(300);
+
+  isLoading = isLoading || loading;
+
+  const RenderItem = useCallback(
+    ({ item, index }: any) => {
+      const isActive = currentSong?.id === item.id;
+
+      return (
+        <SongsSmollCard
+          isActive={isActive}
+          title={item.name}
+          image={item?.image?.[2]?.url}
+          number={index + 1}
+          song={item}
+          onPress={() => handleSongPress(item)}
+        />
+      );
+    },
+    [currentSong],
+  );
+
+  let songListToRender: any = [];
+
+  switch (renderType) {
+    case "Hindi":
+      songListToRender = hindi;
+      break;
+    case "Punjabi":
+      songListToRender = punjabi;
+      break;
+    case "Haryanvi":
+      songListToRender = haryanvi;
+      break;
+    case "Songs":
+      songListToRender = songList;
+      break;
+    case "Recently Played":
+      songListToRender = recentlyPlayed;
+      break;
+    case "songList":
+      songListToRender = songList;
+  }
 
   const handleSongPress = useCallback(
     async (item: any) => {
       setCurrentSong(item);
-      setCurrentSongList(songListToRender);
+      // setTimeout(() => {
+      //   setCurrentSongList(songListToRender);
+      // }, 100);
 
       if (item.type || item.downloadUrl?.[0]?.url) {
         try {
@@ -57,16 +117,6 @@ const Songs = () => {
     },
     [setCurrentSong, setCurrentSongList, songListToRender, socket],
   );
-
-  const { isNotFetch } = useLocalSearchParams();
-
-  /* ================================================================ */
-  /* LOADING                                                           */
-  /* ================================================================ */
-
-  // if (isLoading) {
-  //   return <LoadingState />;
-  // }
 
   return (
     <View
@@ -150,22 +200,16 @@ const Songs = () => {
           keyExtractor={(item, index) => `${item.id}-${index}`}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContent}
-          renderItem={({ item, index }) => {
-            const isActive = currentSong?.id === item.id;
-
-            return (
-              <SongsSmollCard
-                isActive={isActive}
-                title={item.name}
-                image={item?.image?.[2]?.url}
-                number={index + 1}
-                song={item}
-                onPress={() => handleSongPress(item)}
-              />
-            );
-          }}
+          renderItem={RenderItem}
           onEndReached={isNotFetch == "true" ? () => {} : fetchData}
           onEndReachedThreshold={0.25}
+          // Virtualization
+          initialNumToRender={12}
+          maxToRenderPerBatch={12}
+          updateCellsBatchingPeriod={50}
+          windowSize={7}
+          // Reduce unnecessary work
+          removeClippedSubviews={true}
           ListHeaderComponent={
             <View style={{ paddingTop: insets.top }}>
               {/* <Header /> */}

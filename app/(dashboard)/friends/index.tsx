@@ -17,6 +17,7 @@ import FriendCard from "@/src/container/dashboard/common/song-card/friendCard";
 import { colors } from "@/src/constants/theme";
 import { moderateScale } from "react-native-size-matters";
 import LogoutButton from "@/src/container/shared/logout";
+import { useAuthStore } from "@/src/store/authStore";
 
 const Friends = () => {
   const {
@@ -288,7 +289,7 @@ const FriendsTabs = ({
    LOADING
 ========================================================= */
 
-const Loading = () => {
+export const Loading = () => {
   return (
     <View style={styles.loadingContainer}>
       <View style={styles.loadingIcon}>
@@ -395,21 +396,13 @@ const EmptyFriends = ({ type }: { type: string }) => {
 
 const useFriend = () => {
   const [active, setActive] = useState("friends");
-
-  const { user } = useGlobalContext();
-
+  const user = useAuthStore((store) => store.user);
   const [friends, setFriends] = useState<any[]>([]);
-
   const [requests, setRequests] = useState<any[]>([]);
-
   const [users, setUsers] = useState<any[]>([]);
-
   const [isLoading, setIsLoading] = useState(false);
-
   const [isActionLoading, setIsActionLoading] = useState(false);
-
   const { setFriends: setGlobalFriend } = useGlobalContext();
-
   useEffect(() => {
     const loadInitialData = async () => {
       try {

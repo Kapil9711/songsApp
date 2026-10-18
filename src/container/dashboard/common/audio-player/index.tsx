@@ -70,7 +70,7 @@ const PlayerUi = () => {
   }
 
   const bottomOffset =
-    BOTTOM_NAV_HEIGHT + Math.max(insets.bottom, moderateScale(6)) + PLAYER_GAP;
+    BOTTOM_NAV_HEIGHT + Math.max(insets.bottom, moderateScale(14)) + PLAYER_GAP;
 
   const openDetails = () => {
     router.push("/(dashboard)/home/songs-details");
