@@ -1,15 +1,19 @@
+import { useTheme } from "@/themes/theme.context";
 import { Drawer } from "expo-router/drawer";
+import { useWindowDimensions } from "react-native";
 
 export default function DrawerLayout() {
+  const { width } = useWindowDimensions();
+  const { Theme } = useTheme();
   return (
     <Drawer
       screenOptions={{
         headerShown: false,
         drawerPosition: "left",
         swipeEnabled: true,
-        swipeEdgeWidth: 300,
+        swipeEdgeWidth: width * 0.3,
         drawerStyle: {
-          backgroundColor: "#101010",
+          backgroundColor: Theme.colors.background,
           width: 280,
         },
         drawerActiveTintColor: "#C5FF4A",

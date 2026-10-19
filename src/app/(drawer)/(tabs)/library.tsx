@@ -1,9 +1,17 @@
+import { Container } from "@/components/container";
+import { useTheme } from "@/themes/theme.context";
 import { Text, View } from "react-native";
 
 export default function HomeScreen() {
+  const { Theme } = useTheme();
+
   return (
-    <View style={{ flex: 1, backgroundColor: "#101010", padding: 24 }}>
-      <Text style={{ color: "#C5FF4A", fontSize: 24 }}>HOME SCREEN</Text>
-    </View>
+    <Container>
+      <View>
+        <Text style={[Theme.styles.H4, { color: Theme.colors.primary }]}>
+          Home Screen
+        </Text>
+      </View>
+    </Container>
   );
 }

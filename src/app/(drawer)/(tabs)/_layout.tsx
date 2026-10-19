@@ -1,6 +1,10 @@
+import { useTheme } from "@/themes/theme.context";
 import { TopTabs } from "expo-router/js-top-tabs";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabsLayout() {
+  const { Theme } = useTheme();
+  const insets = useSafeAreaInsets();
   return (
     <TopTabs
       tabBarPosition="bottom"
@@ -8,14 +12,15 @@ export default function TabsLayout() {
         swipeEnabled: true,
         lazy: true,
         animationEnabled: true,
+
         tabBarStyle: {
-          backgroundColor: "#101010",
+          backgroundColor: Theme.colors.background,
         },
 
-        tabBarActiveTintColor: "#C5FF4A",
-        tabBarInactiveTintColor: "#929292",
+        tabBarActiveTintColor: Theme.colors.accent,
+        tabBarInactiveTintColor: Theme.colors.text,
         tabBarIndicatorStyle: {
-          backgroundColor: "#C5FF4A",
+          backgroundColor: Theme.colors.text,
         },
       }}
     >
