@@ -1,5 +1,8 @@
 import { DEFAULT_FONT } from "@/constants";
 import { StyleSheet } from "react-native";
+// import { scale } from "react-native-size-matters";
+import { moderateScale, scale } from "react-native-fluid-styles";
+
 import {
   Colors,
   ColStyles,
@@ -18,23 +21,23 @@ import {
 const spacer = 12;
 export const spacing: { [key: number]: number } = {
   0: 0,
-  1: spacer * 0.25,
-  2: spacer * 0.5,
-  3: spacer,
-  4: spacer * 1.5,
-  5: spacer * 3,
+  1: scale(spacer * 0.25),
+  2: scale(spacer * 0.5),
+  3: scale(spacer),
+  4: scale(spacer * 1.5),
+  5: scale(spacer * 3),
 };
 
 const baseFontSize = 16;
 
 const typography: { [key: number | string]: number } = {
   normal: baseFontSize,
-  1: baseFontSize * 1.25,
-  2: baseFontSize * 1.5,
-  3: baseFontSize * 1.75,
-  4: baseFontSize * 2,
-  5: baseFontSize * 2.5,
-  small: baseFontSize * 0.875,
+  1: moderateScale(baseFontSize * 1.25),
+  2: moderateScale(baseFontSize * 1.5),
+  3: moderateScale(baseFontSize * 1.75),
+  4: moderateScale(baseFontSize * 2),
+  5: moderateScale(baseFontSize * 2.5),
+  small: moderateScale(baseFontSize * 0.875),
 };
 
 const generalColors = {

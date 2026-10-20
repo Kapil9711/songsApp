@@ -8,13 +8,14 @@ export default function DrawerLayout() {
   return (
     <Drawer
       screenOptions={{
-        headerShown: false,
+        headerShown: true,
         drawerPosition: "left",
+        drawerType: "slide",
         swipeEnabled: true,
-        swipeEdgeWidth: width * 0.3,
+        swipeEdgeWidth: 100,
         drawerStyle: {
           backgroundColor: Theme.colors.background,
-          width: 280,
+          width: Math.min(width * 0.8, 450),
         },
         drawerActiveTintColor: "#C5FF4A",
         drawerInactiveTintColor: "#929292",
@@ -23,6 +24,8 @@ export default function DrawerLayout() {
       <Drawer.Screen
         name="(tabs)"
         options={{
+          headerShown: false,
+
           drawerLabel: "Music",
           title: "Music",
         }}

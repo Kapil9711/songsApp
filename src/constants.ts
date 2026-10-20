@@ -8,8 +8,8 @@ export const COLOR_SCHEME: ColorSchemeSettings = "system"; // Override system's 
 export const DEFAULT_THEME: string = "default";
 export const DEFAULT_FONT = "Ubuntu";
 
-/**
- * Geolocation
- */
-export const GEOLOCATION_WATCH_INTERVAL: number = 5000;
-export const RN_GEOLOCATION_WATCHERS: any[] = [];
+// env variables
+export const API_BASE_URL =
+  process.env.EXPO_API_BASE_URL || "https://song-backend-two.vercel.app";
+export const JIO_API_BASE_URL =
+  process.env.EXPO_API_BASE_URL || "https://saavn-api-mocha.vercel.app";

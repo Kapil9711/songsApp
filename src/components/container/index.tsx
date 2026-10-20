@@ -1,5 +1,4 @@
 import { InsetStyle, SafeSide, useInsetStyles } from "@/hooks/useInsetStyle";
-import { useTheme } from "@/themes/theme.context";
 import { ReactNode } from "react";
 import { View, ViewStyle } from "react-native";
 
@@ -12,12 +11,17 @@ export const Container = ({
   children: ReactNode;
   style?: ViewStyle;
 }) => {
-  const { Theme } = useTheme();
   const safeAreaStyle = useInsetStyles(insetStyle || SafeSide);
   return (
     <View
       style={[
-        { flex: 1, backgroundColor: Theme.colors.background },
+        {
+          flex: 1,
+          width: "100%",
+          maxWidth: 600,
+          alignSelf: "center",
+          backgroundColor: "transparent",
+        },
         [safeAreaStyle],
         style,
       ]}

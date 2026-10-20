@@ -6,7 +6,7 @@ export default function HomeScreen() {
   const { Theme } = useTheme();
 
   return (
-    <Container>
+    <Container style={{ maxWidth: "100%" }}>
       <View>
         <Text style={[Theme.styles.H4, { color: Theme.colors.primary }]}>
           Home Screen
