@@ -15,7 +15,7 @@ export default function HomePage() {
   useEffect(() => {
     if (!rootNavigationState?.key) return;
     if (!isInitializing) return;
-    if (user) router.replace("/(drawer)/(tabs)");
+    if (user) router.replace("/(drawer)/(tabs)/home");
     else router.replace("/(auth)/sign-in");
   }, [user, rootNavigationState, isInitializing]);
 

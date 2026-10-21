@@ -7,8 +7,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const TAB_ROUTES = [
   {
-    name: "index",
-    path: "/",
+    name: "home",
+    path: "/home",
     label: "Home",
     icon: "home-outline",
     activeIcon: "home",
@@ -55,9 +55,7 @@ export default function CustomTabBar() {
     >
       {TAB_ROUTES.map((tab) => {
         const focused =
-          tab.path === "/"
-            ? pathname === "/"
-            : pathname === tab.path || pathname.startsWith(`${tab.path}/`);
+          pathname === tab.path || pathname.startsWith(`${tab.path}/`);
 
         return (
           <Pressable

@@ -25,7 +25,6 @@ export default function DrawerLayout() {
         name="(tabs)"
         options={{
           headerShown: false,
-
           drawerLabel: "Music",
           title: "Music",
         }}
