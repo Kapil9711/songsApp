@@ -58,16 +58,7 @@ const SongsSmollCard = ({
 }: SongsSmollCardProps) => {
   const { Theme } = useTheme();
   const r = useResponsive();
-
   const styles = useStyles();
-
-  //   const { deleteFile, handleDownload } = useGlobalContext();
-  //   const favorite = useFavoriteStore((state) => state.favorite);
-  //   const handleFavorite = useFavoriteStore((state) => state.handleFavorite);
-  //   const isFav = useMemo(() => {
-  //     return favorite.some((item: any) => song?.id === item.id);
-  //   }, [favorite, song]);
-
   return (
     <Pressable
       onPress={onPress}
