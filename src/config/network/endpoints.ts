@@ -3,5 +3,7 @@ export const endpoints = {
     login: "/user/login",
     register: "/user",
     homePage: "/song/home-page",
+    favorite: "/favorite",
+    friend: "/friend",
   },
 };
