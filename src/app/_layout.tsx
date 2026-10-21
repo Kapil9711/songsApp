@@ -1,3 +1,5 @@
+import PlayerBootstrap from "@/components/player/player.bootstrap";
+import { PlayerForegroundSync } from "@/components/player/player.foregroundSync";
 import SplashScreen from "@/components/splashScreen";
 import { CQueryClientProvider } from "@/provider/queryClientProvider";
 import { ThemeProvider, useTheme } from "@/themes/theme.context";
@@ -39,6 +41,8 @@ const RootStack = () => {
 
   return (
     <View style={[Theme.styles.Bg, { flex: 1 }]}>
+      <PlayerBootstrap />
+      <PlayerForegroundSync />
       <Stack
         screenOptions={{
           headerShown: false,
