@@ -13,9 +13,6 @@ export default function TabsLayout() {
         swipeEnabled: true,
         // lazy: true,
         animationEnabled: true,
-        tabBarStyle: {
-          backgroundColor: Theme.colors.background,
-        },
       }}
     >
       <TopTabs.Screen name="home" options={{ title: "Home" }} />

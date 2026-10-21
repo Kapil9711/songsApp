@@ -5,7 +5,7 @@ import { CQueryClientProvider } from "@/provider/queryClientProvider";
 import { ThemeProvider, useTheme } from "@/themes/theme.context";
 import { Stack, useRootNavigationState } from "expo-router";
 import { useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { StatusBar, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -43,6 +43,8 @@ const RootStack = () => {
     <View style={[Theme.styles.Bg, { flex: 1 }]}>
       <PlayerBootstrap />
       <PlayerForegroundSync />
+
+      <StatusBar barStyle="dark-content" />
       <Stack
         screenOptions={{
           headerShown: false,

@@ -5,6 +5,7 @@ import { useWindowDimensions } from "react-native";
 export default function DrawerLayout() {
   const { width } = useWindowDimensions();
   const { Theme } = useTheme();
+
   return (
     <Drawer
       screenOptions={{

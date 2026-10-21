@@ -62,11 +62,7 @@ const SongsSmollCard = ({
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.container,
-        isActive && styles.activeContainer,
-        pressed && styles.pressed,
-      ]}
+      style={({ pressed }) => [styles.container, pressed && styles.pressed]}
     >
       {/* ========================================================== */}
       {/* ACTIVE BACKGROUND                                           */}
@@ -251,8 +247,6 @@ const SongsSmollCard = ({
           <Pressable
             onPress={(event) => {
               event.stopPropagation();
-
-              //   showAlert(deleteFile, title);
             }}
             hitSlop={6}
             style={({ pressed }) => [
@@ -284,7 +278,7 @@ const useStyles = () => {
       container: {
         width: "100%",
 
-        minHeight: r.ms(82),
+        minHeight: r.ms(65),
 
         marginVertical: r.ms(4),
 
@@ -349,7 +343,6 @@ const useStyles = () => {
 
       activeGradient: {
         position: "absolute",
-
         top: 0,
         bottom: 0,
         left: 0,
@@ -401,7 +394,7 @@ const useStyles = () => {
 
         fontWeight: "600",
 
-        color: Theme.colors.textMuted,
+        color: Theme.colors.text,
 
         letterSpacing: 0.4,
       },

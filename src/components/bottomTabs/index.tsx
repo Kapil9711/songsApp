@@ -4,6 +4,7 @@ import { router, usePathname } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { moderateScale } from "react-native-fluid-styles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import PlayerDock from "../player/components/playerDock";
 
 const TAB_ROUTES = [
   {
@@ -42,54 +43,57 @@ export default function CustomTabBar() {
   const pathname = usePathname();
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: Theme.colors.background,
-          paddingBottom: Math.max(insets.bottom, moderateScale(14)),
-          borderTopColor: Theme.colors.text,
-          borderTopWidth: StyleSheet.hairlineWidth,
-        },
-      ]}
-    >
-      {TAB_ROUTES.map((tab) => {
-        const focused =
-          pathname === tab.path || pathname.startsWith(`${tab.path}/`);
+    <>
+      <PlayerDock />
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: Theme.colors.background,
+            paddingBottom: Math.max(insets.bottom, moderateScale(14)),
+            // borderTopColor: Theme.colors.text,
+            // borderTopWidth: StyleSheet.hairlineWidth,
+          },
+        ]}
+      >
+        {TAB_ROUTES.map((tab) => {
+          const focused =
+            pathname === tab.path || pathname.startsWith(`${tab.path}/`);
 
-        return (
-          <Pressable
-            key={tab.name}
-            accessibilityRole="tab"
-            accessibilityLabel={tab.label}
-            accessibilityState={{ selected: focused }}
-            onPress={() => {
-              if (!focused) {
-                router.navigate(tab.path);
-              }
-            }}
-            style={styles.tab}
-          >
-            <Ionicons
-              name={focused ? tab.activeIcon : tab.icon}
-              size={moderateScale(22)}
-              color={focused ? Theme.colors.accent : Theme.colors.text}
-            />
-
-            <Text
-              style={[
-                styles.label,
-                {
-                  color: focused ? Theme.colors.accent : Theme.colors.text,
-                },
-              ]}
+          return (
+            <Pressable
+              key={tab.name}
+              accessibilityRole="tab"
+              accessibilityLabel={tab.label}
+              accessibilityState={{ selected: focused }}
+              onPress={() => {
+                if (!focused) {
+                  router.navigate(tab.path);
+                }
+              }}
+              style={styles.tab}
             >
-              {tab.label}
-            </Text>
-          </Pressable>
-        );
-      })}
-    </View>
+              <Ionicons
+                name={focused ? tab.activeIcon : tab.icon}
+                size={moderateScale(22)}
+                color={focused ? Theme.colors.accent : Theme.colors.text}
+              />
+
+              <Text
+                style={[
+                  styles.label,
+                  {
+                    color: focused ? Theme.colors.accent : Theme.colors.text,
+                  },
+                ]}
+              >
+                {tab.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </>
   );
 }
 

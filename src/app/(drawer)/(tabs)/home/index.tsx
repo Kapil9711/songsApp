@@ -1,7 +1,9 @@
 import { Container } from "@/components/container";
 import ShowData from "@/components/songs/bigHorizontalCard";
+import { FadeTop } from "@/components/topFade";
 import { api } from "@/config/network/api.config";
 import { endpoints } from "@/config/network/endpoints";
+import { SafeSide } from "@/hooks/useInsetStyle";
 import { useTheme } from "@/themes/theme.context";
 import { useQuery } from "@tanstack/react-query";
 import { ScrollView, Text, View } from "react-native";
@@ -14,11 +16,15 @@ export default function HomeScreen() {
   const r = useResponsive();
 
   return (
-    <Container style={{ maxWidth: "100%" }}>
-      <View style={[styles.container]}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
+    <View style={[styles.container]}>
+      <FadeTop />
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <Container
+          style={{ maxWidth: "100%" }}
+          insetStyle={{ ...SafeSide, left: false, right: false }}
         >
           <View style={{ flex: 1, gap: 10 }}>
             <View style={styles.greetingContainer}>
@@ -49,9 +55,9 @@ export default function HomeScreen() {
               type="song"
             />
           </View>
-        </ScrollView>
-      </View>
-    </Container>
+        </Container>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -80,7 +86,7 @@ const useStyles = () => {
       container: {
         flex: 1,
         position: "relative",
-        paddingHorizontal: r.ms(6),
+        // paddingHorizontal: r.ms(6),
       },
 
       scrollContent: {
@@ -171,7 +177,9 @@ const useStyles = () => {
         opacity: 0.55,
       },
 
-      greetingContainer: {},
+      greetingContainer: {
+        paddingHorizontal: r.ms(14),
+      },
 
       greeting: {
         fontSize: r.ms(25),

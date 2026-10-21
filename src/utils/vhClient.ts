@@ -2,7 +2,7 @@ import { InternalAxiosRequestConfig } from "axios";
 import { createVH } from "vh-dev-client";
 export const vh = createVH({
   appName: "Riffly",
-  serverUrl: ["http://192.168.1.6:4317"],
+  serverUrl: ["http://10.95.249.233:4317"],
   showConsoleOnLog: false,
 });
 

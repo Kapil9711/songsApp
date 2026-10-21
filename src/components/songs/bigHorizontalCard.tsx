@@ -143,13 +143,12 @@ const useStyles = () => {
     return {
       container: {
         width: "100%",
-        paddingLeft: r.ms(6),
       },
 
       /* Header */
 
       header: {
-        paddingHorizontal: r.ms(0),
+        paddingHorizontal: r.ms(14),
 
         marginBottom: r.ms(13),
 

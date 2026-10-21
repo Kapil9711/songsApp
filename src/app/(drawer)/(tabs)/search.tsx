@@ -108,17 +108,19 @@ export default function HomeScreen() {
                   flexDirection: "row",
                   gap: r.ms(2),
                   padding: r.ms(6),
-                  backgroundColor: Theme.colors.background,
+                  // backgroundColor: Theme.colors.background,
                   borderRadius: 8,
-                  borderWidth: 1,
-                  borderColor: Theme.colors.text,
+                  // borderWidth: 1,
+                  // borderColor: Theme.colors.text,
                 }}
               >
                 <Ionicons
                   name={active === "my" ? "heart" : "heart-outline"}
                   size={r.ms(14)}
                   color={
-                    active === "my" ? Theme.colors.text : Theme.colors.text
+                    active === "my"
+                      ? Theme.colors.background
+                      : Theme.colors.text
                   }
                 />
 
@@ -158,10 +160,10 @@ export default function HomeScreen() {
                       gap: r.ms(6),
                       alignItems: "center",
                       padding: r.ms(6),
-                      backgroundColor: Theme.colors.background,
+                      // backgroundColor: Theme.colors.background,
                       borderRadius: 8,
-                      borderWidth: 1,
-                      borderColor: Theme.colors.text,
+                      // borderWidth: 1,
+                      // borderColor: Theme.colors.text,
                     }}
                   >
                     <View
@@ -170,7 +172,12 @@ export default function HomeScreen() {
                         isActive && styles.friendDotActive,
                       ]}
                     >
-                      <Text style={styles.friendInitial}>
+                      <Text
+                        style={[
+                          styles.friendInitial,
+                          isActive && styles.filterTextActive,
+                        ]}
+                      >
                         {name.charAt(0).toUpperCase()}
                       </Text>
                     </View>
@@ -229,17 +236,6 @@ export default function HomeScreen() {
         {/* ============================================================ */}
         {/* TOP FADE                                                      */}
         {/* ============================================================ */}
-        {/* 
-        <LinearGradient
-          pointerEvents="none"
-          colors={[
-            Theme.colors.background,
-            "rgba(8,0,3,0.78)",
-            "rgba(8,0,3,0)",
-          ]}
-          locations={[0, 0.45, 1]}
-          style={styles.topFade}
-        /> */}
       </View>
     </Container>
   );
@@ -394,7 +390,7 @@ const useStyles = () => {
       },
 
       filterTitle: {
-        fontSize: r.ms(9),
+        fontSize: r.ms(12),
 
         fontWeight: "800",
 
@@ -404,7 +400,7 @@ const useStyles = () => {
       },
 
       filterCount: {
-        fontSize: r.ms(8.5),
+        fontSize: r.ms(11.5),
 
         fontWeight: "500",
 
@@ -418,13 +414,13 @@ const useStyles = () => {
       },
 
       filterButton: {
-        minHeight: r.ms(38),
+        minHeight: r.ms(36),
 
         maxWidth: r.ms(150),
 
-        paddingHorizontal: r.ms(12),
+        paddingHorizontal: r.ms(6),
 
-        borderRadius: r.ms(13),
+        borderRadius: r.ms(8),
 
         flexDirection: "row",
 
@@ -443,7 +439,6 @@ const useStyles = () => {
 
       filterButtonActive: {
         backgroundColor: Theme.colors.primary,
-
         borderColor: Theme.colors.primary,
       },
 
@@ -468,7 +463,7 @@ const useStyles = () => {
       },
 
       filterTextActive: {
-        color: Theme.colors.text,
+        color: Theme.colors.background,
       },
 
       friendDot: {

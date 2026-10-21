@@ -116,6 +116,7 @@ const Song = () => {
         // }}
         ListHeaderComponent={
           <Container
+            style={{ maxWidth: "100%" }}
             insetStyle={{
               ...SafeSide,
               top: false,
