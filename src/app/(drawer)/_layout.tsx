@@ -15,7 +15,7 @@ export default function DrawerLayout() {
         drawerPosition: "left",
         drawerType: "slide",
         swipeEnabled: true,
-        swipeEdgeWidth: 100,
+        swipeEdgeWidth: Math.min(width * 0.1, 100),
         drawerStyle: {
           backgroundColor: Theme.colors.background,
           width: Math.min(width * 0.8, 450),

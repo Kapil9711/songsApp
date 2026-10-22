@@ -22,6 +22,13 @@ const TAB_ROUTES = [
     activeIcon: "search",
   },
   {
+    name: "favorite",
+    path: "/favorite",
+    label: "Favorite",
+    icon: "heart-outline",
+    activeIcon: "heart",
+  },
+  {
     name: "library",
     path: "/library",
     label: "Library",

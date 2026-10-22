@@ -1,124 +1,122 @@
-import { Pressable, ScrollView, StyleSheet } from "react-native";
+import { memo, useCallback, useMemo } from "react";
+import {
+  FlatList,
+  Pressable,
+  StyleSheet,
+  type ListRenderItem,
+} from "react-native";
 import { moderateScale } from "react-native-size-matters";
+
+import { usePlayerStore } from "@/store/player.store";
+import { handleSongPlay } from "@/utils/handleSongPlay";
 import SongBigCard from "./songBigCard";
 
-const HorizontalList = ({
-  data,
-  type = "song",
-}: {
+type HorizontalListProps = {
   data: any[];
+  renderData: any[];
   type?: string;
-}) => {
-  //   const setCurrentSong = usePlayerStore((state) => state.setCurrentSong);
+};
 
-  //   const setCurrentSongList = usePlayerStore(
-  //     (state) => state.setCurrentSongList,
-  //   );
+const keyExtractor = (item: any, index: number) =>
+  String(item?.id ?? `item-${index}`);
 
-  //   const { handleSingleAlbumOrPlalist, setPage } = useGlobalContext();
+const HorizontalList = ({ data, type = "song" }: HorizontalListProps) => {
+  const activeMediaId = usePlayerStore((state) => state.activeTrack?.mediaId);
 
-  //   const { socket } = useSocket();
+  const handlePress = useCallback(
+    (index: number) => {
+      if (type === "song") {
+        handleSongPlay(index, data, true);
+      }
+    },
+    [data, type],
+  );
 
-  //   const router = useRouter();
+  const renderItem: ListRenderItem<any> = useCallback(
+    ({ item, index }) => (
+      <SongCard
+        item={item}
+        type={type}
+        isPlaying={activeMediaId === item?.id}
+        onPress={() => handlePress(index)}
+      />
+    ),
+    [activeMediaId, handlePress, type],
+  );
 
-  //   const handlePress = async (item: any) => {
-  //     if (type === "song") {
-  //       try {
-  //         const user: any = await getValueInAsync("user");
-
-  //         const userId = user ? JSON.parse(user)?._id : undefined;
-
-  //         socket?.emit("songPlaying", {
-  //           senderId: userId,
-  //           song: item,
-  //         });
-  //       } catch (error) {
-  //         console.log("Unable to get user:", error);
-  //       }
-
-  //       setCurrentSong(item);
-  //       setCurrentSongList(data);
-
-  //       return;
-  //     }
-
-  //     if (type === "album" || type === "playlist") {
-  //       handleSingleAlbumOrPlalist(item.id, type);
-
-  //       setPage(999);
-
-  //       router.push("/(dashboard)/home/songs");
-  //     }
-  //   };
+  const contentContainerStyle = useMemo(() => styles.contentContainer, []);
 
   if (!data?.length) {
     return null;
   }
 
   return (
-    <ScrollView
+    <FlatList
       horizontal
+      data={data}
+      renderItem={renderItem}
+      keyExtractor={keyExtractor}
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.contentContainer}
+      contentContainerStyle={contentContainerStyle}
       bounces={false}
       decelerationRate="fast"
-    >
-      {data.map((item: any, idx: number) => {
-        const image =
-          item?.image?.[2]?.url ||
-          item?.image?.[1]?.url ||
-          item?.image?.[0]?.url;
-
-        const artist =
-          item?.artist?.name ||
-          item?.artists?.[0]?.name ||
-          item?.primaryArtists ||
-          item?.subtitle ||
-          item?.album?.name ||
-          "";
-
-        return (
-          <Pressable
-            key={`${item?.id ?? "item"}-${idx}`}
-            // onPress={() => handlePress(item)}
-            style={({ pressed }) => [
-              styles.cardWrapper,
-              pressed && styles.cardPressed,
-            ]}
-          >
-            <SongBigCard
-              type={type}
-              image={image}
-              title={item?.name || "Unknown"}
-              subtitle={artist}
-            />
-          </Pressable>
-        );
-      })}
-    </ScrollView>
+      initialNumToRender={5}
+      maxToRenderPerBatch={5}
+      windowSize={5}
+      updateCellsBatchingPeriod={50}
+      removeClippedSubviews
+      extraData={activeMediaId}
+    />
   );
 };
 
+type SongCardProps = {
+  item: any;
+  type: string;
+  isPlaying: boolean;
+  onPress: () => void;
+};
+
+const SongCard = memo(({ item, type, isPlaying, onPress }: SongCardProps) => {
+  const image =
+    item?.image?.[2]?.url ?? item?.image?.[1]?.url ?? item?.image?.[0]?.url;
+
+  const artist = Array.isArray(item?.artists?.primary)
+    ? item.artists.primary.map((artist: any) => artist.name).join(", ")
+    : "Unknown";
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.cardWrapper,
+        pressed && styles.cardPressed,
+      ]}
+    >
+      <SongBigCard
+        type={type}
+        image={image}
+        title={item?.name ?? "Unknown"}
+        subtitle={artist}
+        isPlaying={isPlaying}
+      />
+    </Pressable>
+  );
+});
+
+SongCard.displayName = "SongCard";
+
 const styles = StyleSheet.create({
   contentContainer: {
-    paddingLeft: moderateScale(16),
-    paddingRight: moderateScale(16),
-
+    paddingHorizontal: moderateScale(16),
     gap: moderateScale(12),
   },
-
   cardWrapper: {
-    width: moderateScale(168),
+    // Set a fixed width here if SongBigCard doesn't already define one.
   },
-
   cardPressed: {
-    transform: [
-      {
-        scale: 1,
-      },
-    ],
     opacity: 0.9,
   },
 });
 
-export default HorizontalList;
+export default memo(HorizontalList);

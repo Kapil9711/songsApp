@@ -6,14 +6,21 @@ import { endpoints } from "@/config/network/endpoints";
 import { SafeSide } from "@/hooks/useInsetStyle";
 import { useTheme } from "@/themes/theme.context";
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { ScrollView, Text, View } from "react-native";
-import { useResponsive, useResponsiveStyles } from "react-native-fluid-styles";
+import { useResponsiveStyles } from "react-native-fluid-styles";
 
 export default function HomeScreen() {
-  const { Theme } = useTheme();
   const styles = useStyles();
-  const { data } = useHomePageQuery();
-  const r = useResponsive();
+  const { data, isLoading } = useHomePageQuery();
+
+  const homePageData = useMemo(() => {
+    return {
+      hindi: data?.hindi?.slice(0, 10),
+      haryanvi: data?.haryanvi?.slice(0, 10),
+      punjabi: data?.punjabi?.slice(0, 10),
+    };
+  }, [data?.haryanvi, data?.hindi, data?.punjabi]);
 
   return (
     <View style={[styles.container]}>
@@ -31,9 +38,10 @@ export default function HomeScreen() {
               <Text style={styles.greeting}>Trending Songs</Text>
               <Text style={styles.subtitle}>Currently Trending Songs</Text>
             </View>
+
             <ShowData
               isTrending
-              data={data?.hindi?.slice?.(0, 6)}
+              data={homePageData?.hindi}
               renderData={data?.hindi}
               heading="Hindi"
               type="song"
@@ -41,7 +49,7 @@ export default function HomeScreen() {
 
             <ShowData
               isTrending
-              data={data?.haryanvi?.slice?.(0, 6)}
+              data={homePageData?.haryanvi}
               renderData={data?.haryanvi}
               heading="Haryanvi"
               type="song"
@@ -49,7 +57,7 @@ export default function HomeScreen() {
 
             <ShowData
               isTrending
-              data={data?.punjabi?.slice?.(0, 6)}
+              data={homePageData?.punjabi}
               renderData={data?.punjabi}
               heading="Punjabi"
               type="song"

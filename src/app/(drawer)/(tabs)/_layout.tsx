@@ -14,6 +14,7 @@ export default function TabsLayout() {
     >
       <TopTabs.Screen name="home" options={{ title: "Home" }} />
       <TopTabs.Screen name="search" options={{ title: "Search" }} />
+      <TopTabs.Screen name="favorite" options={{ title: "Favorite" }} />
       <TopTabs.Screen name="library" options={{ title: "Library" }} />
       <TopTabs.Screen name="profile" options={{ title: "Profile" }} />
     </TopTabs>

@@ -1,9 +1,10 @@
 import { Container } from "@/components/container";
-import { PlayerService } from "@/components/player/player.service";
 import { SongSmallCard } from "@/components/songs/songSmalCard";
 import { SafeSide } from "@/hooks/useInsetStyle";
 import { usePlayerStore } from "@/store/player.store";
 import { useTheme } from "@/themes/theme.context";
+import { convertSongListToPlayerList } from "@/utils/convertSongListToPlayerList";
+import { handleSongPlay } from "@/utils/handleSongPlay";
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useCallback, useMemo } from "react";
@@ -17,22 +18,14 @@ const WINDOW_SIZE = 5;
 
 const keyExtractor = (item: any) => String(item.id);
 
-let count = 0;
-
 const Song = () => {
   const { data } = useHomePageQuery();
   const { listType } = useLocalSearchParams<{ listType: string }>();
-
   const activeMediaId = usePlayerStore((state) => state.activeTrack?.mediaId);
-  // const currentSong = usePlayerStore((state) => state.activeTrack);
-
   const { Theme } = useTheme();
+  const styles = useStyles();
   const r = useResponsive();
-
   let staticSongList = [];
-
-  console.log("render", ++count);
-
   switch (listType) {
     case "hindi":
       staticSongList = data?.hindi;
@@ -45,42 +38,13 @@ const Song = () => {
       break;
   }
 
-  const styles = useStyles();
-
-  // console.log(currentSong, "currentsong");
-  // console.log(data?.haryanvi?.[0]);
-
-  //   const {
-  //     data: visibleSongs,
-  //     loadMore,
-  //     hasMore,
-  //   } = usePaginatedData(staticSongList, 20);
-
-  // vh.log.debug("lisType", { listType, staticSongList });
-
   const songListForPlayer = useMemo(() => {
-    return staticSongList.map((item: any, index: number) => {
-      return {
-        mediaId: item.id || index,
-        url: item.downloadUrl?.[3]?.url,
-        title: item.name,
-        artist: item.artists?.primary
-          ?.map((artist: any) => artist.name)
-          .join(", "),
-        artworkUrl: item.image?.[2]?.url,
-      };
-    });
+    return convertSongListToPlayerList(staticSongList);
   }, [staticSongList]);
-
-  const handleSongPress = async (index: number) => {
-    console.log(songListForPlayer[index]);
-    await PlayerService.playQueue(songListForPlayer, index >= 0 ? index : 0);
-  };
 
   const RenderItem = useCallback(
     ({ item, index }: any) => {
       const isActive = activeMediaId === item.id;
-
       return (
         <SongSmallCard
           isActive={isActive}
@@ -88,11 +52,11 @@ const Song = () => {
           image={item?.image?.[2]?.url}
           number={index + 1}
           song={item}
-          onPress={() => handleSongPress(index)}
+          onPress={() => handleSongPlay(index, songListForPlayer)}
         />
       );
     },
-    [staticSongList, activeMediaId],
+    [songListForPlayer, activeMediaId],
   );
 
   return (

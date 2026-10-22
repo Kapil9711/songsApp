@@ -1,239 +1,552 @@
 import { Container } from "@/components/container";
-import { SongSmallCard } from "@/components/songs/songSmalCard";
-import { api } from "@/config/network/api.config";
-import { endpoints } from "@/config/network/endpoints";
 import { useTheme } from "@/themes/theme.context";
 import { Ionicons } from "@expo/vector-icons";
-import { useQuery } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
-import { FlatList, Pressable, ScrollView, Text, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Animated,
+  FlatList,
+  Image,
+  Keyboard,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { useResponsive, useResponsiveStyles } from "react-native-fluid-styles";
 
-export default function HomeScreen() {
-  const { Theme } = useTheme();
-  const [active, setActive] = useState("my");
-  const r = useResponsive();
+type MediaType = "Song" | "Album" | "Artist" | "Playlist";
+
+type SearchItem = {
+  id: string;
+  title: string;
+  subtitle: string;
+  type: MediaType;
+  image: string;
+};
+
+const SEARCH_DATA: SearchItem[] = [
+  {
+    id: "1",
+    title: "Blinding Lights",
+    subtitle: "The Weeknd",
+    type: "Song",
+    image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300",
+  },
+  {
+    id: "2",
+    title: "Starboy",
+    subtitle: "The Weeknd, Daft Punk",
+    type: "Song",
+    image: "https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=300",
+  },
+  {
+    id: "3",
+    title: "After Hours",
+    subtitle: "The Weeknd",
+    type: "Album",
+    image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300",
+  },
+  {
+    id: "4",
+    title: "Save Your Tears",
+    subtitle: "The Weeknd",
+    type: "Song",
+    image: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=300",
+  },
+  {
+    id: "5",
+    title: "Future Nostalgia",
+    subtitle: "Dua Lipa",
+    type: "Album",
+    image: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300",
+  },
+  {
+    id: "6",
+    title: "Levitating",
+    subtitle: "Dua Lipa",
+    type: "Song",
+    image: "https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=300",
+  },
+  {
+    id: "7",
+    title: "Dua Lipa",
+    subtitle: "Artist",
+    type: "Artist",
+    image: "https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?w=300",
+  },
+  {
+    id: "8",
+    title: "Chill Vibes",
+    subtitle: "Playlist · 32 songs",
+    type: "Playlist",
+    image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300",
+  },
+  {
+    id: "9",
+    title: "Shape of You",
+    subtitle: "Ed Sheeran",
+    type: "Song",
+    image: "https://images.unsplash.com/photo-1506157786151-b8491531f063?w=300",
+  },
+];
+
+const CATEGORIES = ["All", "Songs", "Albums", "Artists", "Playlists"];
+
+const RECENT_SEARCHES = ["The Weeknd", "Chill music", "Dua Lipa"];
+
+const TRENDING = ["Blinding Lights", "Levitating", "Chill Vibes"];
+
+function SearchResultCard({
+  item,
+  index,
+  onPress,
+}: {
+  item: SearchItem;
+  index: number;
+  onPress: (item: SearchItem) => void;
+}) {
   const styles = useStyles();
-  const { data: favorite } = useFavoriteQuery();
-  const { data: friends } = useFriendQuery();
-  const RenderItem = useCallback(
-    ({ item, index }: any) => (
+  const { Theme } = useTheme();
+  const r = useResponsive();
+
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(12)).current;
+
+  useEffect(() => {
+    const animation = Animated.parallel([
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 240,
+        delay: Math.min(index * 35, 210),
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: 240,
+        delay: Math.min(index * 35, 210),
+        useNativeDriver: true,
+      }),
+    ]);
+
+    animation.start();
+
+    return () => animation.stop();
+  }, [index, opacity, translateY]);
+
+  const iconName =
+    item.type === "Album"
+      ? "disc-outline"
+      : item.type === "Artist"
+        ? "person-outline"
+        : item.type === "Playlist"
+          ? "list-outline"
+          : "musical-note";
+
+  return (
+    <Animated.View
+      style={{
+        opacity,
+        transform: [{ translateY }],
+      }}
+    >
       <Pressable
+        onPress={() => onPress(item)}
         style={({ pressed }) => [
-          styles.songItem,
-          pressed && styles.songItemPressed,
+          styles.resultCard,
+          pressed && styles.resultPressed,
         ]}
       >
-        <SongSmallCard
-          // isActive={currentSong?.id === item?.id}
-          isActive={false}
-          title={item?.name ?? ""}
-          image={item?.image?.[2]?.url}
-          number={index + 1}
-          song={item}
-          // onPress={() => handleSongPress(item)}
-        />
+        <Image source={{ uri: item.image }} style={styles.artwork} />
+
+        <View style={styles.resultInfo}>
+          <Text numberOfLines={1} style={styles.resultTitle}>
+            {item.title}
+          </Text>
+
+          <View style={styles.resultSubtitleRow}>
+            <Ionicons
+              name={iconName as any}
+              size={r.ms(12)}
+              color={Theme.colors.primary}
+            />
+
+            <Text numberOfLines={1} style={styles.resultSubtitle}>
+              {item.type} · {item.subtitle}
+            </Text>
+          </View>
+        </View>
+
+        <Pressable
+          onPress={() => onPress(item)}
+          hitSlop={8}
+          style={styles.resultAction}
+        >
+          <Ionicons name="play" size={r.ms(17)} color={Theme.colors.primary} />
+        </Pressable>
       </Pressable>
-    ),
-    [],
+    </Animated.View>
   );
+}
+
+export default function SearchScreen() {
+  const { Theme } = useTheme();
+  const styles = useStyles();
+  const r = useResponsive();
+
+  const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [category, setCategory] = useState("All");
+  const [recentSearches, setRecentSearches] = useState(RECENT_SEARCHES);
+  const [isDebouncing, setIsDebouncing] = useState(false);
+
+  const inputRef = useRef<TextInput>(null);
+
+  // Debounce search input by 350ms.
+  useEffect(() => {
+    if (query.trim() === debouncedQuery) {
+      setIsDebouncing(false);
+      return;
+    }
+
+    setIsDebouncing(true);
+
+    const timeout = setTimeout(() => {
+      setDebouncedQuery(query.trim());
+      setIsDebouncing(false);
+    }, 350);
+
+    return () => clearTimeout(timeout);
+  }, [query, debouncedQuery]);
+
+  const results = useMemo(() => {
+    if (!debouncedQuery) return [];
+
+    const normalizedQuery = debouncedQuery.toLowerCase();
+
+    return SEARCH_DATA.filter((item) => {
+      const matchesQuery =
+        item.title.toLowerCase().includes(normalizedQuery) ||
+        item.subtitle.toLowerCase().includes(normalizedQuery) ||
+        item.type.toLowerCase().includes(normalizedQuery);
+
+      const matchesCategory =
+        category === "All" ||
+        item.type === category.slice(0, -1) ||
+        (category === "Songs" && item.type === "Song");
+
+      return matchesQuery && matchesCategory;
+    });
+  }, [debouncedQuery, category]);
+
+  const handleSearch = useCallback((value: string) => {
+    setQuery(value);
+  }, []);
+
+  const selectSearch = useCallback((value: string) => {
+    setQuery(value);
+    setDebouncedQuery(value.trim());
+    setIsDebouncing(false);
+    (inputRef.current as any)?.focus?.();
+  }, []);
+
+  const handleResultPress = useCallback((item: SearchItem) => {
+    Keyboard.dismiss();
+
+    setRecentSearches((previous) =>
+      [item.title, ...previous.filter((value) => value !== item.title)].slice(
+        0,
+        5,
+      ),
+    );
+
+    // TODO: Navigate to the media screen or play the song.
+    console.log("Selected:", item);
+  }, []);
+
+  const renderItem = useCallback(
+    ({ item, index }: { item: SearchItem; index: number }) => (
+      <SearchResultCard
+        key={`${item.id}-${debouncedQuery}`}
+        item={item}
+        index={index}
+        onPress={handleResultPress}
+      />
+    ),
+    [debouncedQuery, handleResultPress],
+  );
+
+  const showResults = debouncedQuery.length > 0;
 
   return (
     <Container style={{ maxWidth: "100%" }}>
-      <View style={[styles.container]}>
-        {/* ============================================================ */}
-        {/* HEADER                                                        */}
-        {/* ============================================================ */}
-
+      <View style={styles.container}>
+        {/* Header */}
         <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <View style={styles.titleRow}>
-              <Text style={styles.title}>Favorites</Text>
-
-              <View style={styles.titleDot} />
-            </View>
-
-            <Text style={styles.subtitle}>Songs you never want to lose</Text>
+          <View style={styles.headingRow}>
+            <Text style={styles.heading}>Search</Text>
+            <View style={styles.titleDot} />
           </View>
 
-          {/* Count */}
+          <Text style={styles.headerSubtitle}>
+            Find your next favorite sound.
+          </Text>
+        </View>
 
-          <View style={styles.countCard}>
-            <Text style={styles.count}>{favorite?.length}</Text>
+        {/* Search input */}
+        <View style={styles.searchWrapper}>
+          <View style={styles.searchBar}>
+            <Ionicons
+              name="search-outline"
+              size={r.ms(21)}
+              color={Theme.colors.primary}
+            />
 
-            <Text style={styles.countLabel}>songs</Text>
+            <TextInput
+              ref={inputRef as any}
+              value={query}
+              onChangeText={handleSearch}
+              placeholder="Songs, artists, albums..."
+              placeholderTextColor="#858995"
+              returnKeyType="search"
+              autoCapitalize="none"
+              autoCorrect={false}
+              selectionColor={Theme.colors.primary}
+              style={styles.input}
+              accessibilityLabel="Search music"
+            />
+
+            {isDebouncing ? (
+              <ActivityIndicator size="small" color={Theme.colors.primary} />
+            ) : query.length > 0 ? (
+              <Pressable
+                onPress={() => {
+                  setQuery("");
+                  setDebouncedQuery("");
+                  setCategory("All");
+                  (inputRef?.current as any)?.focus?.();
+                }}
+                hitSlop={10}
+              >
+                <Ionicons name="close-circle" size={r.ms(20)} color="#858995" />
+              </Pressable>
+            ) : (
+              <Ionicons
+                name="options-outline"
+                size={r.ms(20)}
+                color={Theme.colors.text}
+              />
+            )}
           </View>
         </View>
 
-        {/* ============================================================ */}
-        {/* FILTER                                                        */}
-        {/* ============================================================ */}
-
-        <View style={styles.filterSection}>
-          <View style={styles.filterHeader}>
-            <View style={styles.filterTitleRow}>
-              <Ionicons
-                name="people-outline"
-                size={r.ms(13)}
-                color={Theme.colors.primary}
-              />
-
-              <Text style={styles.filterTitle}>FAVORITES FROM</Text>
-            </View>
-
-            <Text style={styles.filterCount}>
-              {friends?.length ?? 0} friends
-            </Text>
-          </View>
-
-          <ScrollView
+        {/* Category filters */}
+        <View style={styles.categorySection}>
+          <FlatList
             horizontal
+            data={CATEGORIES}
+            keyExtractor={(item) => item}
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterContent}
-          >
-            {/* My Favorites */}
-
-            <Pressable
-              onPress={() => setActive("my")}
-              style={({ pressed }) => [
-                styles.filterButton,
-                active === "my" && styles.filterButtonActive,
-                pressed && styles.filterPressed,
-              ]}
-            >
-              <View
-                style={{
-                  flexDirection: "row",
-                  gap: r.ms(2),
-                  padding: r.ms(6),
-                  // backgroundColor: Theme.colors.background,
-                  borderRadius: 8,
-                  // borderWidth: 1,
-                  // borderColor: Theme.colors.text,
-                }}
-              >
-                <Ionicons
-                  name={active === "my" ? "heart" : "heart-outline"}
-                  size={r.ms(14)}
-                  color={
-                    active === "my"
-                      ? Theme.colors.background
-                      : Theme.colors.text
-                  }
-                />
-
-                <Text
-                  style={[
-                    styles.filterText,
-                    active === "my" && styles.filterTextActive,
-                  ]}
-                >
-                  My Favorites
-                </Text>
-              </View>
-            </Pressable>
-
-            {/* Friends */}
-
-            {friends?.map((item: any) => {
-              const name = item?.user?.name;
-
-              if (!name) return null;
-
-              const isActive = active === name;
+            contentContainerStyle={styles.categoryList}
+            keyboardShouldPersistTaps="handled"
+            renderItem={({ item }) => {
+              const active = category === item;
 
               return (
                 <Pressable
-                  key={item?._id ?? name}
-                  onPress={() => setActive(name)}
+                  onPress={() => setCategory(item)}
                   style={({ pressed }) => [
-                    styles.filterButton,
-                    isActive && styles.filterButtonActive,
-                    pressed && styles.filterPressed,
+                    styles.categoryChip,
+                    active && styles.categoryChipActive,
+                    pressed && styles.categoryPressed,
                   ]}
                 >
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      gap: r.ms(6),
-                      alignItems: "center",
-                      padding: r.ms(6),
-                      // backgroundColor: Theme.colors.background,
-                      borderRadius: 8,
-                      // borderWidth: 1,
-                      // borderColor: Theme.colors.text,
-                    }}
+                  <Text
+                    style={[
+                      styles.categoryText,
+                      active && styles.categoryTextActive,
+                    ]}
                   >
-                    <View
-                      style={[
-                        styles.friendDot,
-                        isActive && styles.friendDotActive,
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.friendInitial,
-                          isActive && styles.filterTextActive,
-                        ]}
-                      >
-                        {name.charAt(0).toUpperCase()}
-                      </Text>
-                    </View>
-
-                    <Text
-                      numberOfLines={1}
-                      style={[
-                        styles.filterText,
-                        isActive && styles.filterTextActive,
-                      ]}
-                    >
-                      {name}
-                    </Text>
-                  </View>
+                    {item}
+                  </Text>
                 </Pressable>
               );
-            })}
-          </ScrollView>
+            }}
+          />
         </View>
 
-        {/* ============================================================ */}
-        {/* DIVIDER                                                       */}
-        {/* ============================================================ */}
+        {/* Search content */}
+        {!showResults ? (
+          <FlatList
+            data={[]}
+            renderItem={null as any}
+            keyExtractor={(item: any) => item.id}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.discoveryContent}
+            ListHeaderComponent={
+              <View>
+                {/* Recent searches */}
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>RECENT SEARCHES</Text>
 
-        <View style={styles.divider} />
+                  {recentSearches.length > 0 && (
+                    <Pressable
+                      onPress={() => setRecentSearches([])}
+                      hitSlop={8}
+                    >
+                      <Text style={styles.clearText}>Clear</Text>
+                    </Pressable>
+                  )}
+                </View>
 
-        {/* ============================================================ */}
-        {/* SONG LIST                                                     */}
-        {/* ============================================================ */}
+                {recentSearches.map((item) => (
+                  <Pressable
+                    key={item}
+                    onPress={() => selectSearch(item)}
+                    style={({ pressed }) => [
+                      styles.recentItem,
+                      pressed && styles.resultPressed,
+                    ]}
+                  >
+                    <View style={styles.recentIcon}>
+                      <Ionicons
+                        name="time-outline"
+                        size={r.ms(17)}
+                        color={Theme.colors.text}
+                      />
+                    </View>
 
-        <FlatList
-          data={favorite}
-          keyExtractor={(item: any) => String(item.id ?? item.name)}
-          renderItem={RenderItem}
-          // Virtualization
-          initialNumToRender={12}
-          maxToRenderPerBatch={12}
-          updateCellsBatchingPeriod={50}
-          windowSize={7}
-          // Reduce unnecessary work
-          removeClippedSubviews={true}
-          // Scroll behavior
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={[
-            styles.listContent,
-            // paginatedFavorite.length === 0 && styles.emptyListContent,
-          ]}
-          // Pagination
-          // onEndReached={loadMore}
-          onEndReachedThreshold={0.4}
-          // Components
-          // ListFooterComponent={RenderFooter}
-          // ListEmptyComponent={EmptyFavorites}
-        />
+                    <Text numberOfLines={1} style={styles.recentText}>
+                      {item}
+                    </Text>
 
-        {/* ============================================================ */}
-        {/* TOP FADE                                                      */}
-        {/* ============================================================ */}
+                    <Ionicons
+                      name="arrow-back"
+                      size={20}
+                      color={Theme.colors.text}
+                    />
+                  </Pressable>
+                ))}
+
+                <View style={[styles.sectionHeader, styles.trendingHeader]}>
+                  <View style={styles.trendingTitleRow}>
+                    <Ionicons
+                      name="trending-up"
+                      size={r.ms(15)}
+                      color={Theme.colors.primary}
+                    />
+                    <Text style={styles.sectionTitle}>TRENDING SEARCHES</Text>
+                  </View>
+                </View>
+
+                <View style={styles.trendingGrid}>
+                  {TRENDING.map((item, index) => (
+                    <Pressable
+                      key={item}
+                      onPress={() => selectSearch(item)}
+                      style={({ pressed }) => [
+                        styles.trendingCard,
+                        pressed && styles.resultPressed,
+                      ]}
+                    >
+                      <View style={styles.trendingNumber}>
+                        <Text style={styles.trendingNumberText}>
+                          0{index + 1}
+                        </Text>
+                      </View>
+
+                      <Text numberOfLines={2} style={styles.trendingText}>
+                        {item}
+                      </Text>
+
+                      <Ionicons
+                        name="open-outline"
+                        size={r.ms(16)}
+                        color={Theme.colors.primary}
+                      />
+                    </Pressable>
+                  ))}
+                </View>
+
+                <View style={styles.discoveryFooter}>
+                  <Ionicons
+                    name="musical-notes-outline"
+                    size={r.ms(16)}
+                    color={Theme.colors.primary}
+                  />
+                  <Text style={styles.footerText}>
+                    Your next favorite is waiting.
+                  </Text>
+                </View>
+              </View>
+            }
+          />
+        ) : (
+          <View style={styles.resultsContainer}>
+            <View style={styles.resultsHeader}>
+              <View>
+                <Text style={styles.resultsTitle}>
+                  {isDebouncing ? "Finding your sound..." : "Search results"}
+                </Text>
+
+                <Text style={styles.resultsSubtitle}>
+                  {isDebouncing
+                    ? "Updating results"
+                    : `${results.length} ${
+                        results.length === 1 ? "match" : "matches"
+                      } found`}
+                </Text>
+              </View>
+
+              {isDebouncing && (
+                <ActivityIndicator color={Theme.colors.primary} size="small" />
+              )}
+            </View>
+
+            {results.length > 0 ? (
+              <FlatList
+                data={results}
+                keyExtractor={(item) => item.id}
+                renderItem={renderItem}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.resultsList}
+                initialNumToRender={8}
+                windowSize={7}
+                removeClippedSubviews
+              />
+            ) : (
+              <View style={styles.emptyState}>
+                <View style={styles.emptyIcon}>
+                  <Ionicons
+                    name="search-outline"
+                    size={r.ms(30)}
+                    color={Theme.colors.primary}
+                  />
+                </View>
+
+                <Text style={styles.emptyTitle}>No sounds found</Text>
+
+                <Text style={styles.emptyDescription}>
+                  We couldn't find anything for "{debouncedQuery}". Try another
+                  song, artist, or album.
+                </Text>
+
+                <Pressable
+                  onPress={() => {
+                    setQuery("");
+                    setDebouncedQuery("");
+                    setCategory("All");
+                  }}
+                  style={styles.resetButton}
+                >
+                  <Text style={styles.resetButtonText}>Explore music</Text>
+                </Pressable>
+              </View>
+            )}
+          </View>
+        )}
       </View>
     </Container>
   );
@@ -241,404 +554,362 @@ export default function HomeScreen() {
 
 const useStyles = () => {
   const { Theme } = useTheme();
-  return useResponsiveStyles((r) => {
-    return {
-      container: {
-        flex: 1,
 
-        backgroundColor: "transparent",
-
-        position: "relative",
-      },
-
-      /* ================================================================ */
-      /* HEADER                                                            */
-      /* ================================================================ */
-
-      header: {
-        paddingHorizontal: r.ms(16),
-
-        paddingTop: r.ms(14),
-
-        paddingBottom: r.ms(15),
-
-        flexDirection: "row",
-
-        alignItems: "center",
-
-        justifyContent: "space-between",
-      },
-
-      headerLeft: {
-        flex: 1,
-
-        minWidth: 0,
-      },
-
-      titleRow: {
-        flexDirection: "row",
-
-        alignItems: "center",
-      },
-
-      title: {
-        fontSize: r.ms(26),
-
-        lineHeight: r.ms(31),
-
-        fontWeight: "800",
-
-        letterSpacing: -0.8,
-
-        color: Theme.colors.text,
-      },
-
-      titleDot: {
-        width: r.ms(6),
-
-        height: r.ms(6),
-
-        borderRadius: r.ms(3),
-
-        marginLeft: r.ms(5),
-
-        marginTop: r.ms(12),
-
-        backgroundColor: Theme.colors.primary,
-      },
-
-      subtitle: {
-        marginTop: r.ms(3),
-
-        fontSize: r.ms(10.5),
-
-        color: Theme.colors.text,
-      },
-
-      /* ================================================================ */
-      /* COUNT                                                             */
-      /* ================================================================ */
-
-      countCard: {
-        width: r.ms(58),
-
-        height: r.ms(58),
-
-        marginLeft: r.ms(12),
-
-        borderRadius: r.ms(17),
-
-        alignItems: "center",
-
-        justifyContent: "center",
-
-        backgroundColor: Theme.colors.background,
-
-        borderWidth: 1,
-
-        borderColor: Theme.colors.text,
-      },
-
-      count: {
-        fontSize: r.ms(18),
-
-        lineHeight: r.ms(21),
-
-        fontWeight: "800",
-
-        color: Theme.colors.text,
-      },
-
-      countLabel: {
-        marginTop: r.ms(2),
-
-        fontSize: r.ms(8.5),
-
-        fontWeight: "500",
-
-        color: Theme.colors.text,
-      },
-
-      /* ================================================================ */
-      /* FILTER                                                            */
-      /* ================================================================ */
-
-      filterSection: {
-        marginBottom: r.ms(10),
-      },
-
-      filterHeader: {
-        paddingHorizontal: r.ms(16),
-
-        marginBottom: r.ms(9),
-
-        flexDirection: "row",
-
-        alignItems: "center",
-
-        justifyContent: "space-between",
-      },
-
-      filterTitleRow: {
-        flexDirection: "row",
-
-        alignItems: "center",
-
-        gap: r.ms(6),
-      },
-
-      filterTitle: {
-        fontSize: r.ms(12),
-
-        fontWeight: "800",
-
-        letterSpacing: 1.1,
-
-        color: Theme.colors.text,
-      },
-
-      filterCount: {
-        fontSize: r.ms(11.5),
-
-        fontWeight: "500",
-
-        color: Theme.colors.text,
-      },
-
-      filterContent: {
-        paddingHorizontal: r.ms(16),
-
-        gap: r.ms(16),
-      },
-
-      filterButton: {
-        minHeight: r.ms(36),
-
-        maxWidth: r.ms(150),
-
-        paddingHorizontal: r.ms(6),
-
-        borderRadius: r.ms(8),
-
-        flexDirection: "row",
-
-        alignItems: "center",
-
-        justifyContent: "center",
-
-        gap: r.ms(6),
-
-        backgroundColor: Theme.colors.background,
-
-        borderWidth: 1,
-
-        borderColor: Theme.colors.text,
-      },
-
-      filterButtonActive: {
-        backgroundColor: Theme.colors.primary,
-        borderColor: Theme.colors.primary,
-      },
-
-      filterPressed: {
-        opacity: 0.72,
-
-        transform: [
-          {
-            scale: 0.96,
-          },
-        ],
-      },
-
-      filterText: {
-        maxWidth: r.ms(110),
-
-        fontSize: r.ms(11),
-
-        fontWeight: "600",
-
-        color: Theme.colors.text,
-      },
-
-      filterTextActive: {
-        color: Theme.colors.background,
-      },
-
-      friendDot: {
-        width: r.ms(14),
-
-        height: r.ms(14),
-
-        borderRadius: r.ms(8),
-
-        alignItems: "center",
-
-        justifyContent: "center",
-
-        backgroundColor: Theme.colors.background,
-      },
-
-      friendDotActive: {
-        backgroundColor: "rgba(255,255,255,0.18)",
-      },
-
-      friendInitial: {
-        fontSize: r.ms(8),
-
-        fontWeight: "800",
-
-        color: Theme.colors.text,
-      },
-
-      /* ================================================================ */
-      /* DIVIDER                                                           */
-      /* ================================================================ */
-
-      divider: {
-        height: 1,
-
-        marginHorizontal: r.ms(16),
-
-        marginBottom: r.ms(5),
-
-        backgroundColor: "rgba(255,255,255,0.045)",
-      },
-
-      /* ================================================================ */
-      /* LIST                                                              */
-      /* ================================================================ */
-
-      listContent: {
-        paddingTop: r.ms(4),
-
-        paddingHorizontal: r.ms(5),
-
-        paddingBottom: r.ms(190),
-      },
-
-      songItem: {
-        marginVertical: r.ms(4),
-
-        borderRadius: r.ms(17),
-      },
-
-      songItemPressed: {
-        opacity: 0.72,
-
-        transform: [
-          {
-            scale: 0.985,
-          },
-        ],
-      },
-
-      /* ================================================================ */
-      /* EMPTY                                                             */
-      /* ================================================================ */
-
-      emptyListContent: {
-        flexGrow: 1,
-      },
-
-      emptyContainer: {
-        flex: 1,
-
-        minHeight: r.ms(350),
-
-        alignItems: "center",
-
-        justifyContent: "center",
-
-        paddingHorizontal: r.ms(45),
-      },
-
-      emptyIcon: {
-        width: r.ms(72),
-
-        height: r.ms(72),
-
-        borderRadius: r.ms(24),
-
-        alignItems: "center",
-
-        justifyContent: "center",
-
-        overflow: "hidden",
-
-        borderWidth: 1,
-
-        borderColor: "rgba(168,85,247,0.18)",
-      },
-
-      emptyTitle: {
-        marginTop: r.ms(16),
-
-        fontSize: r.ms(17),
-
-        fontWeight: "800",
-
-        color: Theme.colors.text,
-      },
-
-      emptyDescription: {
-        maxWidth: r.ms(260),
-
-        marginTop: r.ms(7),
-
-        fontSize: r.ms(11),
-
-        lineHeight: r.ms(17),
-
-        textAlign: "center",
-
-        color: Theme.colors.text,
-      },
-
-      /* ================================================================ */
-      /* TOP FADE                                                          */
-      /* ================================================================ */
-
-      topFade: {
-        position: "absolute",
-
-        top: 0,
-
-        left: 0,
-
-        right: 0,
-
-        height: r.ms(42),
-
-        zIndex: 20,
-      },
-    };
-  });
-};
-
-export const useFavoriteQuery = () => {
-  return useQuery({
-    queryKey: ["favorite"],
-    queryFn: async () => {
-      const { data } = await api.get(endpoints.api.favorite);
-      if (!data?.success || !Array.isArray(data.favorite)) {
-        return [];
-      }
-      return data.favorite;
+  return useResponsiveStyles((r) => ({
+    container: {
+      flex: 1,
+      backgroundColor: "transparent",
+      paddingBottom: r.ms(4),
     },
-    // initialData: [],
-    staleTime: 0,
-  });
-};
 
-export const useFriendQuery = () => {
-  return useQuery({
-    queryKey: ["friend"],
-    queryFn: async () => {
-      const { data } = await api.get(endpoints.api.friend);
-      if (data.success) return data.friends;
-      return [];
+    header: {
+      paddingHorizontal: r.ms(16),
+      paddingTop: r.ms(14),
+      paddingBottom: r.ms(18),
     },
-    // initialData: [],
-    staleTime: 0,
-  });
+
+    headingRow: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+
+    heading: {
+      fontSize: r.ms(27),
+      lineHeight: r.ms(33),
+      fontWeight: "800",
+      letterSpacing: -0.8,
+      color: Theme.colors.text,
+    },
+
+    titleDot: {
+      width: r.ms(6),
+      height: r.ms(6),
+      borderRadius: r.ms(3),
+      backgroundColor: Theme.colors.primary,
+      marginLeft: r.ms(5),
+      marginTop: r.ms(12),
+    },
+
+    headerSubtitle: {
+      marginTop: r.ms(4),
+      fontSize: r.ms(11),
+      color: Theme.colors.text,
+      opacity: 0.7,
+    },
+
+    searchWrapper: {
+      paddingHorizontal: r.ms(16),
+    },
+
+    searchBar: {
+      minHeight: r.ms(52),
+      flexDirection: "row",
+      alignItems: "center",
+      gap: r.ms(11),
+      paddingHorizontal: r.ms(15),
+      borderRadius: r.ms(15),
+      backgroundColor: Theme.colors.background,
+      borderWidth: 1,
+      borderColor: "rgba(197,255,74,0.28)",
+    },
+
+    input: {
+      flex: 1,
+      minWidth: 0,
+      paddingVertical: r.ms(12),
+      fontSize: r.ms(12),
+      color: Theme.colors.text,
+    },
+
+    categorySection: {
+      marginTop: r.ms(18),
+      marginBottom: r.ms(18),
+    },
+
+    categoryList: {
+      paddingHorizontal: r.ms(16),
+      gap: r.ms(9),
+    },
+
+    categoryChip: {
+      minHeight: r.ms(34),
+      paddingHorizontal: r.ms(14),
+      borderRadius: r.ms(10),
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: Theme.colors.background,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.08)",
+    },
+
+    categoryChipActive: {
+      backgroundColor: Theme.colors.primary,
+      borderColor: Theme.colors.primary,
+    },
+
+    categoryPressed: {
+      opacity: 0.7,
+      transform: [{ scale: 0.97 }],
+    },
+
+    categoryText: {
+      fontSize: r.ms(11),
+      fontWeight: "600",
+      color: Theme.colors.text,
+    },
+
+    categoryTextActive: {
+      color: Theme.colors.background,
+    },
+
+    discoveryContent: {
+      paddingHorizontal: r.ms(16),
+      paddingBottom: r.ms(130),
+    },
+
+    sectionHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: r.ms(10),
+    },
+
+    sectionTitle: {
+      fontSize: r.ms(10),
+      fontWeight: "800",
+      letterSpacing: 1.1,
+      color: Theme.colors.text,
+    },
+
+    clearText: {
+      fontSize: r.ms(11),
+      fontWeight: "600",
+      color: Theme.colors.primary,
+    },
+
+    recentItem: {
+      minHeight: r.ms(45),
+      flexDirection: "row",
+      alignItems: "center",
+      gap: r.ms(11),
+      borderRadius: r.ms(10),
+    },
+
+    recentIcon: {
+      width: r.ms(32),
+      height: r.ms(32),
+      borderRadius: r.ms(10),
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: Theme.colors.background,
+    },
+
+    recentText: {
+      flex: 1,
+      fontSize: r.ms(12),
+      fontWeight: "500",
+      color: Theme.colors.text,
+    },
+
+    trendingHeader: {
+      marginTop: r.ms(27),
+      marginBottom: r.ms(13),
+    },
+
+    trendingTitleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: r.ms(7),
+    },
+
+    trendingGrid: {
+      gap: r.ms(9),
+    },
+
+    trendingCard: {
+      minHeight: r.ms(60),
+      flexDirection: "row",
+      alignItems: "center",
+      gap: r.ms(12),
+      paddingHorizontal: r.ms(13),
+      paddingVertical: r.ms(10),
+      borderRadius: r.ms(13),
+      backgroundColor: Theme.colors.background,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.06)",
+    },
+
+    trendingNumber: {
+      width: r.ms(31),
+      height: r.ms(31),
+      borderRadius: r.ms(9),
+      backgroundColor: "rgba(197,255,74,0.09)",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+
+    trendingNumberText: {
+      color: Theme.colors.primary,
+      fontSize: r.ms(10),
+      fontWeight: "800",
+    },
+
+    trendingText: {
+      flex: 1,
+      fontSize: r.ms(12),
+      fontWeight: "600",
+      color: Theme.colors.text,
+    },
+
+    discoveryFooter: {
+      marginTop: r.ms(28),
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: r.ms(7),
+      opacity: 0.8,
+    },
+
+    footerText: {
+      fontSize: r.ms(10),
+      color: Theme.colors.text,
+    },
+
+    resultsContainer: {
+      flex: 1,
+      paddingHorizontal: r.ms(16),
+    },
+
+    resultsHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: r.ms(12),
+    },
+
+    resultsTitle: {
+      fontSize: r.ms(15),
+      fontWeight: "800",
+      color: Theme.colors.text,
+    },
+
+    resultsSubtitle: {
+      marginTop: r.ms(3),
+      fontSize: r.ms(10),
+      color: Theme.colors.text,
+      opacity: 0.65,
+    },
+
+    resultsList: {
+      paddingBottom: r.ms(130),
+      gap: r.ms(8),
+    },
+
+    resultCard: {
+      minHeight: r.ms(70),
+      flexDirection: "row",
+      alignItems: "center",
+      padding: r.ms(8),
+      gap: r.ms(11),
+      borderRadius: r.ms(14),
+      backgroundColor: Theme.colors.background,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.055)",
+    },
+
+    resultPressed: {
+      opacity: 0.72,
+      transform: [{ scale: 0.985 }],
+    },
+
+    artwork: {
+      width: r.ms(52),
+      height: r.ms(52),
+      borderRadius: r.ms(10),
+      backgroundColor: Theme.colors.background,
+    },
+
+    resultInfo: {
+      flex: 1,
+      minWidth: 0,
+      gap: r.ms(6),
+    },
+
+    resultTitle: {
+      fontSize: r.ms(12),
+      fontWeight: "700",
+      color: Theme.colors.text,
+    },
+
+    resultSubtitleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: r.ms(5),
+    },
+
+    resultSubtitle: {
+      flex: 1,
+      fontSize: r.ms(10),
+      color: Theme.colors.text,
+      opacity: 0.7,
+    },
+
+    resultAction: {
+      width: r.ms(35),
+      height: r.ms(35),
+      borderRadius: r.ms(12),
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "rgba(197,255,74,0.09)",
+    },
+
+    emptyState: {
+      flex: 1,
+      minHeight: r.ms(270),
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: r.ms(20),
+    },
+
+    emptyIcon: {
+      width: r.ms(68),
+      height: r.ms(68),
+      borderRadius: r.ms(23),
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "rgba(197,255,74,0.08)",
+      borderWidth: 1,
+      borderColor: "rgba(197,255,74,0.18)",
+    },
+
+    emptyTitle: {
+      marginTop: r.ms(17),
+      fontSize: r.ms(17),
+      fontWeight: "800",
+      color: Theme.colors.text,
+    },
+
+    emptyDescription: {
+      marginTop: r.ms(8),
+      fontSize: r.ms(11),
+      lineHeight: r.ms(17),
+      textAlign: "center",
+      color: Theme.colors.text,
+      opacity: 0.7,
+    },
+
+    resetButton: {
+      marginTop: r.ms(19),
+      paddingHorizontal: r.ms(17),
+      paddingVertical: r.ms(10),
+      borderRadius: r.ms(11),
+      backgroundColor: Theme.colors.primary,
+    },
+
+    resetButtonText: {
+      fontSize: r.ms(11),
+      fontWeight: "700",
+      color: Theme.colors.background,
+    },
+  }));
 };

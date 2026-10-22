@@ -44,13 +44,11 @@ export default function DrawerUserProfile() {
 }
 
 const useStyles = () => {
-  const { Theme } = useTheme();
   return useResponsiveStyles(() => {
     return {
       container: {
         flexDirection: "row",
         alignItems: "center",
-        // paddingHorizontal: moderateScale(16),
         paddingVertical: moderateScale(10),
         gap: moderateScale(12),
       },

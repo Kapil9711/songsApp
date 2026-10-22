@@ -22,14 +22,6 @@ const ShowData = ({
 }: ShowDataProps) => {
   const router = useRouter();
 
-  // const { searchedSongList, setPage } = useGlobalContext();
-
-  // const setSongListToRender = useSongList(
-  //   (state) => state.setSongsLIstToRender,
-  // );
-
-  // const setRenderType = useSongList((state) => state.setRenderType);
-
   const length = data?.length ?? 0;
 
   const { Theme } = useTheme();
