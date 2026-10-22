@@ -1,5 +1,9 @@
 import { Container } from "@/components/container";
+import { SongSmallCard } from "@/components/songs/songSmalCard";
+import { useSongsSearchQuery } from "@/screens/search/api/api.queries";
+import { usePlayerStore } from "@/store/player.store";
 import { useTheme } from "@/themes/theme.context";
+import { handleSongPlay } from "@/utils/handleSongPlay";
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -13,7 +17,11 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useResponsive, useResponsiveStyles } from "react-native-fluid-styles";
+import {
+  moderateScale,
+  useResponsive,
+  useResponsiveStyles,
+} from "react-native-fluid-styles";
 
 type MediaType = "Song" | "Album" | "Artist" | "Playlist";
 
@@ -193,15 +201,13 @@ export default function SearchScreen() {
   const { Theme } = useTheme();
   const styles = useStyles();
   const r = useResponsive();
-
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [category, setCategory] = useState("All");
   const [recentSearches, setRecentSearches] = useState(RECENT_SEARCHES);
   const [isDebouncing, setIsDebouncing] = useState(false);
-
+  const [songsPage, setSongsPage] = useState(1);
   const inputRef = useRef<TextInput>(null);
-
   // Debounce search input by 350ms.
   useEffect(() => {
     if (query.trim() === debouncedQuery) {
@@ -219,25 +225,41 @@ export default function SearchScreen() {
     return () => clearTimeout(timeout);
   }, [query, debouncedQuery]);
 
+  const loadMoreSongs = () => {
+    setSongsPage((page) => page + 1);
+  };
+
+  const songsQuery = useMemo(() => {
+    return { limit: 10, query: debouncedQuery };
+  }, [debouncedQuery]);
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+    useSongsSearchQuery(songsQuery);
+
   const results = useMemo(() => {
-    if (!debouncedQuery) return [];
+    return data?.pages.flat() ?? [];
+  }, [data]);
 
-    const normalizedQuery = debouncedQuery.toLowerCase();
+  console.log(data, "searchSong");
 
-    return SEARCH_DATA.filter((item) => {
-      const matchesQuery =
-        item.title.toLowerCase().includes(normalizedQuery) ||
-        item.subtitle.toLowerCase().includes(normalizedQuery) ||
-        item.type.toLowerCase().includes(normalizedQuery);
+  // const results = useMemo(() => {
+  //   if (!debouncedQuery) return [];
 
-      const matchesCategory =
-        category === "All" ||
-        item.type === category.slice(0, -1) ||
-        (category === "Songs" && item.type === "Song");
+  //   const normalizedQuery = debouncedQuery.toLowerCase();
 
-      return matchesQuery && matchesCategory;
-    });
-  }, [debouncedQuery, category]);
+  //   return SEARCH_DATA.filter((item) => {
+  //     const matchesQuery =
+  //       item.title.toLowerCase().includes(normalizedQuery) ||
+  //       item.subtitle.toLowerCase().includes(normalizedQuery) ||
+  //       item.type.toLowerCase().includes(normalizedQuery);
+
+  //     const matchesCategory =
+  //       category === "All" ||
+  //       item.type === category.slice(0, -1) ||
+  //       (category === "Songs" && item.type === "Song");
+
+  //     return matchesQuery && matchesCategory;
+  //   });
+  // }, [debouncedQuery, category]);
 
   const handleSearch = useCallback((value: string) => {
     setQuery(value);
@@ -249,6 +271,8 @@ export default function SearchScreen() {
     setIsDebouncing(false);
     (inputRef.current as any)?.focus?.();
   }, []);
+
+  const activeMediaId = usePlayerStore((state) => state.activeTrack?.mediaId);
 
   const handleResultPress = useCallback((item: SearchItem) => {
     Keyboard.dismiss();
@@ -264,16 +288,21 @@ export default function SearchScreen() {
     console.log("Selected:", item);
   }, []);
 
-  const renderItem = useCallback(
-    ({ item, index }: { item: SearchItem; index: number }) => (
-      <SearchResultCard
-        key={`${item.id}-${debouncedQuery}`}
-        item={item}
-        index={index}
-        onPress={handleResultPress}
-      />
-    ),
-    [debouncedQuery, handleResultPress],
+  const RenderItem = useCallback(
+    ({ item, index }: any) => {
+      const isActive = activeMediaId === item.id;
+      return (
+        <SongSmallCard
+          isActive={isActive}
+          title={item.name}
+          image={item?.image?.[2]?.url}
+          number={index + 1}
+          song={item}
+          onPress={() => handleSongPlay(index, results, true)}
+        />
+      );
+    },
+    [results, activeMediaId],
   );
 
   const showResults = debouncedQuery.length > 0;
@@ -504,17 +533,37 @@ export default function SearchScreen() {
               )}
             </View>
 
-            {results.length > 0 ? (
+            {results?.length > 0 ? (
               <FlatList
                 data={results}
-                keyExtractor={(item) => item.id}
-                renderItem={renderItem}
+                keyExtractor={(item, index) => item.id + index}
+                renderItem={RenderItem}
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.resultsList}
                 initialNumToRender={8}
                 windowSize={7}
                 removeClippedSubviews
+                onEndReached={() => {
+                  // console.log("END REACHED");
+                  // console.log("hasNextPage:", hasNextPage);
+                  // console.log("isFetchingNextPage:", isFetchingNextPage);
+
+                  if (hasNextPage && !isFetchingNextPage) {
+                    // console.log("FETCHING NEXT PAGE");
+                    fetchNextPage();
+                  }
+                }}
+                ListFooterComponent={() => {
+                  return (
+                    <View style={{ marginTop: moderateScale(10) }}>
+                      <ActivityIndicator
+                        size={"large"}
+                        color={Theme.colors.primary}
+                      />
+                    </View>
+                  );
+                }}
               />
             ) : (
               <View style={styles.emptyState}>

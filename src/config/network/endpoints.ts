@@ -6,4 +6,9 @@ export const endpoints = {
     favorite: "/favorite",
     friend: "/friend",
   },
+  jioApi: {
+    songs: "/api/search/songs",
+    albums: "/api/search/albums",
+    playlist: "/api/search/playlists",
+  },
 };

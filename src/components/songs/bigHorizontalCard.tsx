@@ -90,7 +90,7 @@ const ShowData = ({
       {/* ---------------------------------------------------------------- */}
 
       {length > 0 ? (
-        <HorizontalList data={data} type={type} />
+        <HorizontalList data={data} type={type} renderData={renderData} />
       ) : (
         <EmptyState heading={heading} />
       )}
