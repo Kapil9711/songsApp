@@ -47,12 +47,29 @@ export const useAuthStore = create<AuthState>()(
     {
       name: "auth-storage",
       storage: createJSONStorage(() => AsyncStorage),
-      // Persist only serializable state.
+
       partialize: (state) => ({
         user: state.user,
         token: state.token,
         isAuthenticated: state.isAuthenticated,
       }),
+
+      onRehydrateStorage: () => {
+        // Fallback if hydration never finishes.
+        const timeout = setTimeout(() => {
+          console.warn("Auth hydration timed out");
+          useAuthStore.setState({ isInitializing: false });
+        }, 5000);
+
+        return (_state, error) => {
+          clearTimeout(timeout);
+
+          if (error) {
+            console.error("Auth hydration failed:", error);
+          }
+          useAuthStore.setState({ isInitializing: false });
+        };
+      },
     },
   ),
 );

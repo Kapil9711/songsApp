@@ -1,10 +1,10 @@
+import PlayerDock from "@/components/player/components/playerDock";
 import { useTheme } from "@/themes/theme.context";
 import { Ionicons } from "@expo/vector-icons";
 import { router, usePathname } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { moderateScale } from "react-native-fluid-styles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import PlayerDock from "../player/components/playerDock";
 
 const TAB_ROUTES = [
   {

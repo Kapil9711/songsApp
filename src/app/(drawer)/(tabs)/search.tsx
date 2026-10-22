@@ -14,10 +14,8 @@ export default function HomeScreen() {
   const [active, setActive] = useState("my");
   const r = useResponsive();
   const styles = useStyles();
-
   const { data: favorite } = useFavoriteQuery();
   const { data: friends } = useFriendQuery();
-
   const RenderItem = useCallback(
     ({ item, index }: any) => (
       <Pressable
@@ -628,7 +626,7 @@ export const useFavoriteQuery = () => {
       return data.favorite;
     },
     // initialData: [],
-    // staleTime: 0,
+    staleTime: 0,
   });
 };
 
@@ -641,6 +639,6 @@ export const useFriendQuery = () => {
       return [];
     },
     // initialData: [],
-    // staleTime: 0,
+    staleTime: 0,
   });
 };

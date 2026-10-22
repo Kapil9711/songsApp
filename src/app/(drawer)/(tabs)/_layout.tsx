@@ -1,10 +1,7 @@
-import CustomTabBar from "@/components/bottomTabs";
-import { useTheme } from "@/themes/theme.context";
+import CustomTabBar from "@/components/navigation/bottomTabs";
 import { TopTabs } from "expo-router/js-top-tabs";
 
 export default function TabsLayout() {
-  const { Theme } = useTheme();
-
   return (
     <TopTabs
       tabBarPosition="bottom"

@@ -14,10 +14,10 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!rootNavigationState?.key) return;
-    if (!isInitializing) return;
+    if (isInitializing) return;
     if (user) router.replace("/(drawer)/(tabs)/home");
     else router.replace("/(auth)/sign-in");
-  }, [user, rootNavigationState, isInitializing]);
+  }, [user, rootNavigationState?.key, isInitializing]);
 
   return (
     <View style={{ flex: 1, backgroundColor: Theme.colors.background }}></View>

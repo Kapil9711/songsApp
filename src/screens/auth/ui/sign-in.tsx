@@ -1,5 +1,6 @@
 import { Container } from "@/components/container";
 import Input from "@/components/input/CInput";
+import KeyboardViewWithScroll from "@/components/keyboardView/keyboardViewWithScroll";
 import { useTheme } from "@/themes/theme.context";
 import { vh } from "@/utils/vhClient";
 import { LinearGradient } from "expo-linear-gradient";
@@ -91,107 +92,109 @@ const SignIn = () => {
         pointerEvents="none"
       />
 
-      <Container>
-        <View style={{ flex: 1 }}>
-          <View style={styles.content}>
-            {/* Header */}
-            <View style={styles.header}>
-              <Text style={styles.title}>
-                Welcome back
-                <Text style={styles.dot}>.</Text>
-              </Text>
+      <KeyboardViewWithScroll>
+        <Container>
+          <View style={{ flex: 1 }}>
+            <View style={styles.content}>
+              {/* Header */}
+              <View style={styles.header}>
+                <Text style={styles.title}>
+                  Welcome back
+                  <Text style={styles.dot}>.</Text>
+                </Text>
 
-              <Text style={styles.subtitle}>
-                Login to continue listening to your favorite music.
-              </Text>
-            </View>
-
-            {/* Form */}
-            <View style={styles.form}>
-              <View style={styles.field}>
-                <Text style={styles.label}>Email</Text>
-
-                <Input
-                  name="userId"
-                  control={control}
-                  placeholder="Email"
-                  rules={{ required: "Email is required" }}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  keyboardType="email-address"
-                  style={styles.input}
-                />
+                <Text style={styles.subtitle}>
+                  Login to continue listening to your favorite music.
+                </Text>
               </View>
 
-              <View style={styles.field}>
-                <View style={styles.passwordHeader}>
-                  <Text style={styles.label}>Password</Text>
+              {/* Form */}
+              <View style={styles.form}>
+                <View style={styles.field}>
+                  <Text style={styles.label}>Email</Text>
 
-                  {/* <Pressable onPress={() => {}}>
-                  <Text style={styles.forgotPassword}>Forgot password?</Text>
-                </Pressable> */}
-                  <Pressable
-                    onPress={() => setShowPassword((prev) => !prev)}
-                    hitSlop={10}
-                  >
-                    <Text style={styles.showPassword}>
-                      {showPassword ? "Hide" : "Show"}
-                    </Text>
-                  </Pressable>
+                  <Input
+                    name="userId"
+                    control={control}
+                    placeholder="Email"
+                    rules={{ required: "Email is required" }}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="email-address"
+                    style={styles.input}
+                  />
                 </View>
 
-                <Input
-                  name="password"
-                  control={control}
-                  placeholder="Password"
-                  rules={{ required: "Email is required" }}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  style={styles.input}
-                  secureTextEntry={!showPassword}
-                />
+                <View style={styles.field}>
+                  <View style={styles.passwordHeader}>
+                    <Text style={styles.label}>Password</Text>
+
+                    {/* <Pressable onPress={() => {}}>
+                  <Text style={styles.forgotPassword}>Forgot password?</Text>
+                </Pressable> */}
+                    <Pressable
+                      onPress={() => setShowPassword((prev) => !prev)}
+                      hitSlop={10}
+                    >
+                      <Text style={styles.showPassword}>
+                        {showPassword ? "Hide" : "Show"}
+                      </Text>
+                    </Pressable>
+                  </View>
+
+                  <Input
+                    name="password"
+                    control={control}
+                    placeholder="Password"
+                    rules={{ required: "Email is required" }}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    style={styles.input}
+                    secureTextEntry={!showPassword}
+                  />
+                </View>
+
+                <Pressable
+                  disabled={isPending}
+                  onPress={handleSubmit(onSubmit) as any}
+                  style={[
+                    styles.loginButton,
+                    isPending && styles.loginButtonDisabled,
+                  ]}
+                >
+                  {isPending ? (
+                    <ActivityIndicator size={"small"} />
+                  ) : (
+                    <Text style={styles.loginButtonText}>Login</Text>
+                  )}
+                </Pressable>
               </View>
 
-              <Pressable
-                disabled={isPending}
-                onPress={handleSubmit(onSubmit) as any}
-                style={[
-                  styles.loginButton,
-                  isPending && styles.loginButtonDisabled,
-                ]}
-              >
-                {isPending ? (
-                  <ActivityIndicator size={"small"} />
-                ) : (
-                  <Text style={styles.loginButtonText}>Login</Text>
-                )}
-              </Pressable>
-            </View>
+              {/* Divider */}
+              <View style={styles.dividerContainer}>
+                <View style={styles.divider} />
 
-            {/* Divider */}
-            <View style={styles.dividerContainer}>
-              <View style={styles.divider} />
+                <Text style={styles.orText}>or</Text>
 
-              <Text style={styles.orText}>or</Text>
+                <View style={styles.divider} />
+              </View>
 
-              <View style={styles.divider} />
-            </View>
+              {/* Signup */}
+              <View style={styles.signupContainer}>
+                <Text style={styles.signupText}>Don't have an account? </Text>
 
-            {/* Signup */}
-            <View style={styles.signupContainer}>
-              <Text style={styles.signupText}>Don't have an account? </Text>
-
-              <Pressable
-                onPress={() => {
-                  router.push("/(auth)/sign-up" as any);
-                }}
-              >
-                <Text style={styles.signupButton}>Sign up</Text>
-              </Pressable>
+                <Pressable
+                  onPress={() => {
+                    router.push("/(auth)/sign-up" as any);
+                  }}
+                >
+                  <Text style={styles.signupButton}>Sign up</Text>
+                </Pressable>
+              </View>
             </View>
           </View>
-        </View>
-      </Container>
+        </Container>
+      </KeyboardViewWithScroll>
     </View>
   );
 };

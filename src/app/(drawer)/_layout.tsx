@@ -1,3 +1,4 @@
+import CustomDrawer from "@/components/navigation/customDrawer";
 import { useTheme } from "@/themes/theme.context";
 import { Drawer } from "expo-router/drawer";
 import { useWindowDimensions } from "react-native";
@@ -8,6 +9,7 @@ export default function DrawerLayout() {
 
   return (
     <Drawer
+      drawerContent={() => <CustomDrawer />}
       screenOptions={{
         headerShown: true,
         drawerPosition: "left",
