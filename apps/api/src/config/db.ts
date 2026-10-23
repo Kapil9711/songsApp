@@ -21,7 +21,6 @@ export async function connectDB(): Promise<void> {
         maxIdleTimeMS: 30_000,
         maxConnecting: 2,
         waitQueueTimeoutMS: 2_000,
-
         // Connection timeouts
         connectTimeoutMS: 10_000,
         serverSelectionTimeoutMS: 5_000,
