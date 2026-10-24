@@ -141,13 +141,13 @@ const SongsSmollCard = ({
 
           {isActive && (
             <View style={styles.artworkOverlay}>
-              <View style={styles.playCircle}>
+              {/* <View style={styles.playCircle}>
                 <Ionicons
                   name="volume-high"
                   size={r.ms(11)}
-                  color={Theme.colors.text}
+                  color={Theme.colors.background}
                 />
-              </View>
+              </View> */}
             </View>
           )}
         </View>
@@ -278,7 +278,7 @@ const useStyles = () => {
       container: {
         width: "100%",
 
-        minHeight: r.ms(65),
+        minHeight: r.ms(60),
 
         marginVertical: r.ms(4),
 
@@ -328,7 +328,7 @@ const useStyles = () => {
       row: {
         width: "100%",
 
-        minHeight: r.ms(63),
+        minHeight: r.ms(50),
 
         flexDirection: "row",
 
@@ -526,7 +526,7 @@ const useStyles = () => {
 
         justifyContent: "center",
 
-        backgroundColor: "rgba(15,12,20,0.92)",
+        backgroundColor: Theme.colors.primary,
 
         borderWidth: 1,
 

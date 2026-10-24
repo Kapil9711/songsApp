@@ -55,7 +55,7 @@ const SongBigCard = ({
           </View>
         )}
 
-        <View style={styles.imageOverlay} />
+        {/* <View style={styles.imageOverlay} /> */}
 
         {type !== "song" && (
           <View style={styles.typeBadge}>
@@ -111,7 +111,8 @@ const useStyles = () => {
       overflow: "hidden",
       backgroundColor: Theme.colors.background,
       borderWidth: 1,
-      borderColor: Theme.colors.primary,
+      borderColor: Theme.styles.Card.borderColor,
+      // boxShadow: "0px 0px 5px 2px rgba(1,1,1,.4)",
     },
 
     playingCard: {
@@ -121,7 +122,7 @@ const useStyles = () => {
 
     imageContainer: {
       width: "100%",
-      height: r.ms(164),
+      height: r.vs(144),
       position: "relative",
       overflow: "hidden",
       backgroundColor: Theme.colors.background,
