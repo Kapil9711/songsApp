@@ -5,7 +5,7 @@ import { CQueryClientProvider } from "@/provider/queryClientProvider";
 import { ThemeProvider, useTheme } from "@/themes/theme.context";
 import { Stack, useRootNavigationState } from "expo-router";
 import { useEffect, useState } from "react";
-import { StatusBar, StyleSheet, View } from "react-native";
+import { StatusBar, StyleSheet, useColorScheme, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -24,11 +24,11 @@ export default function RootLayout() {
 }
 
 const RootStack = () => {
-  const { setTheme } = useTheme();
+  // const { setTheme } = useTheme();
 
-  useEffect(() => {
-    setTheme("default");
-  }, []);
+  // useEffect(() => {
+  //   setTheme("default");
+  // }, []);
 
   const { Theme } = useTheme();
   const [showSplash, setShowSplash] = useState(true);
@@ -38,13 +38,20 @@ const RootStack = () => {
       setShowSplash(false);
     }
   }, [rootNavigationState?.key]);
+  const systemColorScheme = useColorScheme();
 
   return (
     <View style={[Theme.styles.Bg, { flex: 1 }]}>
       <PlayerBootstrap />
       <PlayerForegroundSync />
 
-      <StatusBar barStyle="dark-content" />
+      <StatusBar
+        barStyle={
+          systemColorScheme === "dark" ? "light-content" : "dark-content"
+        }
+      />
+
+      {/* <StatusBar barStyle="dark-content" /> */}
       <Stack
         screenOptions={{
           headerShown: false,

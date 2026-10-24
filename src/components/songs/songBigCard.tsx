@@ -1,7 +1,7 @@
 import { useTheme } from "@/themes/theme.context";
 import { Ionicons } from "@expo/vector-icons";
-import { Image, Text, View, useWindowDimensions } from "react-native";
-import { useResponsive, useResponsiveStyles } from "react-native-fluid-styles";
+import { Image, StyleSheet, Text, View } from "react-native";
+import { useResponsive } from "react-native-fluid-styles";
 
 type SongBigCardProps = {
   image?: string;
@@ -21,23 +21,11 @@ const SongBigCard = ({
   const styles = useStyles();
   const r = useResponsive();
   const { Theme } = useTheme();
-  const { width: screenWidth } = useWindowDimensions();
-  const maxTextLength = Math.max(title.length, subtitle.length);
-  const cardWidth = Math.min(
-    screenWidth * 0.72,
-    Math.max(r.ms(145), maxTextLength * r.ms(7.5) + r.ms(28)),
-  );
 
   const showPlaying = type === "song" && isPlaying;
 
   return (
-    <View
-      style={[
-        styles.card,
-        { width: cardWidth },
-        showPlaying && styles.playingCard,
-      ]}
-    >
+    <View style={[styles.card, showPlaying && styles.playingCard]}>
       <View style={styles.imageContainer}>
         {image ? (
           <Image
@@ -55,31 +43,30 @@ const SongBigCard = ({
           </View>
         )}
 
-        {/* <View style={styles.imageOverlay} /> */}
-
         {type !== "song" && (
           <View style={styles.typeBadge}>
             <Ionicons
               name={type === "album" ? "disc-outline" : "musical-notes-outline"}
               size={r.ms(12)}
-              color="#FFFFFF"
+              color={Theme.colors.background}
             />
           </View>
         )}
 
         {showPlaying && (
           <View style={styles.playingBadge}>
-            {[0, 1, 2, 3].map((bar, index) => (
+            <View style={styles.playingIndicator}>
+              <View style={styles.playingDot} />
+            </View>
+
+            {[7, 13, 9, 15].map((height, index) => (
               <View
-                key={bar}
-                style={[
-                  styles.equalizerBar,
-                  {
-                    height: r.ms([7, 13, 9, 15][index]),
-                  },
-                ]}
+                key={index}
+                style={[styles.equalizerBar, { height: r.ms(height) }]}
               />
             ))}
+
+            <Text style={styles.playingLabel}>PLAYING</Text>
           </View>
         )}
       </View>
@@ -94,6 +81,13 @@ const SongBigCard = ({
             {subtitle}
           </Text>
         )}
+
+        {showPlaying && (
+          <View style={styles.playingCaption}>
+            <View style={styles.captionLine} />
+            <Text style={styles.playingCaptionText}>Now playing</Text>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -101,31 +95,47 @@ const SongBigCard = ({
 
 const useStyles = () => {
   const { Theme } = useTheme();
+  const r = useResponsive();
 
-  return useResponsiveStyles((r) => ({
+  const primary = Theme.colors.primary;
+  const background = Theme.colors.background;
+  const text = Theme.colors.text;
+  const border = Theme.styles.Card.borderColor;
+  const cardBackground = Theme.styles.Card.backgroundColor;
+
+  // Derive translucent accent colors from the active theme.
+  const accentSurface = `${primary}18`;
+  const accentBorder = `${primary}55`;
+  const accentGlow = `${primary}25`;
+
+  return StyleSheet.create({
     card: {
-      // Width is calculated from the title and subtitle.
       flexShrink: 0,
-      height: r.ms(210),
+      height: r.ms(230),
       borderRadius: r.ms(16),
       overflow: "hidden",
-      backgroundColor: Theme.colors.background,
+      backgroundColor: cardBackground,
       borderWidth: 1,
-      borderColor: Theme.styles.Card.borderColor,
-      // boxShadow: "0px 0px 5px 2px rgba(1,1,1,.4)",
+      borderColor: border,
     },
 
     playingCard: {
-      borderColor: "#C5FF4A",
-      borderWidth: 1.5,
+      borderColor: primary,
+      borderWidth: r.ms(1.5),
+      backgroundColor: cardBackground,
+      shadowColor: primary,
+      shadowOffset: { width: 0, height: r.ms(2) },
+      shadowOpacity: 0.2,
+      shadowRadius: r.ms(8),
+      elevation: 4,
     },
 
     imageContainer: {
       width: "100%",
-      height: r.vs(144),
+      height: r.vs(154),
       position: "relative",
       overflow: "hidden",
-      backgroundColor: Theme.colors.background,
+      backgroundColor: cardBackground,
     },
 
     image: {
@@ -137,16 +147,7 @@ const useStyles = () => {
       flex: 1,
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: Theme.colors.background,
-    },
-
-    imageOverlay: {
-      position: "absolute",
-      left: 0,
-      right: 0,
-      bottom: 0,
-      height: r.ms(55),
-      backgroundColor: "rgba(0,0,0,0.18)",
+      backgroundColor: cardBackground,
     },
 
     typeBadge: {
@@ -158,31 +159,61 @@ const useStyles = () => {
       borderRadius: r.ms(9),
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: "rgba(0,0,0,0.58)",
+      backgroundColor: `${background}DD`,
       borderWidth: 1,
-      borderColor: "rgba(255,255,255,0.15)",
+      borderColor: border,
     },
 
     playingBadge: {
       position: "absolute",
-      right: r.ms(10),
-      bottom: r.ms(10),
+      right: r.ms(9),
+      bottom: r.ms(9),
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      gap: r.ms(3),
+      gap: r.ms(4),
       paddingHorizontal: r.ms(9),
-      height: r.ms(30),
+      height: r.ms(31),
       borderRadius: r.ms(10),
-      backgroundColor: "rgba(10,15,20,0.82)",
+      backgroundColor: `${background}F2`,
       borderWidth: 1,
-      borderColor: "rgba(197,255,74,0.4)",
+      borderColor: accentBorder,
+      shadowColor: primary,
+      shadowOffset: { width: 0, height: r.ms(1) },
+      shadowOpacity: 0.16,
+      shadowRadius: r.ms(5),
+      elevation: 3,
+    },
+
+    playingIndicator: {
+      width: r.ms(7),
+      height: r.ms(7),
+      borderRadius: r.ms(4),
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: accentSurface,
+      marginRight: r.ms(2),
+    },
+
+    playingDot: {
+      width: r.ms(4),
+      height: r.ms(4),
+      borderRadius: r.ms(2),
+      backgroundColor: primary,
     },
 
     equalizerBar: {
       width: r.ms(3),
       borderRadius: r.ms(2),
-      backgroundColor: "#C5FF4A",
+      backgroundColor: primary,
+    },
+
+    playingLabel: {
+      marginLeft: r.ms(3),
+      fontSize: r.ms(8),
+      fontWeight: "800",
+      letterSpacing: 0.6,
+      color: text,
     },
 
     infoContainer: {
@@ -190,14 +221,14 @@ const useStyles = () => {
       justifyContent: "center",
       paddingHorizontal: r.ms(12),
       paddingVertical: r.ms(8),
-      backgroundColor: Theme.colors.background,
+      backgroundColor: cardBackground,
     },
 
     title: {
       fontSize: r.ms(14),
       lineHeight: r.ms(18),
       fontWeight: "700",
-      color: Theme.colors.text,
+      color: text,
       letterSpacing: -0.2,
     },
 
@@ -206,9 +237,34 @@ const useStyles = () => {
       fontSize: r.ms(11.5),
       lineHeight: r.ms(15),
       fontWeight: "500",
-      color: Theme.colors.text,
+      color: text,
+      opacity: 0.7,
     },
-  }));
+
+    playingCaption: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: r.ms(5),
+      marginTop: r.ms(5),
+    },
+
+    captionLine: {
+      width: r.ms(14),
+      height: r.ms(2),
+      borderRadius: r.ms(2),
+      backgroundColor: primary,
+      shadowColor: primary,
+      shadowOpacity: 0.3,
+      shadowRadius: r.ms(3),
+      shadowOffset: { width: 0, height: 0 },
+    },
+
+    playingCaptionText: {
+      fontSize: r.ms(9),
+      fontWeight: "600",
+      color: primary,
+    },
+  });
 };
 
 export default SongBigCard;

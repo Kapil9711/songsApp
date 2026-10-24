@@ -1,4 +1,5 @@
 import CustomDrawer from "@/components/navigation/customDrawer";
+import NowPlayingBackground from "@/components/nowPlayingBackground";
 import { useTheme } from "@/themes/theme.context";
 import { Drawer } from "expo-router/drawer";
 import { useWindowDimensions } from "react-native";

@@ -1,3 +1,4 @@
+import NowPlayingBackground from "@/components/nowPlayingBackground";
 import PlayerDock from "@/components/player/components/playerDock";
 import { useTheme } from "@/themes/theme.context";
 import { Ionicons } from "@expo/vector-icons";
@@ -52,6 +53,8 @@ export default function CustomTabBar() {
   return (
     <>
       <PlayerDock />
+      {/* <NowPlayingBackground /> */}
+
       <View
         style={[
           styles.container,

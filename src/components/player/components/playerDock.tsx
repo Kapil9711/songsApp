@@ -13,9 +13,11 @@ import { moderateScale } from "react-native-size-matters";
 
 import { usePlayerProgressStore } from "@/store/player.progress.store";
 import { usePlayerStore } from "@/store/player.store";
+import { useTheme } from "@/themes/theme.context";
 import { PlayerService } from "../player.service";
+import NowPlayingBackground from "@/components/nowPlayingBackground";
 
-function formatTime(seconds: number) {
+function formatTime(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) {
     return "0:00";
   }
@@ -26,11 +28,13 @@ function formatTime(seconds: number) {
 }
 
 export default function PlayerDock() {
+  const { Theme } = useTheme();
+
   const [expanded, setExpanded] = useState(false);
   const [seeking, setSeeking] = useState(false);
   const [seekValue, setSeekValue] = useState(0);
 
-  const animation = useState(() => new Animated.Value(0))[0];
+  const [animation] = useState(() => new Animated.Value(0));
 
   const activeTrack = usePlayerStore((state) => state.activeTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
@@ -39,6 +43,144 @@ export default function PlayerDock() {
 
   const position = usePlayerProgressStore((state) => state.position);
   const duration = usePlayerProgressStore((state) => state.duration);
+
+  const styles = StyleSheet.create({
+    root: {
+      position: "relative",
+    },
+
+    backdrop: {
+      ...StyleSheet.absoluteFill,
+      position: "absolute",
+      top: -1000,
+      left: 0,
+      right: 0,
+      height: 2000,
+      // backgroundColor: "rgba(0, 0, 0, 0.35)",
+      zIndex: 100,
+    },
+
+    container: {
+      backgroundColor: Theme.colors.background + "5",
+      overflow: "hidden",
+      marginHorizontal: moderateScale(0),
+      borderColor: Theme.colors.background + "10",
+      borderWidth: StyleSheet.hairlineWidth,
+    },
+
+    compactArea: {
+      height: moderateScale(40),
+      justifyContent: "center",
+      paddingHorizontal: moderateScale(14),
+      // backgroundColor: Theme.colors.background + "6",
+    },
+
+    compactSlider: {
+      width: "100%",
+      height: moderateScale(8),
+    },
+
+    compactTimes: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginTop: moderateScale(3),
+    },
+
+    expandedContent: {
+      flex: 1,
+      paddingHorizontal: moderateScale(18),
+      paddingTop: moderateScale(12),
+      paddingBottom: moderateScale(6),
+    },
+
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: moderateScale(12),
+    },
+
+    artwork: {
+      width: moderateScale(76),
+      height: moderateScale(76),
+      borderRadius: moderateScale(10),
+    },
+
+    placeholder: {
+      backgroundColor: Theme.colors.neutral100,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+
+    trackInfo: {
+      flex: 1,
+      gap: moderateScale(6),
+    },
+
+    title: {
+      color: Theme.colors.text,
+      fontSize: moderateScale(17),
+      fontWeight: "700",
+    },
+
+    artist: {
+      color: Theme.colors.neutral400,
+      fontSize: moderateScale(12),
+    },
+
+    slider: {
+      width: "100%",
+      height: moderateScale(34),
+      marginTop: moderateScale(12),
+    },
+
+    durationRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginTop: -moderateScale(6),
+    },
+
+    time: {
+      color: Theme.colors.neutral400,
+      fontSize: moderateScale(10),
+      fontVariant: ["tabular-nums"],
+    },
+
+    controls: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginTop: moderateScale(18),
+      paddingHorizontal: moderateScale(2),
+    },
+
+    playButton: {
+      width: moderateScale(54),
+      height: moderateScale(54),
+      borderRadius: moderateScale(27),
+      backgroundColor: Theme.colors.primary,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+
+    repeatIcon: {
+      alignItems: "center",
+      justifyContent: "center",
+    },
+
+    repeatOne: {
+      position: "absolute",
+      color: Theme.colors.primary,
+      fontSize: moderateScale(9),
+      fontWeight: "700",
+    },
+
+    collapseButton: {
+      alignSelf: "center",
+      padding: moderateScale(5),
+      marginTop: moderateScale(4),
+    },
+  });
 
   useEffect(() => {
     if (!seeking) {
@@ -121,7 +263,9 @@ export default function PlayerDock() {
     }
   }, []);
 
-  if (!activeTrack) return null;
+  if (!activeTrack) {
+    return null;
+  }
 
   const track = activeTrack as typeof activeTrack & {
     artworkUrl?: string;
@@ -143,7 +287,6 @@ export default function PlayerDock() {
 
   return (
     <View style={styles.root} pointerEvents="box-none">
-      {/* Outside-tap backdrop. It exists only while expanded. */}
       {expanded && (
         <Pressable
           style={styles.backdrop}
@@ -152,20 +295,20 @@ export default function PlayerDock() {
           accessibilityLabel="Close expanded player"
         />
       )}
+      {/* <NowPlayingBackground /> */}
 
       <Animated.View
         style={[
           styles.container,
           {
             height,
-            borderTopLeftRadius: expanded ? 0 : moderateScale(24),
-            borderTopRightRadius: expanded ? 0 : moderateScale(24),
+            borderTopLeftRadius: moderateScale(24),
+            borderTopRightRadius: moderateScale(24),
             zIndex: expanded ? 101 : 1,
-            elevation: expanded ? 21 : 2,
+            // elevation: expanded ? 21 : 2,
           },
         ]}
       >
-        {/* Compact player */}
         {!expanded && (
           <Pressable
             style={styles.compactArea}
@@ -178,9 +321,9 @@ export default function PlayerDock() {
               minimumValue={0}
               maximumValue={max}
               value={currentPosition}
-              minimumTrackTintColor="#FFFFFF"
-              maximumTrackTintColor="#454545"
-              thumbTintColor="#FFFFFF"
+              minimumTrackTintColor={Theme.colors.primary}
+              maximumTrackTintColor={Theme.colors.neutral200}
+              thumbTintColor={Theme.colors.primary}
               disabled={duration <= 0}
               onSlidingStart={() => {
                 setSeeking(true);
@@ -196,7 +339,7 @@ export default function PlayerDock() {
               <Ionicons
                 name="chevron-up"
                 size={moderateScale(15)}
-                color="#A3A3A3"
+                color={Theme.colors.neutral400}
               />
 
               <Text style={styles.time}>{formatTime(duration)}</Text>
@@ -204,7 +347,6 @@ export default function PlayerDock() {
           </Pressable>
         )}
 
-        {/* Expanded player */}
         {expanded && (
           <View style={styles.expandedContent}>
             <View style={styles.header}>
@@ -212,13 +354,15 @@ export default function PlayerDock() {
                 <Image
                   source={{ uri: track.artworkUrl }}
                   style={styles.artwork}
+                  resizeMode="cover"
+                  accessibilityLabel={`${track.title} artwork`}
                 />
               ) : (
                 <View style={[styles.artwork, styles.placeholder]}>
                   <Ionicons
                     name="musical-notes"
                     size={moderateScale(30)}
-                    color="#999"
+                    color={Theme.colors.neutral400}
                   />
                 </View>
               )}
@@ -234,15 +378,14 @@ export default function PlayerDock() {
               </View>
             </View>
 
-            {/* Seek slider */}
             <Slider
               style={styles.slider}
               minimumValue={0}
               maximumValue={max}
               value={currentPosition}
-              minimumTrackTintColor="#FFFFFF"
-              maximumTrackTintColor="#454545"
-              thumbTintColor="#FFFFFF"
+              minimumTrackTintColor={Theme.colors.primary}
+              maximumTrackTintColor={Theme.colors.neutral200}
+              thumbTintColor={Theme.colors.primary}
               disabled={duration <= 0}
               onSlidingStart={() => {
                 setSeeking(true);
@@ -257,7 +400,6 @@ export default function PlayerDock() {
               <Text style={styles.time}>{formatTime(duration)}</Text>
             </View>
 
-            {/* Playback controls */}
             <View style={styles.controls}>
               <Pressable
                 onPress={handleShuffle}
@@ -271,7 +413,9 @@ export default function PlayerDock() {
                 <Ionicons
                   name="shuffle"
                   size={moderateScale(22)}
-                  color={isShuffled ? "#B66BDD" : "#888888"}
+                  color={
+                    isShuffled ? Theme.colors.primary : Theme.colors.neutral400
+                  }
                 />
               </Pressable>
 
@@ -284,7 +428,7 @@ export default function PlayerDock() {
                 <Ionicons
                   name="play-skip-back"
                   size={moderateScale(28)}
-                  color="#FFFFFF"
+                  color={Theme.colors.text}
                 />
               </Pressable>
 
@@ -297,7 +441,7 @@ export default function PlayerDock() {
                 <Ionicons
                   name={isPlaying ? "pause" : "play"}
                   size={moderateScale(32)}
-                  color="#111111"
+                  color={Theme.colors.background}
                 />
               </Pressable>
 
@@ -310,7 +454,7 @@ export default function PlayerDock() {
                 <Ionicons
                   name="play-skip-forward"
                   size={moderateScale(28)}
-                  color="#FFFFFF"
+                  color={Theme.colors.text}
                 />
               </Pressable>
 
@@ -333,7 +477,11 @@ export default function PlayerDock() {
                   <Ionicons
                     name="repeat"
                     size={moderateScale(22)}
-                    color={repeatMode !== "off" ? "#B66BDD" : "#888888"}
+                    color={
+                      repeatMode !== "off"
+                        ? Theme.colors.primary
+                        : Theme.colors.neutral400
+                    }
                   />
 
                   {repeatMode === "track" && (
@@ -343,7 +491,6 @@ export default function PlayerDock() {
               </Pressable>
             </View>
 
-            {/* Collapse button */}
             <Pressable
               onPress={collapsePlayer}
               style={styles.collapseButton}
@@ -353,7 +500,7 @@ export default function PlayerDock() {
               <Ionicons
                 name="chevron-down"
                 size={moderateScale(20)}
-                color="#A3A3A3"
+                color={Theme.colors.neutral400}
               />
             </Pressable>
           </View>
@@ -362,147 +509,3 @@ export default function PlayerDock() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  root: {
-    // position: "absolute",
-    // left: 0,
-    // right: 0,
-    // bottom: 0,
-    // overflow: "visible",
-    // zIndex: 100,
-    // elevation: 20,
-  },
-
-  backdrop: {
-    ...StyleSheet.absoluteFill,
-    // Extend the backdrop over the entire screen, not just the dock.
-    position: "absolute",
-    top: -1000,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 2000,
-    backgroundColor: "rgba(0, 0, 0, 0.3)",
-    zIndex: 100,
-    // elevation: 19,
-  },
-
-  container: {
-    backgroundColor: "#171717",
-    overflow: "hidden",
-    marginHorizontal: moderateScale(0),
-  },
-
-  compactArea: {
-    height: moderateScale(40),
-    justifyContent: "center",
-    paddingHorizontal: moderateScale(14),
-  },
-
-  compactSlider: {
-    width: "100%",
-    height: moderateScale(8),
-  },
-
-  compactTimes: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: moderateScale(3),
-  },
-
-  expandedContent: {
-    flex: 1,
-    paddingHorizontal: moderateScale(18),
-    paddingTop: moderateScale(12),
-    paddingBottom: moderateScale(6),
-  },
-
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: moderateScale(12),
-  },
-
-  artwork: {
-    width: moderateScale(76),
-    height: moderateScale(76),
-    borderRadius: moderateScale(10),
-  },
-
-  placeholder: {
-    backgroundColor: "#292929",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  trackInfo: {
-    flex: 1,
-    gap: moderateScale(6),
-  },
-
-  title: {
-    color: "#FFFFFF",
-    fontSize: moderateScale(17),
-    fontWeight: "700",
-  },
-
-  artist: {
-    color: "#A3A3A3",
-    fontSize: moderateScale(12),
-  },
-
-  slider: {
-    width: "100%",
-    height: moderateScale(34),
-    marginTop: moderateScale(12),
-  },
-
-  durationRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: -moderateScale(6),
-  },
-
-  time: {
-    color: "#A3A3A3",
-    fontSize: moderateScale(10),
-    fontVariant: ["tabular-nums"],
-  },
-
-  controls: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: moderateScale(18),
-    paddingHorizontal: moderateScale(2),
-  },
-
-  playButton: {
-    width: moderateScale(54),
-    height: moderateScale(54),
-    borderRadius: moderateScale(27),
-    backgroundColor: "#FFFFFF",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  repeatIcon: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  repeatOne: {
-    position: "absolute",
-    color: "#B66BDD",
-    fontSize: moderateScale(9),
-    fontWeight: "700",
-  },
-
-  collapseButton: {
-    alignSelf: "center",
-    padding: moderateScale(5),
-    marginTop: moderateScale(4),
-  },
-});

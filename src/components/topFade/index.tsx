@@ -28,11 +28,34 @@ export const FadeTop = () => {
       pointerEvents="none"
       colors={[
         Theme.colors.background,
-        "rgba(243, 240, 241, 0.78)",
-        "rgba(249, 246, 246, .8)",
+        hexToRgba(Theme.colors.background, 0.78),
+        hexToRgba(Theme.colors.background, 0),
       ]}
       locations={[0, 0.45, 1]}
       style={styles.topFade}
     />
   );
+};
+
+const hexToRgba = (hex: string, opacity: number) => {
+  let normalized = hex.replace("#", "");
+
+  // Expand shorthand hex, e.g. #FFF -> #FFFFFF
+  if (/^[0-9a-fA-F]{3}$/.test(normalized)) {
+    normalized = normalized
+      .split("")
+      .map((char) => char + char)
+      .join("");
+  }
+
+  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) {
+    console.warn("Unsupported theme color:", hex);
+    return hex; // Avoid unexpectedly returning black
+  }
+
+  const r = parseInt(normalized.slice(0, 2), 16);
+  const g = parseInt(normalized.slice(2, 4), 16);
+  const b = parseInt(normalized.slice(4, 6), 16);
+
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 };

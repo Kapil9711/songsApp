@@ -1,4 +1,5 @@
 import { Container } from "@/components/container";
+import NowPlayingBackground from "@/components/nowPlayingBackground";
 import { SongSmallCard } from "@/components/songs/songSmalCard";
 import { SafeSide } from "@/hooks/useInsetStyle";
 import { useSongsSearchQuery } from "@/screens/search/api/api.queries";
@@ -13,16 +14,15 @@ import {
   Keyboard,
   Pressable,
   SectionList,
+  StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
-import { useResponsive, useResponsiveStyles } from "react-native-fluid-styles";
+import { useResponsive } from "react-native-fluid-styles";
 
 const CATEGORIES = ["Songs", "Albums", "Artists", "Playlists"];
-
 const RECENT_SEARCHES = ["The Weeknd", "Chill music", "Dua Lipa"];
-
 const TRENDING = ["Blinding Lights", "Levitating", "Chill Vibes"];
 
 type SearchRow =
@@ -42,9 +42,8 @@ export default function SearchScreen() {
   const [recentSearches, setRecentSearches] = useState(RECENT_SEARCHES);
   const [isDebouncing, setIsDebouncing] = useState(false);
 
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef(null as any);
 
-  // Debounce search requests without changing the list's layout.
   useEffect(() => {
     const trimmedQuery = query.trim();
 
@@ -71,14 +70,8 @@ export default function SearchScreen() {
     [debouncedQuery],
   );
 
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-    isFetching,
-  } = useSongsSearchQuery(songsQuery);
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+    useSongsSearchQuery(songsQuery);
 
   const results = useMemo(() => data?.pages.flat() ?? [], [data]);
   const showResults = debouncedQuery.length > 0;
@@ -93,7 +86,7 @@ export default function SearchScreen() {
     setQuery(value);
     setDebouncedQuery(value.trim());
     setIsDebouncing(false);
-    (inputRef.current as any)?.focus();
+    inputRef.current?.focus();
   }, []);
 
   const clearSearch = useCallback(() => {
@@ -101,7 +94,7 @@ export default function SearchScreen() {
     setDebouncedQuery("");
     setCategory("Songs");
     setIsDebouncing(false);
-    (inputRef.current as any)?.focus();
+    inputRef.current?.focus();
   }, []);
 
   const rememberSearch = useCallback((name: string) => {
@@ -125,7 +118,7 @@ export default function SearchScreen() {
         }}
       />
     ),
-    [activeMediaId, handleSongPlay, rememberSearch, results],
+    [activeMediaId, rememberSearch, results],
   );
 
   const renderDiscovery = useCallback(
@@ -228,6 +221,7 @@ export default function SearchScreen() {
           <Text style={styles.resultsTitle}>
             {isDebouncing ? "Finding your sound..." : "Search results"}
           </Text>
+
           <Text style={styles.resultsSubtitle}>
             {isDebouncing
               ? "Updating results"
@@ -263,7 +257,13 @@ export default function SearchScreen() {
           artist, or album.
         </Text>
 
-        <Pressable onPress={clearSearch} style={styles.resetButton}>
+        <Pressable
+          onPress={clearSearch}
+          style={({ pressed }) => [
+            styles.resetButton,
+            pressed && styles.pressed,
+          ]}
+        >
           <Text style={styles.resetButtonText}>Explore music</Text>
         </Pressable>
       </View>
@@ -271,7 +271,6 @@ export default function SearchScreen() {
     [debouncedQuery, clearSearch, styles, r, Theme],
   );
 
-  // Put special rows into the same list so all content scrolls together.
   const rows = useMemo<SearchRow[]>(() => {
     if (!showResults) {
       return [{ type: "discovery", id: "discovery" }];
@@ -343,11 +342,11 @@ export default function SearchScreen() {
           />
 
           <TextInput
-            ref={inputRef as any}
+            ref={inputRef}
             value={query}
             onChangeText={handleSearch}
             placeholder="Songs, artists, albums..."
-            placeholderTextColor="#858995"
+            placeholderTextColor={Theme.colors.neutral400}
             returnKeyType="search"
             autoCapitalize="none"
             autoCorrect={false}
@@ -360,7 +359,11 @@ export default function SearchScreen() {
             <ActivityIndicator size="small" color={Theme.colors.primary} />
           ) : query.length > 0 ? (
             <Pressable onPress={clearSearch} hitSlop={10}>
-              <Ionicons name="close-circle" size={r.ms(20)} color="#858995" />
+              <Ionicons
+                name="close-circle"
+                size={r.ms(20)}
+                color={Theme.colors.neutral400}
+              />
             </Pressable>
           ) : (
             <Ionicons
@@ -420,9 +423,13 @@ export default function SearchScreen() {
 
   return (
     <Container
-      style={{ maxWidth: "100%" }}
+      style={{
+        maxWidth: "100%",
+        backgroundColor: Theme.colors.background,
+      }}
       insetStyle={{ ...SafeSide, bottom: false }}
     >
+      <NowPlayingBackground />
       <View style={styles.container}>
         <SectionList<SearchRow>
           sections={[{ key: "search", data: rows }]}
@@ -477,17 +484,28 @@ export default function SearchScreen() {
 
 const useStyles = () => {
   const { Theme } = useTheme();
+  const r = useResponsive();
 
-  return useResponsiveStyles((r) => ({
+  const primary = Theme.colors.primary;
+  const background = Theme.colors.background;
+  const text = Theme.colors.text;
+  const border = Theme.styles.Card.borderColor;
+  const cardBackground = Theme.styles.Card.backgroundColor;
+
+  // Theme-aware translucent accent surfaces.
+  const primarySurface = `${primary}15`;
+  const primaryBorder = `${primary}30`;
+
+  return StyleSheet.create({
     container: {
       flex: 1,
       minHeight: 0,
       backgroundColor: "transparent",
       paddingBottom: r.ms(4),
+      paddingHorizontal: r.ms(6),
     },
 
     header: {
-      // paddingTop: r.ms(8),
       paddingBottom: r.ms(8),
       flexShrink: 0,
     },
@@ -502,14 +520,14 @@ const useStyles = () => {
       lineHeight: r.ms(33),
       fontWeight: "800",
       letterSpacing: -0.8,
-      color: Theme.colors.text,
+      color: text,
     },
 
     titleDot: {
       width: r.ms(6),
       height: r.ms(6),
       borderRadius: r.ms(3),
-      backgroundColor: Theme.colors.primary,
+      backgroundColor: primary,
       marginLeft: r.ms(5),
       marginTop: r.ms(12),
     },
@@ -517,17 +535,16 @@ const useStyles = () => {
     headerSubtitle: {
       marginTop: r.ms(4),
       fontSize: r.ms(11),
-      color: Theme.colors.text,
+      color: text,
       opacity: 0.7,
     },
 
     stickyArea: {
       flexShrink: 0,
       zIndex: 10,
-      elevation: 1,
-      backgroundColor: Theme.colors.background,
+      // elevation: 1,
+      backgroundColor: background,
       padding: r.ms(6),
-      // paddingBottom: r.ms(3),
       borderRadius: r.ms(8),
     },
 
@@ -538,11 +555,9 @@ const useStyles = () => {
       gap: r.ms(11),
       paddingHorizontal: r.ms(15),
       borderRadius: r.ms(10),
-      backgroundColor: Theme.colors.background,
-      // borderWidth: 1,
-      boxShadow: "0px 0px 6px 1px rgba(133, 130, 130, 0.4)",
-
-      // borderColor: Theme.styles.Card.borderColor,
+      backgroundColor: cardBackground,
+      borderWidth: 1,
+      borderColor: border,
     },
 
     input: {
@@ -550,7 +565,7 @@ const useStyles = () => {
       minWidth: 0,
       paddingVertical: r.ms(12),
       fontSize: r.ms(12),
-      color: Theme.colors.text,
+      color: text,
     },
 
     categorySection: {
@@ -568,14 +583,14 @@ const useStyles = () => {
       borderRadius: r.ms(10),
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: Theme.styles.Card.backgroundColor,
+      backgroundColor: cardBackground,
       borderWidth: 1,
-      borderColor: Theme.styles.Card.borderColor,
+      borderColor: border,
     },
 
     categoryChipActive: {
-      backgroundColor: Theme.colors.primary,
-      borderColor: Theme.colors.primary,
+      backgroundColor: primary,
+      borderColor: primary,
     },
 
     categoryPressed: {
@@ -586,11 +601,11 @@ const useStyles = () => {
     categoryText: {
       fontSize: r.ms(11),
       fontWeight: "600",
-      color: Theme.colors.text,
+      color: text,
     },
 
     categoryTextActive: {
-      color: Theme.colors.background,
+      color: background,
     },
 
     scrollContent: {
@@ -615,13 +630,13 @@ const useStyles = () => {
       fontSize: r.ms(10),
       fontWeight: "800",
       letterSpacing: 1.1,
-      color: Theme.colors.text,
+      color: text,
     },
 
     clearText: {
       fontSize: r.ms(11),
       fontWeight: "600",
-      color: Theme.colors.primary,
+      color: primary,
     },
 
     recentItem: {
@@ -638,14 +653,14 @@ const useStyles = () => {
       borderRadius: r.ms(10),
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: Theme.colors.background,
+      backgroundColor: cardBackground,
     },
 
     recentText: {
       flex: 1,
       fontSize: r.ms(12),
       fontWeight: "500",
-      color: Theme.colors.text,
+      color: text,
     },
 
     trendingHeader: {
@@ -671,22 +686,22 @@ const useStyles = () => {
       paddingHorizontal: r.ms(13),
       paddingVertical: r.ms(10),
       borderRadius: r.ms(13),
-      backgroundColor: Theme.colors.background,
+      backgroundColor: cardBackground,
       borderWidth: 1,
-      borderColor: "rgba(255,255,255,0.06)",
+      borderColor: border,
     },
 
     trendingNumber: {
       width: r.ms(31),
       height: r.ms(31),
       borderRadius: r.ms(9),
-      backgroundColor: "rgba(197,255,74,0.09)",
+      backgroundColor: primarySurface,
       alignItems: "center",
       justifyContent: "center",
     },
 
     trendingNumberText: {
-      color: Theme.colors.primary,
+      color: primary,
       fontSize: r.ms(10),
       fontWeight: "800",
     },
@@ -695,7 +710,7 @@ const useStyles = () => {
       flex: 1,
       fontSize: r.ms(12),
       fontWeight: "600",
-      color: Theme.colors.text,
+      color: text,
     },
 
     discoveryFooter: {
@@ -709,7 +724,7 @@ const useStyles = () => {
 
     footerText: {
       fontSize: r.ms(10),
-      color: Theme.colors.text,
+      color: text,
     },
 
     resultsHeader: {
@@ -722,13 +737,13 @@ const useStyles = () => {
     resultsTitle: {
       fontSize: r.ms(15),
       fontWeight: "800",
-      color: Theme.colors.text,
+      color: text,
     },
 
     resultsSubtitle: {
       marginTop: r.ms(3),
       fontSize: r.ms(10),
-      color: Theme.colors.text,
+      color: text,
       opacity: 0.65,
     },
 
@@ -750,16 +765,16 @@ const useStyles = () => {
       borderRadius: r.ms(23),
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: "rgba(197,255,74,0.08)",
+      backgroundColor: primarySurface,
       borderWidth: 1,
-      borderColor: "rgba(197,255,74,0.18)",
+      borderColor: primaryBorder,
     },
 
     emptyTitle: {
       marginTop: r.ms(17),
       fontSize: r.ms(17),
       fontWeight: "800",
-      color: Theme.colors.text,
+      color: text,
     },
 
     emptyDescription: {
@@ -767,7 +782,7 @@ const useStyles = () => {
       fontSize: r.ms(11),
       lineHeight: r.ms(17),
       textAlign: "center",
-      color: Theme.colors.text,
+      color: text,
       opacity: 0.7,
     },
 
@@ -776,17 +791,17 @@ const useStyles = () => {
       paddingHorizontal: r.ms(17),
       paddingVertical: r.ms(10),
       borderRadius: r.ms(11),
-      backgroundColor: Theme.colors.primary,
+      backgroundColor: primary,
     },
 
     resetButtonText: {
       fontSize: r.ms(11),
       fontWeight: "700",
-      color: Theme.colors.background,
+      color: background,
     },
 
     pressed: {
       opacity: 0.72,
     },
-  }));
+  });
 };

@@ -1,5 +1,6 @@
 import { Container } from "@/components/container";
 import Loading from "@/components/loading";
+import NowPlayingBackground from "@/components/nowPlayingBackground";
 import { SongSmallCard } from "@/components/songs/songSmalCard";
 import { api } from "@/config/network/api.config";
 import { endpoints } from "@/config/network/endpoints";
@@ -11,33 +12,44 @@ import { handleSongPlay } from "@/utils/handleSongPlay";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
-import { FlatList, Pressable, SectionList, Text, View } from "react-native";
-import { useResponsive, useResponsiveStyles } from "react-native-fluid-styles";
+import {
+  FlatList,
+  Pressable,
+  SectionList,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { useResponsive } from "react-native-fluid-styles";
 
 export default function HomeScreen() {
   const { Theme } = useTheme();
-  const [active, setActive] = useState("my");
   const r = useResponsive();
   const styles = useStyles();
+
+  const [active, setActive] = useState("my");
 
   const { data: favoriteData, isLoading: isLoadingFavorite } =
     useFavoriteQuery();
 
   const { data: friends, isLoading: isLoadingFriends } = useFriendQuery();
-  const favorites = favoriteData?.favorite ?? [];
 
-  console.log(friends);
+  const favorites = favoriteData?.favorite ?? [];
 
   const finalData = useMemo(() => {
     if (active === "my") {
-      return favorites ?? [];
+      return favorites;
     }
-    const friend: any = friends?.find(
-      (item: any) => item?.user?.name === active,
-    );
+
+    const friend = friends?.find((item: any) => item?.user?.name === active);
 
     return friend?.user?.favorite ?? [];
   }, [active, favorites, friends]);
+
+  const playerList = useMemo(
+    () => convertSongListToPlayerList(finalData),
+    [finalData],
+  );
 
   const activeMediaId = usePlayerStore((state) => state.activeTrack?.mediaId);
 
@@ -58,14 +70,26 @@ export default function HomeScreen() {
             image={item?.image?.[2]?.url}
             number={index + 1}
             song={item}
-            onPress={() =>
-              handleSongPlay(index, favoriteData?.songListForPlayer || [])
-            }
+            onPress={() => handleSongPlay(index, playerList)}
           />
         </Pressable>
       );
     },
-    [activeMediaId, favoriteData?.songListForPlayer, styles],
+    [activeMediaId, playerList, styles],
+  );
+
+  const filterItems = useMemo(
+    () => [
+      { id: "my", name: "My Favorites", isMine: true },
+      ...(friends ?? [])
+        .filter((friend: any) => friend?.user?.name)
+        .map((friend: any) => ({
+          id: String(friend?._id ?? friend.user.name),
+          name: friend.user.name,
+          isMine: false,
+        })),
+    ],
+    [friends],
   );
 
   const renderStickyFilters = useCallback(
@@ -90,16 +114,7 @@ export default function HomeScreen() {
 
           <FlatList
             horizontal
-            data={[
-              { id: "my", name: "My Favorites", isMine: true },
-              ...(friends ?? [])
-                .filter((friend: any) => friend?.user?.name)
-                .map((friend: any) => ({
-                  id: String(friend?._id ?? friend.user.name),
-                  name: friend.user.name,
-                  isMine: false,
-                })),
-            ]}
+            data={filterItems}
             keyExtractor={(item) => item.id}
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.filterContent}
@@ -174,10 +189,9 @@ export default function HomeScreen() {
         <View style={styles.divider} />
       </View>
     ),
-    [active, friends, styles, r, Theme],
+    [active, filterItems, friends, styles, r, Theme],
   );
 
-  // Keep the title and count in the normal scrolling content.
   const renderPageHeader = useCallback(
     () => (
       <View style={styles.header}>
@@ -211,9 +225,13 @@ export default function HomeScreen() {
 
   return (
     <Container
-      style={{ maxWidth: "100%" }}
+      style={{
+        maxWidth: "100%",
+        backgroundColor: Theme.colors.background,
+      }}
       insetStyle={{ ...SafeSide, bottom: false }}
     >
+      <NowPlayingBackground />
       <Loading loading={isLoadingFavorite || isLoadingFriends} />
 
       <View style={styles.container}>
@@ -243,17 +261,28 @@ export default function HomeScreen() {
 
 const useStyles = () => {
   const { Theme } = useTheme();
+  const r = useResponsive();
 
-  return useResponsiveStyles((r) => ({
+  const primary = Theme.colors.primary;
+  const background = Theme.colors.background;
+  const text = Theme.colors.text;
+  const border = Theme.styles.Card.borderColor;
+  const cardBackground = Theme.styles.Card.backgroundColor;
+
+  // Theme-derived subtle surfaces.
+  const primarySurface = `${primary}15`;
+  const primaryBorder = `${primary}30`;
+  const activeDotSurface = `${background}30`;
+
+  return StyleSheet.create({
     container: {
       flex: 1,
       minHeight: 0,
       backgroundColor: "transparent",
     },
 
-    // Normal scrolling heading
+    // Normal scrolling heading.
     header: {
-      // paddingTop: r.ms(14),
       paddingBottom: r.ms(8),
       flexDirection: "row",
       alignItems: "center",
@@ -275,7 +304,7 @@ const useStyles = () => {
       lineHeight: r.ms(31),
       fontWeight: "800",
       letterSpacing: -0.8,
-      color: Theme.colors.text,
+      color: text,
     },
 
     titleDot: {
@@ -284,13 +313,14 @@ const useStyles = () => {
       borderRadius: r.ms(3),
       marginLeft: r.ms(5),
       marginTop: r.ms(12),
-      backgroundColor: Theme.colors.primary,
+      backgroundColor: primary,
     },
 
     subtitle: {
       marginTop: r.ms(3),
       fontSize: r.ms(10.5),
-      color: Theme.colors.text,
+      color: text,
+      opacity: 0.7,
     },
 
     countCard: {
@@ -300,33 +330,32 @@ const useStyles = () => {
       borderRadius: r.ms(17),
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: Theme.colors.background,
+      backgroundColor: cardBackground,
       borderWidth: 1,
-      borderColor: Theme.colors.text,
+      borderColor: border,
     },
 
     count: {
       fontSize: r.ms(18),
       lineHeight: r.ms(21),
       fontWeight: "800",
-      color: Theme.colors.text,
+      color: text,
     },
 
     countLabel: {
       marginTop: r.ms(2),
       fontSize: r.ms(8.5),
       fontWeight: "500",
-      color: Theme.colors.text,
+      color: text,
+      opacity: 0.75,
     },
 
     // Native sticky header: keep its background opaque.
     stickyArea: {
-      backgroundColor: Theme.colors.background,
+      backgroundColor: background,
       padding: r.ms(10),
       borderRadius: r.ms(10),
-
       zIndex: 20,
-      // elevation: 8,
     },
 
     filterSection: {
@@ -351,13 +380,14 @@ const useStyles = () => {
       fontSize: r.ms(12),
       fontWeight: "800",
       letterSpacing: 1.1,
-      color: Theme.colors.text,
+      color: text,
     },
 
     filterCount: {
       fontSize: r.ms(11.5),
       fontWeight: "500",
-      color: Theme.colors.text,
+      color: text,
+      opacity: 0.75,
     },
 
     filterContent: {
@@ -373,14 +403,14 @@ const useStyles = () => {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: Theme.colors.background,
+      backgroundColor: cardBackground,
       borderWidth: 1,
-      borderColor: Theme.styles.Card.borderColor,
+      borderColor: border,
     },
 
     filterButtonActive: {
-      backgroundColor: Theme.colors.primary,
-      borderColor: Theme.colors.primary,
+      backgroundColor: primary,
+      borderColor: primary,
     },
 
     filterPressed: {
@@ -400,11 +430,11 @@ const useStyles = () => {
       maxWidth: r.ms(110),
       fontSize: r.ms(11),
       fontWeight: "600",
-      color: Theme.colors.text,
+      color: text,
     },
 
     filterTextActive: {
-      color: Theme.colors.background,
+      color: background,
     },
 
     friendDot: {
@@ -413,24 +443,24 @@ const useStyles = () => {
       borderRadius: r.ms(8),
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: Theme.colors.background,
+      backgroundColor: primarySurface,
     },
 
     friendDotActive: {
-      backgroundColor: "rgba(255,255,255,0.18)",
+      backgroundColor: activeDotSurface,
     },
 
     friendInitial: {
       fontSize: r.ms(8),
       fontWeight: "800",
-      color: Theme.colors.text,
+      color: text,
     },
 
     divider: {
-      height: 1,
+      height: StyleSheet.hairlineWidth,
       marginHorizontal: r.ms(0),
       marginBottom: r.ms(5),
-      backgroundColor: "rgba(255,255,255,0.08)",
+      backgroundColor: border,
     },
 
     listContent: {
@@ -448,7 +478,7 @@ const useStyles = () => {
       opacity: 0.72,
       transform: [{ scale: 0.985 }],
     },
-  }));
+  });
 };
 
 export const useFavoriteQuery = () => {
@@ -470,7 +500,6 @@ export const useFavoriteQuery = () => {
         songListForPlayer,
       };
     },
-    staleTime: 0,
   });
 };
 
@@ -480,11 +509,14 @@ export const useFriendQuery = () => {
     queryFn: async () => {
       const { data } = await api.get(endpoints.api.friend);
 
-      if (data.success)
-        return data.friends?.filter(
-          (item: any) =>
-            item?.user?.isFavouritePublic && item?.user?.favorite?.length,
+      if (data.success) {
+        return (
+          data.friends?.filter(
+            (item: any) =>
+              item?.user?.isFavouritePublic && item?.user?.favorite?.length,
+          ) ?? []
         );
+      }
 
       return [];
     },
