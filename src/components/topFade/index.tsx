@@ -1,9 +1,11 @@
 import { useTheme } from "@/themes/theme.context";
 import { LinearGradient } from "expo-linear-gradient";
 import { useResponsiveStyles } from "react-native-fluid-styles";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export const FadeTop = () => {
   const { Theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = useResponsiveStyles((r) => {
     return {
       topFade: {
@@ -15,7 +17,7 @@ export const FadeTop = () => {
 
         right: 0,
 
-        height: r.ms(42),
+        height: insets.top,
 
         zIndex: 20,
       },

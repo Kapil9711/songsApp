@@ -1,4 +1,3 @@
-import { useLoading } from "@/store/loading.store";
 import { useTheme } from "@/themes/theme.context";
 import { useEffect, useRef } from "react";
 import { Animated, Easing, StyleSheet, Text, View } from "react-native";
@@ -12,11 +11,14 @@ type LoadingProps = {
 const BAR_COUNT = 5;
 const BAR_HEIGHTS = [18, 34, 24, 42, 20];
 
-export default function Loading() {
+export default function Loading({
+  loading,
+  title,
+}: {
+  loading: boolean;
+  title?: string;
+}) {
   const styles = useStyles();
-  const loading = useLoading((state) => state.loading);
-  const title = useLoading((state) => state.title);
-
   const progress = useRef(
     Array.from({ length: BAR_COUNT }, () => new Animated.Value(0)),
   ).current;
@@ -109,7 +111,7 @@ const useStyles = () => {
       elevation: 10000,
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: "rgba(0, 0, 0, 0.52)",
+      backgroundColor: "rgba(0, 0, 0, 0.62)",
     },
 
     card: {
@@ -161,11 +163,4 @@ const useStyles = () => {
       backgroundColor: "#C5FF4A",
     },
   }));
-};
-
-export const useSetLoading = (isLoading: boolean) => {
-  const updateLoading = useLoading((state) => state.updateLoading);
-  useEffect(() => {
-    updateLoading(isLoading);
-  }, [isLoading]);
 };

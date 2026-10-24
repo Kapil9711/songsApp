@@ -1,4 +1,4 @@
-import TrackPlayer, { Event, type MediaItem } from "@rntp/player";
+import TrackPlayer, { Event, RepeatMode, type MediaItem } from "@rntp/player";
 
 import { usePlayerProgressStore } from "@/store/player.progress.store";
 import { usePlayerStore } from "@/store/player.store";
@@ -13,6 +13,11 @@ function requireReady() {
   }
 }
 
+function reportError(error: unknown, fallback: string) {
+  const message = error instanceof Error ? error.message : fallback;
+  usePlayerStore.getState().setError(message);
+}
+
 function syncQueue() {
   const queue = TrackPlayer.getQueue();
   const activeIndex = TrackPlayer.getActiveMediaItemIndex() ?? -1;
@@ -20,26 +25,36 @@ function syncQueue() {
 
   const store = usePlayerStore.getState();
 
-  store.setQueue(queue);
+  store.setQueue([...queue]);
   store.setActiveTrack(activeTrack, activeIndex);
 }
 
 function syncFromNative() {
-  // If a native read fails, let the caller handle the error.
   syncQueue();
 
-  usePlayerStore
-    .getState()
-    .setPlayback(
-      TrackPlayer.isPlaying(),
-      String(TrackPlayer.getPlaybackState()),
-    );
+  const store = usePlayerStore.getState();
+
+  store.setPlayback(
+    TrackPlayer.isPlaying(),
+    String(TrackPlayer.getPlaybackState()),
+  );
+
+  store.setShuffled(TrackPlayer.isShuffleEnabled());
+
+  const nativeRepeatMode = TrackPlayer.getRepeatMode();
+
+  store.setRepeatMode(
+    nativeRepeatMode === RepeatMode.One
+      ? "track"
+      : nativeRepeatMode === RepeatMode.All
+        ? "queue"
+        : "off",
+  );
 }
 
 function registerListeners() {
   if (listenersRegistered) return;
 
-  // Register each listener only once in this JS runtime.
   listenersRegistered = true;
 
   TrackPlayer.addEventListener(Event.IsPlayingChanged, ({ playing }) => {
@@ -54,7 +69,6 @@ function registerListeners() {
 
   TrackPlayer.addEventListener(Event.MediaItemTransition, ({ item, index }) => {
     usePlayerStore.getState().setActiveTrack(item, index ?? -1);
-
     usePlayerProgressStore.getState().reset();
   });
 
@@ -80,12 +94,6 @@ function registerListeners() {
   });
 }
 
-function reportError(error: unknown, fallback: string) {
-  const message = error instanceof Error ? error.message : fallback;
-
-  usePlayerStore.getState().setError(message);
-}
-
 export function initializePlayer(): Promise<void> {
   if (usePlayerStore.getState().status === "ready") {
     return Promise.resolve();
@@ -98,11 +106,9 @@ export function initializePlayer(): Promise<void> {
 
   initialization = Promise.resolve()
     .then(() => {
-      // Native setup belongs in registerPlaybackSession
-      // in index.js. Do not call setupPlayer here.
+      // Native setup belongs in registerPlaybackSession in index.js.
       registerListeners();
       syncFromNative();
-
       usePlayerStore.getState().setStatus("ready");
     })
     .catch((error: unknown) => {
@@ -111,7 +117,6 @@ export function initializePlayer(): Promise<void> {
       throw error;
     })
     .finally(() => {
-      // Allows a future initialization attempt after failure.
       initialization = null;
     });
 
@@ -141,7 +146,7 @@ function enqueueQueueOperation(operation: () => void): Promise<void> {
     }
   });
 
-  // A failed operation must not block subsequent operations.
+  // A failed operation must not block subsequent queue operations.
   queueOperation = next.catch(() => {});
 
   return next;
@@ -182,15 +187,64 @@ export const PlayerService = {
     runPlayerCommand(() => TrackPlayer.seekTo(position));
   },
 
+  toggleShuffle() {
+    requireReady();
+
+    try {
+      const enabled = !TrackPlayer.isShuffleEnabled();
+
+      TrackPlayer.setShuffleEnabled(enabled);
+
+      // Read back the native state instead of assuming it changed.
+      usePlayerStore.getState().setShuffled(TrackPlayer.isShuffleEnabled());
+    } catch (error) {
+      reportError(error, "Failed to toggle shuffle");
+      throw error;
+    }
+  },
+
+  async toggleRepeat() {
+    requireReady();
+
+    try {
+      const currentMode = TrackPlayer.getRepeatMode();
+
+      const nextMode =
+        currentMode === RepeatMode.Off
+          ? RepeatMode.One
+          : currentMode === RepeatMode.One
+            ? RepeatMode.All
+            : RepeatMode.Off;
+
+      TrackPlayer.setRepeatMode(nextMode);
+
+      const actualMode = TrackPlayer.getRepeatMode();
+
+      usePlayerStore
+        .getState()
+        .setRepeatMode(
+          actualMode === RepeatMode.One
+            ? "track"
+            : actualMode === RepeatMode.All
+              ? "queue"
+              : "off",
+        );
+    } catch (error) {
+      reportError(error, "Failed to toggle repeat");
+      throw error;
+    }
+  },
+
   playQueue(items: MediaItem[], startIndex = 0) {
     return enqueueQueueOperation(() => {
       if (items.length === 0) {
         TrackPlayer.clear();
 
-        usePlayerStore.getState().setQueue([]);
-        usePlayerStore.getState().setActiveTrack(null, -1);
-        usePlayerProgressStore.getState().reset();
+        const store = usePlayerStore.getState();
+        store.setQueue([]);
+        store.setActiveTrack(null, -1);
 
+        usePlayerProgressStore.getState().reset();
         return;
       }
 
@@ -221,8 +275,10 @@ export const PlayerService = {
     return enqueueQueueOperation(() => {
       TrackPlayer.clear();
 
-      usePlayerStore.getState().setQueue([]);
-      usePlayerStore.getState().setActiveTrack(null, -1);
+      const store = usePlayerStore.getState();
+      store.setQueue([]);
+      store.setActiveTrack(null, -1);
+
       usePlayerProgressStore.getState().reset();
     });
   },

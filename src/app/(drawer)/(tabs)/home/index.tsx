@@ -1,4 +1,5 @@
 import { Container } from "@/components/container";
+import Loading from "@/components/loading";
 import ShowData from "@/components/songs/bigHorizontalCard";
 import { FadeTop } from "@/components/topFade";
 import { api } from "@/config/network/api.config";
@@ -25,6 +26,7 @@ export default function HomeScreen() {
   return (
     <View style={[styles.container]}>
       <FadeTop />
+      <Loading loading={isLoading} />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}

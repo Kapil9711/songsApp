@@ -8,7 +8,14 @@ import { handleSongPlay } from "@/utils/handleSongPlay";
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useCallback, useMemo } from "react";
-import { FlatList, Platform, Pressable, Text, View } from "react-native";
+import {
+  FlatList,
+  Platform,
+  Pressable,
+  StatusBar,
+  Text,
+  View,
+} from "react-native";
 import { useResponsive, useResponsiveStyles } from "react-native-fluid-styles";
 import { useHomePageQuery } from ".";
 
@@ -179,20 +186,7 @@ const Song = () => {
         }}
       />
 
-      {/* ============================================================ */}
-      {/* TOP FADE                                                      */}
-      {/* ============================================================ */}
-
-      {/* <LinearGradient
-        pointerEvents="none"
-        colors={[
-          "rgba(18,15,22,0.88)",
-          "rgba(18,15,22,0.88)",
-          "rgba(18,15,22,0)",
-        ]}
-        locations={[0, 0.45, 1]}
-        style={styles.topFade}
-      /> */}
+      <StatusBar barStyle="light-content" />
     </View>
   );
 };

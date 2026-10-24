@@ -28,20 +28,20 @@ const TAB_ROUTES = [
     icon: "heart-outline",
     activeIcon: "heart",
   },
-  {
-    name: "library",
-    path: "/library",
-    label: "Library",
-    icon: "library-outline",
-    activeIcon: "library",
-  },
-  {
-    name: "profile",
-    path: "/profile",
-    label: "Profile",
-    icon: "person-outline",
-    activeIcon: "person",
-  },
+  // {
+  //   name: "library",
+  //   path: "/library",
+  //   label: "Library",
+  //   icon: "library-outline",
+  //   activeIcon: "library",
+  // },
+  // {
+  //   name: "profile",
+  //   path: "/profile",
+  //   label: "Profile",
+  //   icon: "person-outline",
+  //   activeIcon: "person",
+  // },
 ] as const;
 
 export default function CustomTabBar() {

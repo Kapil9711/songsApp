@@ -16,7 +16,11 @@ import { usePlayerStore } from "@/store/player.store";
 import { PlayerService } from "../player.service";
 
 function formatTime(seconds: number) {
-  const total = Math.max(0, Math.floor(seconds || 0));
+  if (!Number.isFinite(seconds) || seconds < 0) {
+    return "0:00";
+  }
+
+  const total = Math.floor(seconds);
 
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
 }
@@ -25,20 +29,26 @@ export default function PlayerDock() {
   const [expanded, setExpanded] = useState(false);
   const [seeking, setSeeking] = useState(false);
   const [seekValue, setSeekValue] = useState(0);
+
   const animation = useState(() => new Animated.Value(0))[0];
 
   const activeTrack = usePlayerStore((state) => state.activeTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
+  const isShuffled = usePlayerStore((state) => state.isShuffled);
+  const repeatMode = usePlayerStore((state) => state.repeatMode);
 
   const position = usePlayerProgressStore((state) => state.position);
   const duration = usePlayerProgressStore((state) => state.duration);
 
   useEffect(() => {
-    if (!seeking) setSeekValue(position);
+    if (!seeking) {
+      setSeekValue(position);
+    }
   }, [position, seeking]);
 
   const toggleExpanded = useCallback(() => {
     const next = !expanded;
+
     setExpanded(next);
 
     Animated.spring(animation, {
@@ -52,7 +62,52 @@ export default function PlayerDock() {
   const seek = useCallback(async (value: number) => {
     setSeeking(false);
     setSeekValue(value);
-    await PlayerService.seekTo(value);
+
+    try {
+      await PlayerService.seekTo(value);
+    } catch (error) {
+      console.error("Failed to seek:", error);
+    }
+  }, []);
+
+  const handleTogglePlay = useCallback(async () => {
+    try {
+      await PlayerService.togglePlay();
+    } catch (error) {
+      console.error("Failed to toggle playback:", error);
+    }
+  }, []);
+
+  const handlePrevious = useCallback(async () => {
+    try {
+      await PlayerService.previous();
+    } catch (error) {
+      console.error("Failed to play previous track:", error);
+    }
+  }, []);
+
+  const handleNext = useCallback(async () => {
+    try {
+      await PlayerService.next();
+    } catch (error) {
+      console.error("Failed to play next track:", error);
+    }
+  }, []);
+
+  const handleShuffle = useCallback(async () => {
+    try {
+      await PlayerService.toggleShuffle();
+    } catch (error) {
+      console.error("Failed to toggle shuffle:", error);
+    }
+  }, []);
+
+  const handleRepeat = useCallback(async () => {
+    try {
+      await PlayerService.toggleRepeat();
+    } catch (error) {
+      console.error("Failed to toggle repeat:", error);
+    }
   }, []);
 
   if (!activeTrack) return null;
@@ -62,7 +117,10 @@ export default function PlayerDock() {
   };
 
   const max = Math.max(duration, 1);
-  const currentPosition = Math.min(seeking ? seekValue : position, max);
+  const currentPosition = Math.min(
+    Math.max(0, seeking ? seekValue : position),
+    max,
+  );
 
   const collapsedHeight = moderateScale(30);
   const expandedHeight = moderateScale(280);
@@ -89,7 +147,7 @@ export default function PlayerDock() {
           style={styles.compactArea}
           onPress={toggleExpanded}
           accessibilityRole="button"
-          accessibilityLabel={expanded ? "Collapse player" : "Expand player"}
+          accessibilityLabel="Expand player"
         >
           <View style={styles.progressTrack}>
             <View
@@ -104,11 +162,13 @@ export default function PlayerDock() {
 
           <View style={styles.compactTimes}>
             <Text style={styles.time}>{formatTime(currentPosition)}</Text>
+
             <Ionicons
-              name={expanded ? "chevron-down" : "chevron-up"}
+              name="chevron-up"
               size={moderateScale(15)}
               color="#A3A3A3"
             />
+
             <Text style={styles.time}>{formatTime(duration)}</Text>
           </View>
         </Pressable>
@@ -137,12 +197,14 @@ export default function PlayerDock() {
               <Text style={styles.title} numberOfLines={1}>
                 {track.title}
               </Text>
+
               <Text style={styles.artist} numberOfLines={2}>
                 {track.artist || "Unknown artist"}
               </Text>
             </View>
           </View>
 
+          {/* Seek slider */}
           <Slider
             style={styles.slider}
             minimumValue={0}
@@ -152,9 +214,9 @@ export default function PlayerDock() {
             maximumTrackTintColor="#454545"
             thumbTintColor="#FFFFFF"
             disabled={duration <= 0}
-            onSlidingStart={(value) => {
+            onSlidingStart={() => {
               setSeeking(true);
-              setSeekValue(value);
+              setSeekValue(position);
             }}
             onValueChange={setSeekValue}
             onSlidingComplete={seek}
@@ -165,22 +227,41 @@ export default function PlayerDock() {
             <Text style={styles.time}>{formatTime(duration)}</Text>
           </View>
 
+          {/* Shuffle, previous, play/pause, next, repeat */}
           <View style={styles.controls}>
             <Pressable
-              onPress={() => void PlayerService.previous()}
-              hitSlop={12}
+              onPress={handleShuffle}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel={
+                isShuffled ? "Disable shuffle" : "Enable shuffle"
+              }
+              accessibilityState={{ selected: isShuffled }}
+            >
+              <Ionicons
+                name="shuffle"
+                size={moderateScale(22)}
+                color={isShuffled ? "#B66BDD" : "#888888"}
+              />
+            </Pressable>
+
+            <Pressable
+              onPress={handlePrevious}
+              hitSlop={10}
+              accessibilityRole="button"
               accessibilityLabel="Previous track"
             >
               <Ionicons
                 name="play-skip-back"
-                size={moderateScale(32)}
+                size={moderateScale(28)}
                 color="#FFFFFF"
               />
             </Pressable>
 
             <Pressable
-              onPress={() => void PlayerService.togglePlay()}
+              onPress={handleTogglePlay}
               style={styles.playButton}
+              accessibilityRole="button"
               accessibilityLabel={isPlaying ? "Pause" : "Play"}
             >
               <Ionicons
@@ -191,21 +272,52 @@ export default function PlayerDock() {
             </Pressable>
 
             <Pressable
-              onPress={() => void PlayerService.next()}
-              hitSlop={12}
+              onPress={handleNext}
+              hitSlop={10}
+              accessibilityRole="button"
               accessibilityLabel="Next track"
             >
               <Ionicons
                 name="play-skip-forward"
-                size={moderateScale(32)}
+                size={moderateScale(28)}
                 color="#FFFFFF"
               />
             </Pressable>
+
+            <Pressable
+              onPress={handleRepeat}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel={
+                repeatMode === "track"
+                  ? "Repeat track"
+                  : repeatMode === "queue"
+                    ? "Repeat queue"
+                    : "Repeat off"
+              }
+              accessibilityState={{
+                selected: repeatMode !== "off",
+              }}
+            >
+              <View style={styles.repeatIcon}>
+                <Ionicons
+                  name="repeat"
+                  size={moderateScale(22)}
+                  color={repeatMode !== "off" ? "#B66BDD" : "#888888"}
+                />
+
+                {repeatMode === "track" && (
+                  <Text style={styles.repeatOne}>1</Text>
+                )}
+              </View>
+            </Pressable>
           </View>
 
+          {/* Collapse player */}
           <Pressable
             onPress={toggleExpanded}
             style={styles.collapseButton}
+            accessibilityRole="button"
             accessibilityLabel="Collapse player"
           >
             <Ionicons
@@ -223,98 +335,126 @@ export default function PlayerDock() {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#171717",
-
     overflow: "hidden",
     marginHorizontal: moderateScale(0),
   },
+
   compactArea: {
     height: moderateScale(34),
     justifyContent: "center",
     paddingHorizontal: moderateScale(14),
   },
+
   progressTrack: {
     height: moderateScale(3),
     backgroundColor: "#414141",
     borderRadius: moderateScale(3),
     overflow: "hidden",
   },
+
   progressFill: {
     height: "100%",
     backgroundColor: "#B66BDD",
   },
+
   compactTimes: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginTop: moderateScale(3),
   },
+
   expandedContent: {
     flex: 1,
     paddingHorizontal: moderateScale(18),
     paddingTop: moderateScale(12),
     paddingBottom: moderateScale(6),
   },
+
   header: {
     flexDirection: "row",
     alignItems: "center",
     gap: moderateScale(12),
   },
+
   artwork: {
     width: moderateScale(76),
     height: moderateScale(76),
     borderRadius: moderateScale(10),
   },
+
   placeholder: {
     backgroundColor: "#292929",
     alignItems: "center",
     justifyContent: "center",
   },
+
   trackInfo: {
     flex: 1,
     gap: moderateScale(6),
   },
+
   title: {
     color: "#FFFFFF",
     fontSize: moderateScale(17),
     fontWeight: "700",
   },
+
   artist: {
     color: "#A3A3A3",
     fontSize: moderateScale(12),
   },
+
   slider: {
     width: "100%",
     height: moderateScale(34),
     marginTop: moderateScale(12),
   },
+
   durationRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: -moderateScale(6),
   },
+
   time: {
     color: "#A3A3A3",
     fontSize: moderateScale(10),
     fontVariant: ["tabular-nums"],
   },
+
   controls: {
     flexDirection: "row",
-    justifyContent: "center",
+    justifyContent: "space-between",
     alignItems: "center",
-    gap: moderateScale(42),
     marginTop: moderateScale(18),
+    paddingHorizontal: moderateScale(2),
   },
+
   playButton: {
-    width: moderateScale(60),
-    height: moderateScale(60),
-    borderRadius: moderateScale(30),
+    width: moderateScale(54),
+    height: moderateScale(54),
+    borderRadius: moderateScale(27),
     backgroundColor: "#FFFFFF",
     justifyContent: "center",
     alignItems: "center",
   },
+
+  repeatIcon: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  repeatOne: {
+    position: "absolute",
+    color: "#B66BDD",
+    fontSize: moderateScale(9),
+    fontWeight: "700",
+  },
+
   collapseButton: {
     alignSelf: "center",
     padding: moderateScale(5),
-    marginTop: moderateScale(6),
+    marginTop: moderateScale(4),
   },
 });

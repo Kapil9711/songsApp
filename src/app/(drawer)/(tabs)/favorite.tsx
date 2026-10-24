@@ -1,4 +1,5 @@
 import { Container } from "@/components/container";
+import Loading from "@/components/loading";
 import { SongSmallCard } from "@/components/songs/songSmalCard";
 import { api } from "@/config/network/api.config";
 import { endpoints } from "@/config/network/endpoints";
@@ -17,33 +18,44 @@ export default function HomeScreen() {
   const [active, setActive] = useState("my");
   const r = useResponsive();
   const styles = useStyles();
-  const { data: favoriteData } = useFavoriteQuery();
-  const { data: friends } = useFriendQuery();
+
+  const { data: favoriteData, isLoading: isLoadingFavorite } =
+    useFavoriteQuery();
+  const { data: friends, isLoading: isLoadingFriends } = useFriendQuery();
+
   const activeMediaId = usePlayerStore((state) => state.activeTrack?.mediaId);
 
   const RenderItem = useCallback(
-    ({ item, index }: any) => (
-      <Pressable
-        style={({ pressed }) => [
-          styles.songItem,
-          pressed && styles.songItemPressed,
-        ]}
-      >
-        <SongSmallCard
-          isActive={activeMediaId === item?.id}
-          title={item?.name ?? ""}
-          image={item?.image?.[2]?.url}
-          number={index + 1}
-          song={item}
-          onPress={() => handleSongPlay(index, favoriteData?.songListForPlayer)}
-        />
-      </Pressable>
-    ),
+    ({ item, index }: any) => {
+      const isActive = activeMediaId == item?.id;
+
+      return (
+        <Pressable
+          style={({ pressed }) => [
+            styles.songItem,
+            pressed && styles.songItemPressed,
+          ]}
+        >
+          <SongSmallCard
+            isActive={isActive}
+            title={item?.name ?? ""}
+            image={item?.image?.[2]?.url}
+            number={index + 1}
+            song={item}
+            onPress={() =>
+              handleSongPlay(index, favoriteData?.songListForPlayer)
+            }
+          />
+        </Pressable>
+      );
+    },
     [activeMediaId, favoriteData?.songListForPlayer],
   );
 
   return (
     <Container style={{ maxWidth: "100%" }}>
+      <Loading loading={isLoadingFavorite || isLoadingFriends} />
+
       <View style={[styles.container]}>
         {/* ============================================================ */}
         {/* HEADER                                                        */}
@@ -623,16 +635,18 @@ export const useFavoriteQuery = () => {
       if (!data?.success || !Array.isArray(data.favorite)) {
         return { favorite: [], songListForPlayer: [] };
       }
+      // const favorite = data?.favorite?.map((item: any) => {
+      //   return { ...item, id: item?._id };
+      // });
       const songListForPlayer: any = convertSongListToPlayerList(
         data?.favorite,
       );
       return {
-        favorite: data?.favorite?.map((item: any) => {
-          return { ...item, id: item?._id };
-        }),
+        favorite: data?.favorite,
         songListForPlayer,
       };
     },
+    staleTime: 0,
   });
 };
 

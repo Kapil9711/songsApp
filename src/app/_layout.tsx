@@ -1,4 +1,3 @@
-import Loading from "@/components/loading";
 import PlayerBootstrap from "@/components/player/player.bootstrap";
 import { PlayerForegroundSync } from "@/components/player/player.foregroundSync";
 import SplashScreen from "@/components/splashScreen";
@@ -44,8 +43,6 @@ const RootStack = () => {
     <View style={[Theme.styles.Bg, { flex: 1 }]}>
       <PlayerBootstrap />
       <PlayerForegroundSync />
-
-      <Loading />
 
       <StatusBar barStyle="dark-content" />
       <Stack
