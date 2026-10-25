@@ -1,11 +1,11 @@
 import { useTheme } from "@/themes/theme.context";
 import { useEffect, useRef } from "react";
-import { Animated, Easing, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, StyleSheet, View } from "react-native";
 import { useResponsiveStyles } from "react-native-fluid-styles";
 
 type LoadingProps = {
   title?: string;
-  isLoading?: boolean;
+  loading: boolean;
 };
 
 const BAR_COUNT = 5;
@@ -13,12 +13,10 @@ const BAR_HEIGHTS = [18, 34, 24, 42, 20];
 
 export default function Loading({
   loading,
-  title,
-}: {
-  loading: boolean;
-  title?: string;
-}) {
+  title = "Loading...",
+}: LoadingProps) {
   const styles = useStyles();
+
   const progress = useRef(
     Array.from({ length: BAR_COUNT }, () => new Animated.Value(0)),
   ).current;
@@ -29,6 +27,7 @@ export default function Loading({
         value.stopAnimation();
         value.setValue(0);
       });
+
       return;
     }
 
@@ -36,12 +35,14 @@ export default function Loading({
       Animated.loop(
         Animated.sequence([
           Animated.delay(index * 100),
+
           Animated.timing(value, {
             toValue: 1,
             duration: 350 + (index % 2) * 100,
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
+
           Animated.timing(value, {
             toValue: 0,
             duration: 350 + (index % 2) * 100,
@@ -91,10 +92,10 @@ export default function Loading({
           ))}
         </View>
 
-        <Text style={styles.title}>{title}</Text>
+        {/* <Text style={styles.title}>{title}</Text> */}
 
         {/* <View style={styles.progressTrack}>
-          <Animated.View style={styles.progressGlow} />
+          <View style={styles.progressIndicator} />
         </View> */}
       </View>
     </View>
@@ -111,7 +112,8 @@ const useStyles = () => {
       elevation: 10000,
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: "rgba(0, 0, 0, 0.62)",
+      backgroundColor: Theme.colors.background,
+      opacity: 0.7,
     },
 
     card: {
@@ -121,9 +123,9 @@ const useStyles = () => {
       paddingHorizontal: r.ms(28),
       paddingVertical: r.ms(26),
       borderRadius: r.ms(22),
-      //   backgroundColor: "rgba(20, 23, 32, 0.1)",
-      //   borderWidth: StyleSheet.hairlineWidth,
-      //   borderColor: "rgba(197, 255, 74, 0.24)",
+      // backgroundColor: Theme.styles.Card.backgroundColor,
+      // borderWidth: StyleSheet.hairlineWidth,
+      // borderColor: Theme.styles.Card.borderColor,
       gap: r.ms(18),
     },
 
@@ -138,7 +140,7 @@ const useStyles = () => {
     bar: {
       width: r.ms(5),
       borderRadius: r.ms(5),
-      backgroundColor: "#C5FF4A",
+      backgroundColor: Theme.colors.primary,
     },
 
     title: {
@@ -153,14 +155,14 @@ const useStyles = () => {
       height: r.ms(3),
       borderRadius: r.ms(3),
       overflow: "hidden",
-      backgroundColor: "rgba(255,255,255,0.10)",
+      backgroundColor: Theme.styles.Card.borderColor,
     },
 
-    progressGlow: {
+    progressIndicator: {
       width: "35%",
       height: "100%",
       borderRadius: r.ms(3),
-      backgroundColor: "#C5FF4A",
+      backgroundColor: Theme.colors.primary,
     },
   }));
 };

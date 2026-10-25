@@ -2,195 +2,198 @@ import { Container } from "@/components/container";
 import Input from "@/components/input/CInput";
 import KeyboardViewWithScroll from "@/components/keyboardView/keyboardViewWithScroll";
 import { useTheme } from "@/themes/theme.context";
-import { vh } from "@/utils/vhClient";
+
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
 import { ResponsiveAPI, useResponsiveStyles } from "react-native-fluid-styles";
+
 import { LoginPayload } from "../api/api";
 import { useLoginUserMutation } from "../api/api.queries";
+
+const withOpacity = (color: string, opacity: number) => {
+  if (color.startsWith("#")) {
+    let hex = color.slice(1);
+
+    if (hex.length === 3) {
+      hex = hex
+        .split("")
+        .map((char) => char + char)
+        .join("");
+    }
+
+    if (/^[0-9a-fA-F]{6}$/.test(hex)) {
+      const r = parseInt(hex.slice(0, 2), 16);
+      const g = parseInt(hex.slice(2, 4), 16);
+      const b = parseInt(hex.slice(4, 6), 16);
+
+      return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+    }
+  }
+
+  return color;
+};
 
 const SignIn = () => {
   const { Theme } = useTheme();
   const styles = useStyles();
   const router = useRouter();
+
   const [showPassword, setShowPassword] = useState(false);
   const { control, handleSubmit } = useForm();
   const { mutate, isPending } = useLoginUserMutation();
 
   const handleLogin = async (data: any) => {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
     const { password, userId } = data;
+
     if (
       typeof password !== "string" ||
       !password.trim() ||
       typeof userId !== "string" ||
       !userId.trim()
     ) {
-      Alert.alert("Error", "Enter Your Login Details");
+      Alert.alert("Error", "Enter your login details");
       return;
     }
+
     const identifier = userId.trim();
     const payload: LoginPayload = { password };
+
     if (emailRegex.test(identifier)) {
       payload.email = identifier;
     } else {
       payload.name = identifier;
     }
-    await mutate(payload);
+
+    mutate(payload);
   };
 
   const onSubmit = (data: any) => {
-    vh.log.info("sign-in", data);
     handleLogin(data);
   };
 
   return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: Theme.colors.background,
-      }}
-    >
-      {/* Top purple glow */}
+    <View style={styles.screen}>
+      {/* Theme-based ambient glow */}
       <LinearGradient
         colors={[
-          "rgba(168,85,247,0.22)",
-          "rgba(168,85,247,0.08)",
+          withOpacity(Theme.colors.primary, 0.18),
+          withOpacity(Theme.colors.primary, 0.06),
           "transparent",
         ]}
         start={{ x: 1, y: 0 }}
         end={{ x: 0.25, y: 0.7 }}
-        style={{
-          position: "absolute",
-          top: 0,
-          right: 0,
-          width: "100%",
-          height: "55%",
-        }}
+        style={styles.topGlow}
         pointerEvents="none"
       />
 
-      {/* Bottom purple glow */}
       <LinearGradient
         colors={[
           "transparent",
-          "rgba(168,85,247,0.04)",
-          "rgba(168,85,247,0.12)",
+          withOpacity(Theme.colors.primary, 0.04),
+          withOpacity(Theme.colors.primary, 0.12),
         ]}
         start={{ x: 0.8, y: 0.2 }}
         end={{ x: 0, y: 1 }}
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          width: "80%",
-          height: "45%",
-        }}
+        style={styles.bottomGlow}
         pointerEvents="none"
       />
 
       <KeyboardViewWithScroll>
         <Container>
-          <View style={{ flex: 1 }}>
-            <View style={styles.content}>
-              {/* Header */}
-              <View style={styles.header}>
-                <Text style={styles.title}>
-                  Welcome back
-                  <Text style={styles.dot}>.</Text>
-                </Text>
+          <View style={styles.content}>
+            <View style={styles.header}>
+              <Text style={styles.title}>
+                Welcome back
+                <Text style={styles.dot}>.</Text>
+              </Text>
 
-                <Text style={styles.subtitle}>
-                  Login to continue listening to your favorite music.
-                </Text>
+              <Text style={styles.subtitle}>
+                Login to continue listening to your favorite music.
+              </Text>
+            </View>
+
+            <View style={styles.form}>
+              <View style={styles.field}>
+                <Text style={styles.label}>Email or username</Text>
+
+                <Input
+                  name="userId"
+                  control={control}
+                  placeholder="Email or username"
+                  rules={{ required: "Email or username is required" }}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="email-address"
+                  style={styles.input}
+                />
               </View>
 
-              {/* Form */}
-              <View style={styles.form}>
-                <View style={styles.field}>
-                  <Text style={styles.label}>Email</Text>
+              <View style={styles.field}>
+                <View style={styles.passwordHeader}>
+                  <Text style={styles.label}>Password</Text>
 
-                  <Input
-                    name="userId"
-                    control={control}
-                    placeholder="Email"
-                    rules={{ required: "Email is required" }}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    keyboardType="email-address"
-                    style={styles.input}
-                  />
+                  <Pressable
+                    onPress={() => setShowPassword((prev) => !prev)}
+                    hitSlop={10}
+                  >
+                    <Text style={styles.showPassword}>
+                      {showPassword ? "Hide" : "Show"}
+                    </Text>
+                  </Pressable>
                 </View>
 
-                <View style={styles.field}>
-                  <View style={styles.passwordHeader}>
-                    <Text style={styles.label}>Password</Text>
+                <Input
+                  name="password"
+                  control={control}
+                  placeholder="Password"
+                  rules={{ required: "Password is required" }}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  style={styles.input}
+                  secureTextEntry={!showPassword}
+                />
+              </View>
 
-                    {/* <Pressable onPress={() => {}}>
-                  <Text style={styles.forgotPassword}>Forgot password?</Text>
-                </Pressable> */}
-                    <Pressable
-                      onPress={() => setShowPassword((prev) => !prev)}
-                      hitSlop={10}
-                    >
-                      <Text style={styles.showPassword}>
-                        {showPassword ? "Hide" : "Show"}
-                      </Text>
-                    </Pressable>
-                  </View>
-
-                  <Input
-                    name="password"
-                    control={control}
-                    placeholder="Password"
-                    rules={{ required: "Email is required" }}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    style={styles.input}
-                    secureTextEntry={!showPassword}
+              <Pressable
+                disabled={isPending}
+                onPress={handleSubmit(onSubmit) as any}
+                style={({ pressed }) => [
+                  styles.loginButton,
+                  isPending && styles.loginButtonDisabled,
+                  pressed && !isPending && styles.buttonPressed,
+                ]}
+              >
+                {isPending ? (
+                  <ActivityIndicator
+                    size="small"
+                    color={Theme.colors.background}
                   />
-                </View>
+                ) : (
+                  <Text style={styles.loginButtonText}>Login</Text>
+                )}
+              </Pressable>
+            </View>
 
-                <Pressable
-                  disabled={isPending}
-                  onPress={handleSubmit(onSubmit) as any}
-                  style={[
-                    styles.loginButton,
-                    isPending && styles.loginButtonDisabled,
-                  ]}
-                >
-                  {isPending ? (
-                    <ActivityIndicator size={"small"} />
-                  ) : (
-                    <Text style={styles.loginButtonText}>Login</Text>
-                  )}
-                </Pressable>
-              </View>
+            <View style={styles.dividerContainer}>
+              <View style={styles.divider} />
+              <Text style={styles.orText}>or</Text>
+              <View style={styles.divider} />
+            </View>
 
-              {/* Divider */}
-              <View style={styles.dividerContainer}>
-                <View style={styles.divider} />
+            <View style={styles.signupContainer}>
+              <Text style={styles.signupText}>Don't have an account? </Text>
 
-                <Text style={styles.orText}>or</Text>
-
-                <View style={styles.divider} />
-              </View>
-
-              {/* Signup */}
-              <View style={styles.signupContainer}>
-                <Text style={styles.signupText}>Don't have an account? </Text>
-
-                <Pressable
-                  onPress={() => {
-                    router.push("/(auth)/sign-up" as any);
-                  }}
-                >
-                  <Text style={styles.signupButton}>Sign up</Text>
-                </Pressable>
-              </View>
+              <Pressable
+                onPress={() => router.push("/(auth)/sign-up" as any)}
+                hitSlop={8}
+              >
+                <Text style={styles.signupButton}>Sign up</Text>
+              </Pressable>
             </View>
           </View>
         </Container>
@@ -203,174 +206,154 @@ export default SignIn;
 
 const useStyles = () => {
   const { Theme } = useTheme();
-  return useResponsiveStyles((r: ResponsiveAPI) => {
-    return {
-      container: {
-        flex: 1,
-        backgroundColor: Theme?.colors?.background,
-      },
 
-      content: {
-        flex: 1,
-        justifyContent: "center",
-        paddingHorizontal: 24,
-      },
+  return useResponsiveStyles((_r: ResponsiveAPI) => ({
+    screen: {
+      flex: 1,
+      backgroundColor: Theme.colors.background,
+    },
 
-      header: {
-        marginBottom: 36,
-      },
+    topGlow: {
+      position: "absolute",
+      top: 0,
+      right: 0,
+      width: "100%",
+      height: "55%",
+    },
 
-      title: {
-        fontSize: 32,
-        fontWeight: "700",
-        color: Theme?.colors?.text,
-        marginBottom: 10,
-      },
+    bottomGlow: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      width: "80%",
+      height: "45%",
+    },
 
-      dot: {
-        color: Theme?.colors?.primary,
-      },
+    content: {
+      flex: 1,
+      justifyContent: "center",
+      paddingHorizontal: 24,
+      paddingVertical: 24,
+    },
 
-      subtitle: {
-        fontSize: 15,
-        lineHeight: 22,
-        color: Theme?.colors?.text,
-      },
+    header: {
+      marginBottom: 32,
+    },
 
-      form: {
-        gap: 20,
-      },
+    title: {
+      fontSize: 32,
+      fontWeight: "700",
+      color: Theme.colors.text,
+      marginBottom: 10,
+    },
 
-      field: {
-        gap: 8,
-      },
+    dot: {
+      color: Theme.colors.primary,
+    },
 
-      label: {
-        fontSize: 13,
-        fontWeight: "600",
-        color: Theme.colors.text,
-      },
+    subtitle: {
+      fontSize: 15,
+      lineHeight: 22,
+      color: withOpacity(Theme.colors.text, 0.72),
+    },
 
-      inputContainer: {
-        height: 56,
+    form: {
+      gap: 20,
+    },
 
-        flexDirection: "row",
-        alignItems: "center",
+    field: {
+      gap: 8,
+    },
 
-        backgroundColor: Theme.colors.background,
+    label: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: Theme.colors.text,
+    },
 
-        borderWidth: 1,
-        borderColor: Theme.colors.primary,
+    input: {
+      flex: 1,
+      fontSize: 15,
+      color: Theme.colors.background,
+      paddingVertical: 0,
+    },
 
-        borderRadius: 16,
+    passwordHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
 
-        paddingHorizontal: 16,
-      },
+    showPassword: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: Theme.colors.primary,
+      marginLeft: 10,
+    },
 
-      input: {
-        flex: 1,
-        fontSize: 15,
-        color: Theme.colors.text,
-        paddingVertical: 0,
-      },
+    loginButton: {
+      minHeight: 54,
+      borderRadius: 16,
+      backgroundColor: Theme.colors.primary,
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 4,
+      shadowColor: Theme.colors.primary,
+      shadowOffset: { width: 0, height: 5 },
+      shadowOpacity: 0.22,
+      shadowRadius: 8,
+      elevation: 4,
+    },
 
-      passwordHeader: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-      },
+    loginButtonDisabled: {
+      backgroundColor: Theme.colors.secondary,
+      shadowOpacity: 0,
+      elevation: 0,
+    },
 
-      forgotPassword: {
-        fontSize: 13,
-        fontWeight: "600",
-        color: Theme.colors.primary,
-      },
+    buttonPressed: {
+      opacity: 0.85,
+    },
 
-      showPassword: {
-        fontSize: 13,
-        fontWeight: "600",
-        color: Theme.colors.primary,
+    loginButtonText: {
+      fontSize: 15,
+      fontWeight: "700",
+      color: Theme.colors.background,
+    },
 
-        marginLeft: 10,
-      },
+    dividerContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginVertical: 28,
+    },
 
-      loginButton: {
-        height: 56,
+    divider: {
+      flex: 1,
+      height: 1,
+      backgroundColor: Theme.colors.accent,
+    },
 
-        borderRadius: 16,
+    orText: {
+      fontSize: 13,
+      color: withOpacity(Theme.colors.text, 0.65),
+      marginHorizontal: 14,
+    },
 
-        backgroundColor: Theme.colors.primary,
+    signupContainer: {
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
+    },
 
-        alignItems: "center",
-        justifyContent: "center",
+    signupText: {
+      fontSize: 14,
+      color: Theme.colors.text,
+    },
 
-        marginTop: 4,
-
-        shadowColor: Theme.colors.primary,
-        shadowOffset: {
-          width: 0,
-          height: 6,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 10,
-
-        elevation: 5,
-      },
-
-      loginButtonDisabled: {
-        backgroundColor: Theme.colors.secondary,
-        shadowOpacity: 0,
-        elevation: 0,
-      },
-
-      loginButtonText: {
-        fontSize: 15,
-        fontWeight: "700",
-        color: Theme.colors.background,
-      },
-
-      dividerContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-
-        marginVertical: 28,
-      },
-
-      divider: {
-        flex: 1,
-
-        height: 1,
-
-        backgroundColor: Theme.colors.accent,
-      },
-
-      orText: {
-        fontSize: 13,
-
-        color: Theme.colors.text,
-
-        marginHorizontal: 14,
-      },
-
-      signupContainer: {
-        flexDirection: "row",
-
-        justifyContent: "center",
-        alignItems: "center",
-      },
-
-      signupText: {
-        fontSize: 14,
-        color: Theme.colors.text,
-      },
-
-      signupButton: {
-        fontSize: 14,
-
-        fontWeight: "700",
-
-        color: Theme.colors.primary,
-      },
-    };
-  });
+    signupButton: {
+      fontSize: 14,
+      fontWeight: "700",
+      color: Theme.colors.primary,
+    },
+  }));
 };

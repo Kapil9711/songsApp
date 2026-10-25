@@ -1,6 +1,32 @@
 import { ImageStyle, TextStyle, ViewStyle } from "react-native";
 
-export type GeneralColors = Record<string, string>;
+// export type GeneralColors = Record<string, string>;
+
+export type GeneralColors = {
+  transparent: string;
+  black: string;
+  white: string;
+  red: string;
+  blue: string;
+  green: string;
+  orange: string;
+  purple: string;
+
+  neutral50: string;
+  neutral100: string;
+  neutral200: string;
+  neutral300: string;
+  neutral400: string;
+  neutral600: string;
+  neutral650: string;
+  neutral700: string;
+  neutral800: string;
+  neutral900: string;
+  neutral1000: string;
+  neutral1100: string;
+  neutral1200: string;
+  blue1000overlay: string;
+};
 
 export type ThemeColors = {
   text: string;

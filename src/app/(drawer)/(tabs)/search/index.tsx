@@ -2,15 +2,22 @@ import { Container } from "@/components/container";
 import NowPlayingBackground from "@/components/nowPlayingBackground";
 import { SongSmallCard } from "@/components/songs/songSmalCard";
 import { SafeSide } from "@/hooks/useInsetStyle";
-import { useSongsSearchQuery } from "@/screens/search/api/api.queries";
+import {
+  useAlbumsSearchQuery,
+  usePlaylistsSearchQuery,
+  useSongsSearchQuery,
+} from "@/screens/search/api/api.queries";
 import { usePlayerStore } from "@/store/player.store";
 import { useTheme } from "@/themes/theme.context";
 import { handleSongPlay } from "@/utils/handleSongPlay";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   Keyboard,
   Pressable,
   SectionList,
@@ -21,29 +28,142 @@ import {
 } from "react-native";
 import { useResponsive } from "react-native-fluid-styles";
 
-const CATEGORIES = ["Songs", "Albums", "Artists", "Playlists"];
-const RECENT_SEARCHES = ["The Weeknd", "Chill music", "Dua Lipa"];
+const CATEGORIES = ["All", "Songs", "Albums", "Playlists"] as const;
+
+type SearchCategory = (typeof CATEGORIES)[number];
+
 const TRENDING = ["Blinding Lights", "Levitating", "Chill Vibes"];
 
+const RECENT_SEARCHES_KEY = "@riffly/recent-searches";
+const MAX_RECENT_SEARCHES = 5;
+
+type SearchItem = {
+  id?: string | number;
+  _id?: string;
+  name?: string;
+  title?: string;
+  image?: { url?: string }[];
+  imageUrl?: string;
+  artwork?: string;
+  [key: string]: any;
+};
+
+type SearchResult =
+  | {
+      kind: "song";
+      item: SearchItem;
+    }
+  | {
+      kind: "album";
+      item: SearchItem;
+    }
+  | {
+      kind: "playlist";
+      item: SearchItem;
+    };
+
 type SearchRow =
-  | { type: "discovery"; id: string }
-  | { type: "results-header"; id: string }
-  | { type: "empty"; id: string }
-  | { type: "song"; id: string; song: any };
+  | {
+      type: "discovery";
+      id: string;
+    }
+  | {
+      type: "results-header";
+      id: string;
+    }
+  | {
+      type: "empty";
+      id: string;
+    }
+  | {
+      type: "song";
+      id: string;
+      song: SearchItem;
+    }
+  | {
+      type: "collection";
+      id: string;
+      item: SearchItem;
+      collectionType: "album" | "playlist";
+    };
+
+const getItemName = (item: SearchItem) => item.name ?? item.title ?? "Untitled";
+
+const getItemImage = (item: SearchItem) =>
+  item.image?.[2]?.url ??
+  item.image?.[1]?.url ??
+  item.image?.[0]?.url ??
+  item.imageUrl ??
+  item.artwork ??
+  undefined;
 
 export default function SearchScreen() {
   const { Theme } = useTheme();
   const styles = useStyles();
   const r = useResponsive();
+  const router = useRouter();
 
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [category, setCategory] = useState("Songs");
-  const [recentSearches, setRecentSearches] = useState(RECENT_SEARCHES);
+  const [category, setCategory] = useState<SearchCategory>("All");
+
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [recentSearchesLoaded, setRecentSearchesLoaded] = useState(false);
+
   const [isDebouncing, setIsDebouncing] = useState(false);
 
-  const inputRef = useRef(null as any);
+  const inputRef = useRef<TextInput>(null);
 
+  // Restore recent searches from AsyncStorage.
+  useEffect(() => {
+    let mounted = true;
+
+    const loadRecentSearches = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(RECENT_SEARCHES_KEY);
+
+        if (mounted && stored) {
+          const parsed: unknown = JSON.parse(stored);
+
+          if (Array.isArray(parsed)) {
+            const validSearches = parsed.filter(
+              (value): value is string => typeof value === "string",
+            );
+
+            setRecentSearches(validSearches.slice(0, MAX_RECENT_SEARCHES));
+          }
+        }
+      } catch (error) {
+        console.warn("Failed to load recent searches", error);
+      } finally {
+        if (mounted) {
+          setRecentSearchesLoaded(true);
+        }
+      }
+    };
+
+    void loadRecentSearches();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Persist recent searches after loading the saved history.
+  useEffect(() => {
+    if (!recentSearchesLoaded) {
+      return;
+    }
+
+    AsyncStorage.setItem(
+      RECENT_SEARCHES_KEY,
+      JSON.stringify(recentSearches),
+    ).catch((error) => {
+      console.warn("Failed to save recent searches", error);
+    });
+  }, [recentSearches, recentSearchesLoaded]);
+
+  // Debounce search input.
   useEffect(() => {
     const trimmedQuery = query.trim();
 
@@ -59,10 +179,12 @@ export default function SearchScreen() {
       setIsDebouncing(false);
     }, 350);
 
-    return () => clearTimeout(timeout);
+    return () => {
+      clearTimeout(timeout);
+    };
   }, [query, debouncedQuery]);
 
-  const songsQuery = useMemo(
+  const searchParams = useMemo(
     () => ({
       limit: 10,
       query: debouncedQuery,
@@ -70,57 +192,245 @@ export default function SearchScreen() {
     [debouncedQuery],
   );
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    useSongsSearchQuery(songsQuery);
-
-  const results = useMemo(() => data?.pages.flat() ?? [], [data]);
-  const showResults = debouncedQuery.length > 0;
+  // Search APIs.
+  const songsQuery = useSongsSearchQuery(searchParams);
+  const albumsQuery = useAlbumsSearchQuery(searchParams);
+  const playlistsQuery = usePlaylistsSearchQuery(searchParams);
 
   const activeMediaId = usePlayerStore((state) => state.activeTrack?.mediaId);
 
+  const showResults = debouncedQuery.length > 0;
+
+  // Flatten paginated results.
+  const songs = useMemo(
+    () => songsQuery.data?.pages.flat() ?? [],
+    [songsQuery.data],
+  );
+
+  const albums = useMemo(
+    () => albumsQuery.data?.pages.flat() ?? [],
+    [albumsQuery.data],
+  );
+
+  const playlists = useMemo(
+    () => playlistsQuery.data?.pages.flat() ?? [],
+    [playlistsQuery.data],
+  );
+
+  // Combine songs, albums, and playlists in the All tab.
+  const mixedResults = useMemo<SearchResult[]>(
+    () => [
+      ...songs.map((item: SearchItem) => ({
+        kind: "song" as const,
+        item,
+      })),
+      ...albums.map((item: SearchItem) => ({
+        kind: "album" as const,
+        item,
+      })),
+      ...playlists.map((item: SearchItem) => ({
+        kind: "playlist" as const,
+        item,
+      })),
+    ],
+    [songs, albums, playlists],
+  );
+
+  // Select the query matching the current category.
+  const activeQuery =
+    category === "Songs"
+      ? songsQuery
+      : category === "Albums"
+        ? albumsQuery
+        : category === "Playlists"
+          ? playlistsQuery
+          : null;
+
+  // Use combined results for All and individual results for other tabs.
+  const results = useMemo<SearchResult[]>(() => {
+    if (category === "All") {
+      return mixedResults;
+    }
+
+    return (activeQuery?.data?.pages.flat() ?? []).map((item: SearchItem) => ({
+      kind:
+        category === "Albums"
+          ? ("album" as const)
+          : category === "Playlists"
+            ? ("playlist" as const)
+            : ("song" as const),
+      item,
+    }));
+  }, [category, mixedResults, activeQuery?.data]);
+
+  const anyInitialPending =
+    category === "All"
+      ? songsQuery.isPending ||
+        albumsQuery.isPending ||
+        playlistsQuery.isPending
+      : Boolean(activeQuery?.isPending);
+
+  const anyFetching =
+    category === "All"
+      ? songsQuery.isFetching ||
+        albumsQuery.isFetching ||
+        playlistsQuery.isFetching
+      : Boolean(activeQuery?.isFetching);
+
+  const isFirstPageLoading =
+    showResults &&
+    (isDebouncing ||
+      (anyInitialPending && results.length === 0) ||
+      (anyFetching && results.length === 0));
+
+  // Update the search input.
   const handleSearch = useCallback((value: string) => {
     setQuery(value);
   }, []);
 
-  const selectSearch = useCallback((value: string) => {
-    setQuery(value);
-    setDebouncedQuery(value.trim());
-    setIsDebouncing(false);
-    inputRef.current?.focus();
-  }, []);
+  // Save a search in recent history, keeping the newest first.
+  const rememberSearch = useCallback((value: string) => {
+    const normalized = value.trim().replace(/\s+/g, " ");
 
-  const clearSearch = useCallback(() => {
-    setQuery("");
-    setDebouncedQuery("");
-    setCategory("Songs");
-    setIsDebouncing(false);
-    inputRef.current?.focus();
-  }, []);
+    if (!normalized) {
+      return;
+    }
 
-  const rememberSearch = useCallback((name: string) => {
     setRecentSearches((previous) =>
-      [name, ...previous.filter((value) => value !== name)].slice(0, 5),
+      [
+        normalized,
+        ...previous.filter(
+          (entry) => entry.toLowerCase() !== normalized.toLowerCase(),
+        ),
+      ].slice(0, MAX_RECENT_SEARCHES),
     );
   }, []);
 
+  // Save completed searches, not each keystroke.
+  useEffect(() => {
+    if (debouncedQuery.trim() && !isDebouncing) {
+      rememberSearch(debouncedQuery);
+    }
+  }, [debouncedQuery, isDebouncing, rememberSearch]);
+
+  // Select a recent or trending search.
+  const selectSearch = useCallback(
+    (value: string) => {
+      rememberSearch(value);
+      setQuery(value);
+      setDebouncedQuery(value.trim());
+      setIsDebouncing(false);
+      (inputRef.current as any)?.focus();
+    },
+    [rememberSearch],
+  );
+
+  // Clear search input and return to discovery.
+  const clearSearch = useCallback(() => {
+    setQuery("");
+    setDebouncedQuery("");
+    setCategory("All");
+    setIsDebouncing(false);
+    (inputRef.current as any)?.focus();
+  }, []);
+
+  // Render a song result.
   const renderSong = useCallback(
-    ({ item, index }: { item: any; index: number }) => (
+    ({
+      item,
+      index,
+      songResults,
+    }: {
+      item: SearchItem;
+      index: number;
+      songResults: SearchItem[];
+    }) => (
       <SongSmallCard
         isActive={activeMediaId === item.id}
-        title={item.name}
-        image={item?.image?.[2]?.url}
+        title={getItemName(item)}
+        image={getItemImage(item) as any}
         number={index + 1}
         song={item}
         onPress={() => {
           Keyboard.dismiss();
-          rememberSearch(item.name);
-          handleSongPlay(index, results, true);
+
+          rememberSearch(debouncedQuery || getItemName(item));
+
+          void handleSongPlay(index, songResults, true);
         }}
       />
     ),
-    [activeMediaId, rememberSearch, results],
+    [activeMediaId, debouncedQuery, rememberSearch],
   );
 
+  // Render an album or playlist result.
+  const renderCollection = useCallback(
+    ({
+      item,
+      index,
+      collectionType,
+    }: {
+      item: SearchItem;
+      index: number;
+      collectionType: "album" | "playlist";
+    }) => {
+      const name = getItemName(item);
+      const image = getItemImage(item);
+      const id = item.id ?? item._id;
+      const isAlbum = collectionType === "album";
+
+      return (
+        <Pressable
+          onPress={() => {
+            rememberSearch(debouncedQuery || name);
+
+            router.push({
+              pathname: "/(drawer)/(tabs)/search/song",
+              params: {
+                id,
+                isAlbum: isAlbum ? 1 : 0,
+              },
+            });
+          }}
+        >
+          <View style={styles.collectionRow}>
+            <View style={styles.collectionArtwork}>
+              {image ? (
+                <Image
+                  source={{ uri: image }}
+                  style={styles.collectionImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Ionicons
+                  name={isAlbum ? "disc-outline" : "list-outline"}
+                  size={r.ms(25)}
+                  color={Theme.colors.primary}
+                />
+              )}
+            </View>
+
+            <View style={styles.collectionInfo}>
+              <Text numberOfLines={1} style={styles.collectionTitle}>
+                {name}
+              </Text>
+
+              <Text numberOfLines={1} style={styles.collectionSubtitle}>
+                {isAlbum ? "Album" : "Playlist"}
+              </Text>
+            </View>
+
+            <Text style={styles.collectionNumber}>
+              {String(index + 1).padStart(2, "0")}
+            </Text>
+          </View>
+        </Pressable>
+      );
+    },
+    [styles, r, Theme, router, rememberSearch, debouncedQuery],
+  );
+
+  // Discovery screen: recent and trending searches.
   const renderDiscovery = useCallback(
     () => (
       <View style={styles.discoveryContent}>
@@ -170,6 +480,7 @@ export default function SearchScreen() {
               size={r.ms(15)}
               color={Theme.colors.primary}
             />
+
             <Text style={styles.sectionTitle}>TRENDING SEARCHES</Text>
           </View>
         </View>
@@ -207,6 +518,7 @@ export default function SearchScreen() {
             size={r.ms(16)}
             color={Theme.colors.primary}
           />
+
           <Text style={styles.footerText}>Your next favorite is waiting.</Text>
         </View>
       </View>
@@ -214,12 +526,15 @@ export default function SearchScreen() {
     [recentSearches, selectSearch, styles, r, Theme],
   );
 
+  // Results section header.
   const renderResultsHeader = useCallback(
     () => (
       <View style={styles.resultsHeader}>
         <View>
           <Text style={styles.resultsTitle}>
-            {isDebouncing ? "Finding your sound..." : "Search results"}
+            {isDebouncing
+              ? "Finding your sound..."
+              : `Search ${category.toLowerCase()}`}
           </Text>
 
           <Text style={styles.resultsSubtitle}>
@@ -231,70 +546,137 @@ export default function SearchScreen() {
           </Text>
         </View>
 
-        {isDebouncing && (
+        {(isDebouncing || isFirstPageLoading) && (
           <ActivityIndicator color={Theme.colors.primary} size="small" />
         )}
       </View>
     ),
-    [isDebouncing, results.length, styles, Theme],
+    [category, isDebouncing, isFirstPageLoading, results.length, styles, Theme],
   );
 
+  // Empty and loading states.
   const renderEmptyResults = useCallback(
     () => (
       <View style={styles.emptyState}>
-        <View style={styles.emptyIcon}>
-          <Ionicons
-            name="search-outline"
-            size={r.ms(30)}
-            color={Theme.colors.primary}
-          />
-        </View>
+        {isFirstPageLoading ? (
+          <>
+            <ActivityIndicator size="large" color={Theme.colors.primary} />
 
-        <Text style={styles.emptyTitle}>No sounds found</Text>
+            <Text style={styles.emptyTitle}>
+              Loading {category.toLowerCase()}...
+            </Text>
 
-        <Text style={styles.emptyDescription}>
-          We couldn't find anything for "{debouncedQuery}". Try another song,
-          artist, or album.
-        </Text>
+            <Text style={styles.emptyDescription}>
+              Please wait while we find your results.
+            </Text>
+          </>
+        ) : (
+          <>
+            <View style={styles.emptyIcon}>
+              <Ionicons
+                name="search-outline"
+                size={r.ms(30)}
+                color={Theme.colors.primary}
+              />
+            </View>
 
-        <Pressable
-          onPress={clearSearch}
-          style={({ pressed }) => [
-            styles.resetButton,
-            pressed && styles.pressed,
-          ]}
-        >
-          <Text style={styles.resetButtonText}>Explore music</Text>
-        </Pressable>
+            <Text style={styles.emptyTitle}>No results found</Text>
+
+            <Text style={styles.emptyDescription}>
+              We couldn't find {category.toLowerCase()} for
+              {' "'}
+              {debouncedQuery}
+              {'". '}
+              Try another search.
+            </Text>
+
+            <Pressable
+              onPress={clearSearch}
+              style={({ pressed }) => [
+                styles.resetButton,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text style={styles.resetButtonText}>Explore music</Text>
+            </Pressable>
+          </>
+        )}
       </View>
     ),
-    [debouncedQuery, clearSearch, styles, r, Theme],
+    [
+      isFirstPageLoading,
+      category,
+      Theme,
+      debouncedQuery,
+      clearSearch,
+      styles,
+      r,
+    ],
   );
 
+  // Build rows for SectionList.
   const rows = useMemo<SearchRow[]>(() => {
     if (!showResults) {
-      return [{ type: "discovery", id: "discovery" }];
+      return [
+        {
+          type: "discovery",
+          id: "discovery",
+        },
+      ];
     }
 
     const searchRows: SearchRow[] = [
-      { type: "results-header", id: "results-header" },
+      {
+        type: "results-header",
+        id: "results-header",
+      },
     ];
+
+    if (isFirstPageLoading && results.length === 0) {
+      searchRows.push({
+        type: "empty",
+        id: "loading",
+      });
+
+      return searchRows;
+    }
 
     if (results.length > 0) {
       searchRows.push(
-        ...results.map((song: any) => ({
-          type: "song" as const,
-          id: String(song.id ?? song._id ?? song.name),
-          song,
-        })),
+        ...results.map((result, index) => {
+          const item = result.item;
+
+          const id = String(
+            item.id ?? item._id ?? `${getItemName(item)}-${index}`,
+          );
+
+          if (result.kind === "song") {
+            return {
+              type: "song" as const,
+              id: `song-${id}`,
+              song: item,
+            };
+          }
+
+          return {
+            type: "collection" as const,
+            id: `${result.kind}-${id}`,
+            item,
+            collectionType: result.kind,
+          };
+        }),
       );
-    } else if (!isDebouncing && !isLoading) {
-      searchRows.push({ type: "empty", id: "empty" });
+    } else if (!anyFetching) {
+      searchRows.push({
+        type: "empty",
+        id: "empty",
+      });
     }
 
     return searchRows;
-  }, [showResults, results, isDebouncing, isLoading]);
+  }, [showResults, results, isFirstPageLoading, anyFetching]);
 
+  // Render each row type.
   const renderRow = useCallback(
     ({ item, index }: { item: SearchRow; index: number }) => {
       switch (item.type) {
@@ -308,29 +690,46 @@ export default function SearchScreen() {
           return renderEmptyResults();
 
         case "song": {
-          const songIndex = rows
-            .slice(1, index)
-            .filter((row) => row.type === "song").length;
+          const songRows = rows.filter(
+            (row): row is Extract<SearchRow, { type: "song" }> =>
+              row.type === "song",
+          );
+
+          const songIndex = songRows.findIndex((row) => row.id === item.id);
+
+          const songResults = songRows.map((row) => row.song);
 
           return renderSong({
             item: item.song,
-            index: songIndex,
+            index: Math.max(songIndex, 0),
+            songResults,
           });
         }
+
+        case "collection":
+          return renderCollection({
+            item: item.item,
+            collectionType: item.collectionType,
+            index: rows
+              .slice(1, index)
+              .filter((row) => row.type === "collection").length,
+          });
 
         default:
           return null;
       }
     },
     [
+      rows,
       renderDiscovery,
       renderResultsHeader,
       renderEmptyResults,
       renderSong,
-      rows,
+      renderCollection,
     ],
   );
 
+  // Search bar and category tabs.
   const renderStickyHeader = useCallback(
     () => (
       <View style={styles.stickyArea}>
@@ -342,7 +741,7 @@ export default function SearchScreen() {
           />
 
           <TextInput
-            ref={inputRef}
+            ref={inputRef as any}
             value={query}
             onChangeText={handleSearch}
             placeholder="Songs, artists, albums..."
@@ -377,7 +776,7 @@ export default function SearchScreen() {
         <View style={styles.categorySection}>
           <FlatList
             horizontal
-            data={CATEGORIES}
+            data={[...CATEGORIES]}
             keyExtractor={(item) => item}
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.categoryList}
@@ -421,19 +820,62 @@ export default function SearchScreen() {
     ],
   );
 
+  // Pagination for the selected category.
+  const handleLoadMore = useCallback(() => {
+    if (!showResults) {
+      return;
+    }
+
+    if (category === "All") {
+      if (songsQuery.hasNextPage && !songsQuery.isFetching) {
+        void songsQuery.fetchNextPage();
+      }
+
+      if (albumsQuery.hasNextPage && !albumsQuery.isFetching) {
+        void albumsQuery.fetchNextPage();
+      }
+
+      if (playlistsQuery.hasNextPage && !playlistsQuery.isFetching) {
+        void playlistsQuery.fetchNextPage();
+      }
+
+      return;
+    }
+
+    if (activeQuery?.hasNextPage && !activeQuery.isFetching) {
+      void activeQuery.fetchNextPage();
+    }
+  }, [
+    showResults,
+    category,
+    songsQuery,
+    albumsQuery,
+    playlistsQuery,
+    activeQuery,
+  ]);
+
   return (
     <Container
       style={{
         maxWidth: "100%",
         backgroundColor: Theme.colors.background,
       }}
-      insetStyle={{ ...SafeSide, bottom: false }}
+      insetStyle={{
+        ...SafeSide,
+        bottom: false,
+      }}
     >
       <NowPlayingBackground />
+
       <View style={styles.container}>
         <SectionList<SearchRow>
-          sections={[{ key: "search", data: rows }]}
-          keyExtractor={(item, index) => item.id + index}
+          sections={[
+            {
+              key: "search",
+              data: rows,
+            },
+          ]}
+          keyExtractor={(item, index) => `${item.id}-${index}`}
           renderItem={renderRow}
           renderSectionHeader={renderStickyHeader}
           stickySectionHeadersEnabled
@@ -441,6 +883,7 @@ export default function SearchScreen() {
             <View style={styles.header}>
               <View style={styles.headingRow}>
                 <Text style={styles.heading}>Search</Text>
+
                 <View style={styles.titleDot} />
               </View>
 
@@ -450,20 +893,28 @@ export default function SearchScreen() {
             </View>
           }
           ListFooterComponent={
-            showResults && isFetchingNextPage ? (
+            category === "All" ? (
+              songsQuery.isFetchingNextPage ||
+              albumsQuery.isFetchingNextPage ||
+              playlistsQuery.isFetchingNextPage ? (
+                <View style={styles.listFooter}>
+                  <ActivityIndicator color={Theme.colors.primary} />
+
+                  <Text style={styles.footerLoadingText}>Loading more...</Text>
+                </View>
+              ) : null
+            ) : activeQuery?.isFetchingNextPage ? (
               <View style={styles.listFooter}>
                 <ActivityIndicator color={Theme.colors.primary} />
+
+                <Text style={styles.footerLoadingText}>Loading more...</Text>
               </View>
             ) : (
               (null as any)
             )
           }
           onScrollBeginDrag={Keyboard.dismiss}
-          onEndReached={() => {
-            if (showResults && hasNextPage && !isFetchingNextPage) {
-              fetchNextPage();
-            }
-          }}
+          onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -475,6 +926,7 @@ export default function SearchScreen() {
             activeMediaId,
             category,
             isDebouncing,
+            isFirstPageLoading,
           }}
         />
       </View>
@@ -492,7 +944,6 @@ const useStyles = () => {
   const border = Theme.styles.Card.borderColor;
   const cardBackground = Theme.styles.Card.backgroundColor;
 
-  // Theme-aware translucent accent surfaces.
   const primarySurface = `${primary}15`;
   const primaryBorder = `${primary}30`;
 
@@ -542,7 +993,6 @@ const useStyles = () => {
     stickyArea: {
       flexShrink: 0,
       zIndex: 10,
-      // elevation: 1,
       backgroundColor: background,
       padding: r.ms(6),
       borderRadius: r.ms(8),
@@ -749,10 +1199,17 @@ const useStyles = () => {
 
     listFooter: {
       paddingVertical: r.ms(16),
+      alignItems: "center",
+      gap: r.ms(8),
+    },
+
+    footerLoadingText: {
+      fontSize: r.ms(10),
+      color: text,
+      opacity: 0.7,
     },
 
     emptyState: {
-      flex: 1,
       minHeight: r.ms(270),
       alignItems: "center",
       justifyContent: "center",
@@ -775,6 +1232,7 @@ const useStyles = () => {
       fontSize: r.ms(17),
       fontWeight: "800",
       color: text,
+      textAlign: "center",
     },
 
     emptyDescription: {
@@ -802,6 +1260,55 @@ const useStyles = () => {
 
     pressed: {
       opacity: 0.72,
+    },
+
+    collectionRow: {
+      minHeight: r.ms(66),
+      flexDirection: "row",
+      alignItems: "center",
+      gap: r.ms(12),
+      paddingVertical: r.ms(7),
+    },
+
+    collectionArtwork: {
+      width: r.ms(52),
+      height: r.ms(52),
+      borderRadius: r.ms(10),
+      backgroundColor: cardBackground,
+      borderWidth: 1,
+      borderColor: border,
+      alignItems: "center",
+      justifyContent: "center",
+      overflow: "hidden",
+    },
+
+    collectionImage: {
+      width: "100%",
+      height: "100%",
+    },
+
+    collectionInfo: {
+      flex: 1,
+      minWidth: 0,
+      gap: r.ms(4),
+    },
+
+    collectionTitle: {
+      fontSize: r.ms(12),
+      fontWeight: "700",
+      color: text,
+    },
+
+    collectionSubtitle: {
+      fontSize: r.ms(10),
+      color: text,
+      opacity: 0.65,
+    },
+
+    collectionNumber: {
+      fontSize: r.ms(10),
+      fontWeight: "700",
+      color: primary,
     },
   });
 };

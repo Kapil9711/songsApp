@@ -30,7 +30,7 @@ export default function TabsLayout() {
       <TopTabs.Screen name="favorite" options={{ title: "Favorite" }} />
 
       {/* Uncomment when these routes are ready */}
-      {/* <TopTabs.Screen name="library" options={{ title: "Library" }} /> */}
+      <TopTabs.Screen name="library" options={{ title: "Library" }} />
       {/* <TopTabs.Screen name="profile" options={{ title: "Profile" }} /> */}
     </TopTabs>
   );

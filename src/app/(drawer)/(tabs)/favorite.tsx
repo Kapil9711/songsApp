@@ -10,7 +10,7 @@ import { useTheme } from "@/themes/theme.context";
 import { convertSongListToPlayerList } from "@/utils/convertSongListToPlayerList";
 import { handleSongPlay } from "@/utils/handleSongPlay";
 import { Ionicons } from "@expo/vector-icons";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
 import {
   FlatList,
@@ -495,10 +495,103 @@ export const useFavoriteQuery = () => {
         data.favorite,
       );
 
+      const favoriteIdMap: any = {};
+      data?.favorite?.forEach((item: any) => {
+        favoriteIdMap[item.id] = true;
+      });
+
       return {
         favorite: data.favorite,
         songListForPlayer,
+        favoriteIdMap,
       };
+    },
+  });
+};
+
+export const useAddFavoriteMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["addFavorite"],
+
+    mutationFn: async (payload: {
+      name: string;
+      id: string;
+      downloadUrl: any[];
+      image: any[];
+    }) => {
+      const { data } = await api.post(endpoints.api.favorite, payload);
+
+      return data;
+    },
+
+    onMutate: async (newFavorite) => {
+      await queryClient.cancelQueries({
+        queryKey: ["favorite"],
+      });
+
+      const previousFavorites = queryClient.getQueryData<
+        Awaited<ReturnType<typeof useFavoriteQuery>>
+      >(["favorite"]);
+
+      queryClient.setQueryData(["favorite"], (old: any) => {
+        if (!old) return old;
+
+        const favorites = old.favorite;
+
+        if (!Array.isArray(favorites)) {
+          return old;
+        }
+
+        const alreadyExists = favorites.some(
+          (item: any) => item.id === newFavorite.id,
+        );
+
+        let updatedFavorites: any[];
+
+        if (alreadyExists) {
+          // Remove the existing favorite.
+          updatedFavorites = favorites.filter(
+            (item: any) => item.id !== newFavorite.id,
+          );
+        } else {
+          // Add the new favorite.
+          updatedFavorites = [...favorites, newFavorite];
+        }
+
+        // Rebuild the player list and ID map.
+        const songListForPlayer = convertSongListToPlayerList(updatedFavorites);
+
+        const favoriteIdMap = updatedFavorites.reduce(
+          (map: Record<string, boolean>, item: any) => {
+            map[item.id] = true;
+            return map;
+          },
+          {},
+        );
+
+        return {
+          ...old,
+          favorite: updatedFavorites,
+          songListForPlayer,
+          favoriteIdMap,
+        };
+      });
+
+      return { previousFavorites };
+    },
+
+    onError: (_error, _newFavorite, context) => {
+      if (context?.previousFavorites !== undefined) {
+        queryClient.setQueryData(["favorite"], context.previousFavorites);
+      }
+    },
+
+    onSettled: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["favorite"],
+      });
     },
   });
 };

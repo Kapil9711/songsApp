@@ -29,13 +29,13 @@ const TAB_ROUTES = [
     icon: "heart-outline",
     activeIcon: "heart",
   },
-  // {
-  //   name: "library",
-  //   path: "/library",
-  //   label: "Library",
-  //   icon: "library-outline",
-  //   activeIcon: "library",
-  // },
+  {
+    name: "library",
+    path: "/library",
+    label: "Library",
+    icon: "library-outline",
+    activeIcon: "library",
+  },
   // {
   //   name: "profile",
   //   path: "/profile",

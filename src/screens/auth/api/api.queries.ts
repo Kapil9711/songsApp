@@ -15,7 +15,7 @@ export const useLoginUserMutation = () => {
         return;
       }
       setSession(data.token, data.user);
-      router.push("/(drawer)/(tabs)/home");
+      router.replace("/(drawer)/(tabs)/home");
     },
     onError: () => {
       Alert.alert("Error", "Login Failed");

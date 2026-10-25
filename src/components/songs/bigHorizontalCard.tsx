@@ -7,7 +7,7 @@ import HorizontalList from "./horizontalList";
 
 type ShowDataProps = {
   data: any;
-  heading: string;
+  heading?: string;
   type?: string;
   isTrending?: boolean;
   renderData?: any;
@@ -38,36 +38,40 @@ const ShowData = ({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.titleContainer}>
-          <View style={styles.titleIndicator} />
-          <Text numberOfLines={1} style={styles.heading}>
-            {heading}
-          </Text>
-        </View>
+        {heading ? (
+          <>
+            <View style={styles.titleContainer}>
+              <View style={styles.titleIndicator} />
+              <Text numberOfLines={1} style={styles.heading}>
+                {heading}
+              </Text>
+            </View>
 
-        {length > 0 && (
-          <Pressable
-            onPress={handleSeeMore}
-            hitSlop={10}
-            style={({ pressed }) => [
-              styles.seeMoreButton,
-              pressed && styles.seeMorePressed,
-            ]}
-          >
-            <Text style={styles.seeMoreText}>See all</Text>
-            <Ionicons
-              name="chevron-forward"
-              size={r.ms(17)}
-              color={Theme.colors.primary}
-            />
-          </Pressable>
-        )}
+            {length > 0 && (
+              <Pressable
+                onPress={handleSeeMore}
+                hitSlop={10}
+                style={({ pressed }) => [
+                  styles.seeMoreButton,
+                  pressed && styles.seeMorePressed,
+                ]}
+              >
+                <Text style={styles.seeMoreText}>See all</Text>
+                <Ionicons
+                  name="chevron-forward"
+                  size={r.ms(17)}
+                  color={Theme.colors.primary}
+                />
+              </Pressable>
+            )}
+          </>
+        ) : null}
       </View>
 
       {length > 0 ? (
         <HorizontalList data={data} type={type} renderData={renderData} />
       ) : (
-        <EmptyState heading={heading} />
+        <EmptyState heading={heading || ""} />
       )}
     </View>
   );
@@ -113,7 +117,7 @@ const useStyles = () => {
     /* Header */
 
     header: {
-      paddingHorizontal: r.ms(14),
+      paddingHorizontal: r.ms(16),
       marginBottom: r.ms(13),
       flexDirection: "row",
       alignItems: "center",

@@ -64,6 +64,7 @@ const generalColors = {
   neutral1000: "#1D1D1D",
   neutral1100: "#131313",
   neutral1200: "#030203",
+  blue1000overlay: "rgba(0, 0, 255, 0.1)",
 } satisfies GeneralColors;
 
 const themeColors: ThemeColors = {

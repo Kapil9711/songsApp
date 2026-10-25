@@ -6,11 +6,12 @@ import { FadeTop } from "@/components/topFade";
 import { api } from "@/config/network/api.config";
 import { endpoints } from "@/config/network/endpoints";
 import { SafeSide } from "@/hooks/useInsetStyle";
+import { useHomePagePlaylistQuery } from "@/screens/search/api/api.queries";
 import { useTheme } from "@/themes/theme.context";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { useResponsive } from "react-native-fluid-styles";
+import { moderateScale, useResponsive } from "react-native-fluid-styles";
 
 export default function HomeScreen() {
   const styles = useStyles();
@@ -23,6 +24,19 @@ export default function HomeScreen() {
       punjabi: data?.punjabi?.slice(0, 10),
     };
   }, [data?.haryanvi, data?.hindi, data?.punjabi]);
+  const { data: charts } = useHomePagePlaylistQuery("chart");
+  const { data: fiftys } = useHomePagePlaylistQuery("1950s");
+  const { data: sixts } = useHomePagePlaylistQuery("1960s");
+  const { data: seventys } = useHomePagePlaylistQuery("1970s");
+  const { data: eights } = useHomePagePlaylistQuery("1980s");
+  const { data: nineties } = useHomePagePlaylistQuery("1990s");
+  const { data: TwoThousands } = useHomePagePlaylistQuery("2000s");
+  const { data: romance } = useHomePagePlaylistQuery("romance");
+  const { data: chill } = useHomePagePlaylistQuery("chill");
+  const { data: sad } = useHomePagePlaylistQuery("sad");
+  const { data: party } = useHomePagePlaylistQuery("party");
+
+  // console.log(charts);
 
   return (
     <View style={[styles.container]}>
@@ -67,6 +81,142 @@ export default function HomeScreen() {
               type="song"
             />
           </View>
+
+          {/* charts */}
+          <View style={{ flex: 1, gap: 10, marginTop: moderateScale(10) }}>
+            <View style={styles.greetingContainer}>
+              <Text style={styles.greeting}>Chartbusters</Text>
+              <Text style={styles.subtitle}>Chartbusters of the year</Text>
+            </View>
+            <ShowData
+              isTrending
+              data={charts?.all}
+              renderData={charts?.all}
+              type="playlist"
+            />
+          </View>
+
+          {/* romance */}
+          <View style={{ flex: 1, gap: 10, marginTop: moderateScale(10) }}>
+            <View style={styles.greetingContainer}>
+              <Text style={styles.greeting}>Romance</Text>
+              <Text style={styles.subtitle}>Romantic Songs</Text>
+            </View>
+            <ShowData
+              isTrending
+              data={romance?.all}
+              renderData={romance?.all}
+              type="playlist"
+            />
+          </View>
+
+          {/* party */}
+          <View style={{ flex: 1, gap: 10, marginTop: moderateScale(10) }}>
+            <View style={styles.greetingContainer}>
+              <Text style={styles.greeting}>Party</Text>
+              <Text style={styles.subtitle}>Party Songs</Text>
+            </View>
+            <ShowData
+              isTrending
+              data={party?.all}
+              renderData={party?.all}
+              type="playlist"
+            />
+          </View>
+
+          {/* chill */}
+          <View style={{ flex: 1, gap: 10, marginTop: moderateScale(10) }}>
+            <View style={styles.greetingContainer}>
+              <Text style={styles.greeting}>Chill</Text>
+              <Text style={styles.subtitle}>Chill Songs</Text>
+            </View>
+            <ShowData
+              isTrending
+              data={chill?.all}
+              renderData={chill?.all}
+              type="playlist"
+            />
+          </View>
+
+          {/* sad */}
+          <View style={{ flex: 1, gap: 10, marginTop: moderateScale(10) }}>
+            <View style={styles.greetingContainer}>
+              <Text style={styles.greeting}>Sad</Text>
+              <Text style={styles.subtitle}>Sad Songs</Text>
+            </View>
+            <ShowData
+              isTrending
+              data={sad?.all}
+              renderData={sad?.all}
+              type="playlist"
+            />
+          </View>
+
+          {/* 1960s */}
+          <View style={{ flex: 1, gap: 10, marginTop: moderateScale(10) }}>
+            <View style={styles.greetingContainer}>
+              <Text style={styles.greeting}>1960s</Text>
+              <Text style={styles.subtitle}>Oldies</Text>
+            </View>
+            <ShowData
+              isTrending
+              data={sixts?.all}
+              renderData={sixts?.all}
+              type="playlist"
+            />
+          </View>
+          {/* 1970s */}
+          <View style={{ flex: 1, gap: 10, marginTop: moderateScale(10) }}>
+            <View style={styles.greetingContainer}>
+              <Text style={styles.greeting}>1970s</Text>
+              <Text style={styles.subtitle}>Oldies</Text>
+            </View>
+            <ShowData
+              isTrending
+              data={seventys?.all}
+              renderData={seventys?.all}
+              type="playlist"
+            />
+          </View>
+          {/* 1980s */}
+          <View style={{ flex: 1, gap: 10, marginTop: moderateScale(10) }}>
+            <View style={styles.greetingContainer}>
+              <Text style={styles.greeting}>1980s</Text>
+              <Text style={styles.subtitle}>Oldies</Text>
+            </View>
+            <ShowData
+              isTrending
+              data={eights?.all}
+              renderData={eights?.all}
+              type="playlist"
+            />
+          </View>
+          {/* 1990s */}
+          <View style={{ flex: 1, gap: 10, marginTop: moderateScale(10) }}>
+            <View style={styles.greetingContainer}>
+              <Text style={styles.greeting}>1990s</Text>
+              <Text style={styles.subtitle}>Oldies</Text>
+            </View>
+            <ShowData
+              isTrending
+              data={nineties?.all}
+              renderData={nineties?.all}
+              type="playlist"
+            />
+          </View>
+          {/* 2000s */}
+          <View style={{ flex: 1, gap: 10, marginTop: moderateScale(10) }}>
+            <View style={styles.greetingContainer}>
+              <Text style={styles.greeting}>2000s</Text>
+              <Text style={styles.subtitle}>Milenial</Text>
+            </View>
+            <ShowData
+              isTrending
+              data={TwoThousands?.all}
+              renderData={TwoThousands?.all}
+              type="playlist"
+            />
+          </View>
         </Container>
       </ScrollView>
     </View>
@@ -99,6 +249,7 @@ const useStyles = () => {
     container: {
       flex: 1,
       position: "relative",
+      backgroundColor: Theme.colors.background,
     },
 
     scrollContent: {},
@@ -177,7 +328,7 @@ const useStyles = () => {
     },
 
     greetingContainer: {
-      paddingHorizontal: r.ms(14),
+      paddingHorizontal: r.ms(16),
     },
 
     greeting: {

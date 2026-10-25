@@ -7,6 +7,10 @@ let initialization: Promise<void> | null = null;
 let listenersRegistered = false;
 let queueOperation: Promise<void> = Promise.resolve();
 
+// Prevent stale native events from overwriting the requested index
+// while a new queue is being installed.
+let pendingActiveIndex: number | null = null;
+
 function requireReady() {
   if (usePlayerStore.getState().status !== "ready") {
     throw new Error("Player is not ready. Initialize it before playback.");
@@ -20,13 +24,34 @@ function reportError(error: unknown, fallback: string) {
 
 function syncQueue() {
   const queue = TrackPlayer.getQueue();
-  const activeIndex = TrackPlayer.getActiveMediaItemIndex() ?? -1;
-  const activeTrack = TrackPlayer.getActiveMediaItem();
+  const nativeIndex = TrackPlayer.getActiveMediaItemIndex() ?? -1;
+  const nativeTrack: any = TrackPlayer.getActiveMediaItem();
 
   const store = usePlayerStore.getState();
+  store.setQueue(queue);
 
-  store.setQueue([...queue]);
-  store.setActiveTrack(activeTrack, activeIndex);
+  // While a new queue is loading, don't replace the intended index
+  // with a stale native index from the previous queue.
+  if (pendingActiveIndex !== null) {
+    const intendedIndex = pendingActiveIndex;
+    const intendedTrack: any = queue[intendedIndex];
+
+    if (
+      intendedTrack &&
+      nativeTrack &&
+      String(intendedTrack.mediaId ?? intendedTrack.id) ===
+        String(nativeTrack.mediaId ?? nativeTrack.id)
+    ) {
+      store.setActiveTrack(nativeTrack, nativeIndex);
+      pendingActiveIndex = null;
+    } else {
+      store.setActiveTrack(intendedTrack ?? null, intendedIndex);
+    }
+
+    return;
+  }
+
+  store.setActiveTrack(nativeTrack, nativeIndex);
 }
 
 function syncFromNative() {
@@ -54,7 +79,6 @@ function syncFromNative() {
 
 function registerListeners() {
   if (listenersRegistered) return;
-
   listenersRegistered = true;
 
   TrackPlayer.addEventListener(Event.IsPlayingChanged, ({ playing }) => {
@@ -68,17 +92,27 @@ function registerListeners() {
   });
 
   TrackPlayer.addEventListener(Event.MediaItemTransition, ({ item, index }) => {
-    usePlayerStore.getState().setActiveTrack(item, index ?? -1);
+    const nextIndex = index ?? -1;
+
+    usePlayerStore.getState().setActiveTrack(item, nextIndex);
     usePlayerProgressStore.getState().reset();
+
+    if (pendingActiveIndex !== null && nextIndex === pendingActiveIndex) {
+      pendingActiveIndex = null;
+      TrackPlayer.play();
+    }
   });
 
   TrackPlayer.addEventListener(Event.MediaMetadataChanged, () => {
-    usePlayerStore
-      .getState()
-      .setActiveTrack(
-        TrackPlayer.getActiveMediaItem(),
-        TrackPlayer.getActiveMediaItemIndex() ?? -1,
-      );
+    const activeIndex = TrackPlayer.getActiveMediaItemIndex() ?? -1;
+    const activeTrack = TrackPlayer.getActiveMediaItem();
+
+    // Ignore stale metadata updates during queue replacement.
+    if (pendingActiveIndex !== null && activeIndex !== pendingActiveIndex) {
+      return;
+    }
+
+    usePlayerStore.getState().setActiveTrack(activeTrack, activeIndex);
   });
 
   TrackPlayer.addEventListener(Event.QueueChanged, () => {
@@ -191,11 +225,8 @@ export const PlayerService = {
     requireReady();
 
     try {
-      const enabled = !TrackPlayer.isShuffleEnabled();
+      TrackPlayer.setShuffleEnabled(!TrackPlayer.isShuffleEnabled());
 
-      TrackPlayer.setShuffleEnabled(enabled);
-
-      // Read back the native state instead of assuming it changed.
       usePlayerStore.getState().setShuffled(TrackPlayer.isShuffleEnabled());
     } catch (error) {
       reportError(error, "Failed to toggle shuffle");
@@ -238,6 +269,7 @@ export const PlayerService = {
   playQueue(items: MediaItem[], startIndex = 0) {
     return enqueueQueueOperation(() => {
       if (items.length === 0) {
+        pendingActiveIndex = null;
         TrackPlayer.clear();
 
         const store = usePlayerStore.getState();
@@ -253,11 +285,48 @@ export const PlayerService = {
         Math.min(Math.floor(startIndex), items.length - 1),
       );
 
-      TrackPlayer.setMediaItems(items, index);
+      const currentQueue = TrackPlayer.getQueue();
 
-      syncQueue();
+      const isSameQueue =
+        currentQueue.length === items.length &&
+        currentQueue.every((current: any, i) => {
+          const next: any = items[i];
+
+          return (
+            String(current.mediaId ?? current.id) ===
+              String(next.mediaId ?? next.id) && current.url === next.url
+          );
+        });
+
+      if (isSameQueue) {
+        const activeIndex = TrackPlayer.getActiveMediaItemIndex() ?? -1;
+
+        if (activeIndex === index) {
+          if (!TrackPlayer.isPlaying()) {
+            TrackPlayer.play();
+          }
+          return;
+        }
+
+        pendingActiveIndex = index;
+        TrackPlayer.skipToIndex(index);
+        TrackPlayer.play();
+        return;
+      }
+
+      // Set the desired index before changing the native queue so
+      // synchronous QueueChanged events cannot flash the old index.
+      pendingActiveIndex = index;
+
+      const intendedTrack = items[index];
+      usePlayerStore.getState().setActiveTrack(intendedTrack, index);
       usePlayerProgressStore.getState().reset();
 
+      // Set the native queue once, at the requested index.
+      TrackPlayer.setMediaItems(items, index);
+
+      // Do not immediately read back the queue or active index here.
+      // Native events will synchronize the store when ready.
       TrackPlayer.play();
     });
   },
@@ -273,6 +342,7 @@ export const PlayerService = {
 
   clearQueue() {
     return enqueueQueueOperation(() => {
+      pendingActiveIndex = null;
       TrackPlayer.clear();
 
       const store = usePlayerStore.getState();

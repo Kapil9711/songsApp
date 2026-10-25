@@ -20,6 +20,13 @@ const HomeLayout = () => {
         }}
         name="song"
       />
+
+      <Stack.Screen
+        options={{
+          title: "Song",
+        }}
+        name="playlistAlbumSong"
+      />
     </Stack>
   );
 };

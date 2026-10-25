@@ -1,4 +1,10 @@
+import {
+  useAddFavoriteMutation,
+  useFavoriteQuery,
+} from "@/app/(drawer)/(tabs)/favorite";
+import { useDownloadStore } from "@/store/donwload.store";
 import { useTheme } from "@/themes/theme.context";
+import { downloadService } from "@/utils/download.service";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { memo } from "react";
@@ -12,6 +18,7 @@ type SongsSmollCardProps = {
   number: number;
   song?: any;
   isShowButton?: boolean;
+
   onPress?: () => void;
 };
 
@@ -27,6 +34,48 @@ const SongsSmollCard = ({
   const { Theme } = useTheme();
   const r = useResponsive();
   const styles = useStyles();
+  const { data: favoriteData } = useFavoriteQuery();
+  const { mutate } = useAddFavoriteMutation();
+  const isFavorite = favoriteData?.favoriteIdMap?.[song?.id];
+  const downloadSongIdMap = useDownloadStore(
+    (state) => state.downloadSongIdMap,
+  );
+  const isDownloaded = downloadSongIdMap[song?.id];
+
+  const handleAddFavorite = (song: any) => {
+    const payload = {
+      name: song?.name,
+      id: song?.id,
+      downloadUrl: song?.downloadUrl,
+      image: song?.image,
+    };
+    mutate(payload);
+  };
+
+  const handleDownload = async (song: any) => {
+    try {
+      // const payload = {
+      //   id: song.id,
+      //   name: song.name,
+      //   downloadUrl: song.downloadUrl,
+      //   image: song?.image,
+      //   artists: song?.artists,
+      // };
+      const downloadedSong = await downloadService.downloadSong(song, {
+        onProgress: (progress) => {
+          console.log(`Download progress: ${progress.toFixed(0)}%`);
+        },
+      });
+
+      console.log("Downloaded to:", downloadedSong.localUri);
+    } catch (error) {
+      console.error("Song download failed:", error);
+    }
+  };
+
+  const handleDeleteSong = () => {
+    downloadService.deleteSong(song?.id);
+  };
 
   return (
     <Pressable
@@ -109,7 +158,11 @@ const SongsSmollCard = ({
 
           <View style={styles.meta}>
             <Text numberOfLines={1} ellipsizeMode="tail" style={styles.artist}>
-              {song?.artist || song?.artists?.[0]?.name || "Unknown Artist"}
+              {song?.artists && Array.isArray(song?.artists?.primary)
+                ? song.artists?.primary
+                    ?.map((artist: any) => artist.name)
+                    .join(", ")
+                : "unknown"}
             </Text>
 
             {isActive && (
@@ -121,29 +174,35 @@ const SongsSmollCard = ({
           </View>
         </View>
 
-        {isShowButton ? (
-          <View style={styles.actions}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Favorite song"
-              onPress={(event) => event.stopPropagation()}
-              hitSlop={6}
-              style={({ pressed }) => [
-                styles.actionButton,
-                pressed && styles.actionPressed,
-              ]}
-            >
-              <Ionicons
-                name="heart-outline"
-                size={r.ms(19)}
-                color={Theme.colors.text}
-              />
-            </Pressable>
+        <View style={styles.actions}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Favorite song"
+            onPress={(event) => {
+              event.stopPropagation();
+              handleAddFavorite(song);
+            }}
+            hitSlop={6}
+            style={({ pressed }) => [
+              styles.actionButton,
+              pressed && styles.actionPressed,
+            ]}
+          >
+            <Ionicons
+              name={isFavorite ? "heart" : "heart-outline"}
+              size={r.ms(19)}
+              color={isFavorite ? Theme.colors.primary : Theme.colors.text}
+            />
+          </Pressable>
 
+          {!isDownloaded ? (
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Download song"
-              onPress={(event) => event.stopPropagation()}
+              onPress={(event) => {
+                event.stopPropagation();
+                handleDownload(song);
+              }}
               hitSlop={6}
               style={({ pressed }) => [
                 styles.actionButton,
@@ -156,26 +215,29 @@ const SongsSmollCard = ({
                 color={Theme.colors.neutral400}
               />
             </Pressable>
-          </View>
-        ) : (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Delete song"
-            onPress={(event) => event.stopPropagation()}
-            hitSlop={6}
-            style={({ pressed }) => [
-              styles.actionButton,
-              styles.deleteButton,
-              pressed && styles.actionPressed,
-            ]}
-          >
-            <Ionicons
-              name="trash-outline"
-              size={r.ms(19)}
-              color={Theme.colors.danger}
-            />
-          </Pressable>
-        )}
+          ) : (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Delete song"
+              onPress={(event) => {
+                event.stopPropagation();
+                handleDeleteSong();
+              }}
+              hitSlop={6}
+              style={({ pressed }) => [
+                styles.actionButton,
+                styles.deleteButton,
+                pressed && styles.actionPressed,
+              ]}
+            >
+              <Ionicons
+                name="trash-outline"
+                size={r.ms(19)}
+                color={Theme.colors.danger}
+              />
+            </Pressable>
+          )}
+        </View>
       </View>
     </Pressable>
   );
