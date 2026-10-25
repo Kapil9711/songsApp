@@ -1,4 +1,3 @@
-import NowPlayingBackground from "@/components/nowPlayingBackground";
 import PlayerDock from "@/components/player/components/playerDock";
 import { useTheme } from "@/themes/theme.context";
 import { Ionicons } from "@expo/vector-icons";
@@ -36,13 +35,13 @@ const TAB_ROUTES = [
     icon: "library-outline",
     activeIcon: "library",
   },
-  // {
-  //   name: "profile",
-  //   path: "/profile",
-  //   label: "Profile",
-  //   icon: "person-outline",
-  //   activeIcon: "person",
-  // },
+  {
+    name: "users",
+    path: "/users",
+    label: "Live Users",
+    icon: "person-outline",
+    activeIcon: "person",
+  },
 ] as const;
 
 export default function CustomTabBar() {

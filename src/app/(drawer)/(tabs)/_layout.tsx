@@ -31,7 +31,7 @@ export default function TabsLayout() {
 
       {/* Uncomment when these routes are ready */}
       <TopTabs.Screen name="library" options={{ title: "Library" }} />
-      {/* <TopTabs.Screen name="profile" options={{ title: "Profile" }} /> */}
+      <TopTabs.Screen name="users" options={{ title: "Live Users" }} />
     </TopTabs>
   );
 }
