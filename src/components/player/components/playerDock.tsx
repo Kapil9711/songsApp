@@ -88,6 +88,7 @@ export default function PlayerDock({
 
   const activeTrack = usePlayerStore((state) => state.activeTrack);
   const storedQueue = usePlayerStore((state) => state.queue);
+
   const activeMediaId = usePlayerStore((state) => state.activeTrack?.mediaId);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const isShuffled = usePlayerStore((state) => state.isShuffled);
@@ -452,7 +453,7 @@ export default function PlayerDock({
 
   const handleQueueSongPress = useCallback(
     (index: number) => {
-      handleSongPlay(index, songListForPlayer);
+      handleSongPlay(index, songListForPlayer, true);
     },
     [songListForPlayer],
   );

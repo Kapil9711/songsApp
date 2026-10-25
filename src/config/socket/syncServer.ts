@@ -1,36 +1,43 @@
-// config/socket/syncServer.ts
+// src/config/socket/syncServer.ts
 
 import { io, Socket } from "socket.io-client";
 
 const SOCKET_URL = "http://10.95.249.59:5001";
 
+// --------------------------------------------------
+// TYPES
+// --------------------------------------------------
+
 export type SyncSong = {
   id: string;
   title: string;
   artist?: string;
-  artwork?: string;
+  artworkUrl?: string;
   url?: string;
 };
 
 export type PlayerCommand =
   | { type: "PLAY" }
   | { type: "PAUSE" }
-  | { type: "NEXT" }
-  | { type: "PREVIOUS" }
   | { type: "SEEK"; position: number }
   | { type: "PLAY_SONG"; song: SyncSong };
 
 export type GroupMembersPayload = {
-  groupId: string;
+  groupId: string | null;
   users: string[];
 };
 
 export type PlayerCommandPayload = {
-  commandId?: string;
+  commandId: string;
   groupId: string;
   senderId: string;
   command: PlayerCommand;
   issuedAt: number;
+};
+
+export type PlaybackControllerPayload = {
+  groupId: string;
+  controllerId: string | null;
 };
 
 export type SyncRequestPayload = {
@@ -47,7 +54,9 @@ export type SyncAcceptedPayload = {
 };
 
 export type SyncRejectedPayload = {
-  senderId: string;
+  receiverId?: string;
+  senderId?: string;
+  reason?: string;
 };
 
 export type SyncErrorPayload = {
@@ -59,26 +68,47 @@ export type OnlineUsersPayload = {
   users: string[];
 };
 
+// --------------------------------------------------
+// SOCKET EVENTS
+// --------------------------------------------------
+
 export type ServerToClientEvents = {
-  joined: (payload?: unknown) => void;
+  joined: (payload?: { userId?: string }) => void;
+
   users: (payload: OnlineUsersPayload) => void;
+
   connectionsUpdated: (payload: GroupMembersPayload) => void;
+
   syncRequest: (payload: SyncRequestPayload) => void;
+
   syncRequestSent: (payload: SyncRequestSentPayload) => void;
+
   syncAccepted: (payload: SyncAcceptedPayload) => void;
+
   syncRejected: (payload: SyncRejectedPayload) => void;
-  syncDisconnected: (payload?: unknown) => void;
-  groupLeft: (payload?: unknown) => void;
+
+  syncDisconnected: (payload?: { userId?: string; reason?: string }) => void;
+
+  groupLeft: (payload?: { success?: boolean; groupId?: string | null }) => void;
+
   playerCommand: (payload: PlayerCommandPayload) => void;
+
+  playbackControllerUpdated: (payload: PlaybackControllerPayload) => void;
+
   syncError: (payload: SyncErrorPayload) => void;
 };
 
 export type ClientToServerEvents = {
   join: (userId: string) => void;
+
   requestSync: (payload: { receiverId: string }) => void;
+
   acceptSync: (payload: { senderId: string }) => void;
+
   rejectSync: (payload: { senderId: string }) => void;
+
   leaveGroup: () => void;
+
   playerCommand: (payload: {
     command: PlayerCommand;
     commandId?: string;
@@ -86,6 +116,10 @@ export type ClientToServerEvents = {
 };
 
 export type SyncSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
+
+// --------------------------------------------------
+// SOCKET SERVICE
+// --------------------------------------------------
 
 class SyncSocketService {
   private socket: SyncSocket | null = null;
@@ -102,7 +136,7 @@ class SyncSocketService {
       throw new Error("A valid userId is required to connect to Riffly sync.");
     }
 
-    // Reuse the existing socket for the same user.
+    // Reuse the socket for the same user.
     if (this.socket && this.userId === normalizedUserId) {
       if (!this.socket.connected) {
         this.socket.connect();
@@ -136,7 +170,7 @@ class SyncSocketService {
       console.log("[Riffly Sync] Connected:", socket.id);
 
       // Join after initial connection and every reconnection.
-      if (this.userId === normalizedUserId) {
+      if (this.socket === socket && this.userId === normalizedUserId) {
         socket.emit("join", normalizedUserId);
       }
     });
@@ -151,6 +185,10 @@ class SyncSocketService {
 
     socket.on("syncError", (payload) => {
       console.error("[Riffly Sync] Server error:", payload.message);
+    });
+
+    socket.on("playbackControllerUpdated", (payload) => {
+      console.log("[Riffly Sync] Playback controller:", payload.controllerId);
     });
 
     socket.connect();
@@ -226,8 +264,17 @@ class SyncSocketService {
     this.socket!.emit("leaveGroup");
   }
 
-  sendCommand(command: PlayerCommand): void {
-    if (!this.ensureConnected()) return;
+  /**
+   * Broadcast a player command.
+   *
+   * The server sends it to the other group members.
+   * The current device must execute its own action locally.
+   */
+  sendCommand(command: PlayerCommand): boolean {
+    if (!this.ensureConnected()) {
+      console.warn("[Riffly Sync] Cannot send command: socket unavailable.");
+      return false;
+    }
 
     const commandId = [
       this.userId,
@@ -239,6 +286,14 @@ class SyncSocketService {
       command,
       commandId,
     });
+
+    console.log("[Riffly Sync] Command sent:", {
+      senderId: this.userId,
+      commandId,
+      type: command.type,
+    });
+
+    return true;
   }
 
   /**
@@ -262,8 +317,7 @@ class SyncSocketService {
     socket.on(event, listener as never);
 
     return () => {
-      // Only remove the listener from the socket on which
-      // it was originally registered.
+      // Remove the listener from the original socket.
       socket.off(event, listener as never);
     };
   }
@@ -286,11 +340,13 @@ class SyncSocketService {
   private ensureConnected(): boolean {
     if (!this.socket) {
       console.warn("[Riffly Sync] Connect the socket before sending events.");
+
       return false;
     }
 
     if (!this.socket.connected) {
       console.warn("[Riffly Sync] Socket is not connected.");
+
       return false;
     }
 
