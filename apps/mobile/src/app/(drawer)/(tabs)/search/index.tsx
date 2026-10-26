@@ -102,18 +102,13 @@ export default function SearchScreen() {
   const styles = useStyles();
   const r = useResponsive();
   const router = useRouter();
-
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [category, setCategory] = useState<SearchCategory>("All");
-
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [recentSearchesLoaded, setRecentSearchesLoaded] = useState(false);
-
   const [isDebouncing, setIsDebouncing] = useState(false);
-
   const inputRef = useRef<TextInput>(null);
-
   // Restore recent searches from AsyncStorage.
   useEffect(() => {
     let mounted = true;

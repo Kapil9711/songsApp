@@ -10,6 +10,7 @@ import { MemoizedShowTrendingSongs } from "./components/showTrendingSong";
 import { useMemo } from "react";
 import Loading from "@/components/loading";
 import { useTrendingSongsQuery } from "@/shared/api/api.queries";
+import { MemoizedRifflyHero } from "./components/heroSection";
 
 export default function HomeScreen() {
   const styles = useStyles();
@@ -28,6 +29,17 @@ export default function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
       >
         <Container style={styles.maxContainer} insetStyle={insetSyles}>
+          <MemoizedRifflyHero
+            onMoodSelect={(mood) => {
+              console.log("Selected mood:", mood);
+              // TODO: Load songs for this mood.
+            }}
+            onGlobalRadioPress={() => {
+              console.log("Global Radio pressed");
+              // TODO: Start Global Radio playback.
+            }}
+          />
+
           <MemoizedShowTrendingSongs />
 
           {/* charts */}
