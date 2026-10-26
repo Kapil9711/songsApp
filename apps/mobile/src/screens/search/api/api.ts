@@ -117,30 +117,6 @@ export const getHomePagePlaylist = async (query: string) => {
   };
 };
 
-export const getAblumSongById = async (id: string) => {
-  const { data } = await jioApi.get(endpoints.jioApi.albumsSongs, {
-    params: { id, limit: 100 },
-  });
-
-  if (data.success === true) {
-    // console.log(data?.data?.songs?.[0], "singleAlbumSong");
-    return data?.data?.songs;
-  }
-  return [];
-};
-
-export const getPlaylistSongById = async (id: string) => {
-  const { data } = await jioApi.get(endpoints.jioApi.playlistSongs, {
-    params: { id, limit: 100 },
-  });
-
-  if (data.success === true) {
-    // console.log(data?.data?.songs?.[0], "singlePlaylistSong");
-    return data?.data?.songs;
-  }
-  return [];
-};
-
 const checkSongIncludeLanguage = (song: any, languages: any[]) => {
   const songLanguage = song?.language;
   return languages.includes(songLanguage);

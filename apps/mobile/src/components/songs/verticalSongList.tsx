@@ -1,16 +1,12 @@
 import { Container } from "@/components/container";
 import { BackHeader } from "@/components/header/backHeader";
-import Loading from "@/components/loading";
-import NowPlayingBackground from "@/components/nowPlayingBackground";
 import { SongSmallCard } from "@/components/songs/songSmalCard";
 import { SafeSide } from "@/hooks/useInsetStyle";
-import { useGetAlbumPlaylistSongQuery } from "@/screens/search/api/api.queries";
 import { usePlayerStore } from "@/store/player.store";
 import { useTheme } from "@/themes/theme.context";
 import { convertSongListToPlayerList } from "@/utils/convertSongListToPlayerList";
 import { handleSongPlay } from "@/utils/handleSongPlay";
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams } from "expo-router";
 import { useCallback, useMemo } from "react";
 import {
   FlatList,
@@ -22,34 +18,27 @@ import {
   View,
 } from "react-native";
 import { useResponsive } from "react-native-fluid-styles";
-
+import NowPlayingBackground from "@/components/nowPlayingBackground";
 const INITIAL_RENDER = 10;
 const BATCH_SIZE = 8;
 const WINDOW_SIZE = 5;
 
 const keyExtractor = (item: any) => String(item.id);
 
-const Song = () => {
-  const { isAlbum, id }: any = useLocalSearchParams();
-
-  const { data, isLoading } = useGetAlbumPlaylistSongQuery(
-    id,
-    isAlbum == 1 ? true : false,
-  );
-
+const VerticalSongList = ({
+  listToRender,
+  heading,
+}: {
+  listToRender: any[];
+  heading: string;
+}) => {
   const activeMediaId = usePlayerStore((state) => state.activeTrack?.mediaId);
-
   const { Theme } = useTheme();
   const styles = useStyles();
   const r = useResponsive();
-
-  const staticSongList = useMemo(() => {
-    return data;
-  }, [data]);
-
   const songListForPlayer = useMemo(
-    () => convertSongListToPlayerList(staticSongList),
-    [staticSongList],
+    () => convertSongListToPlayerList(listToRender),
+    [listToRender],
   );
 
   const RenderItem = useCallback(
@@ -77,7 +66,7 @@ const Song = () => {
             </View>
 
             <Text style={[Theme.styles.text.muted, styles.subtitle]}>
-              {staticSongList?.length} songs
+              {listToRender.length} songs
             </Text>
           </View>
 
@@ -97,7 +86,7 @@ const Song = () => {
             </Text>
 
             <View style={styles.countBadge}>
-              <Text style={styles.countText}>{staticSongList?.length}</Text>
+              <Text style={styles.countText}>{listToRender.length}</Text>
             </View>
           </View>
 
@@ -119,7 +108,7 @@ const Song = () => {
         </View>
       </View>
     ),
-    [Theme, styles, staticSongList?.length, r],
+    [Theme, styles, listToRender.length, r],
   );
 
   return (
@@ -130,7 +119,6 @@ const Song = () => {
         bottom: false,
       }}
     >
-      <Loading loading={isLoading} />
       <StatusBar
         barStyle={
           Theme.colors.background.toLowerCase() === "#ffffff" ||
@@ -141,12 +129,12 @@ const Song = () => {
       />
       <NowPlayingBackground />
 
-      <BackHeader title={isAlbum == 1 ? "Album Song" : "Playlist Song"} />
+      <BackHeader title={heading || "Song"} />
 
       <View style={styles.container}>
         <FlatList
           style={styles.list}
-          data={staticSongList}
+          data={listToRender}
           renderItem={RenderItem}
           keyExtractor={keyExtractor}
           ListHeaderComponent={ListHeader}
@@ -301,4 +289,4 @@ const useStyles = () => {
   });
 };
 
-export default Song;
+export default VerticalSongList;

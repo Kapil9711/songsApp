@@ -30,7 +30,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { moderateScale } from "react-native-size-matters";
+import { moderateScale } from "react-native-fluid-styles";
 import DrawerUserProfile from "./components/drawerProfile";
 
 const COLOR_SCHEMES: {

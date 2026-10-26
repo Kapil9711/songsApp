@@ -1,12 +1,5 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import {
-  getAblumSongById,
-  getAlbums,
-  getHomePagePlaylist,
-  getPlaylists,
-  getPlaylistSongById,
-  getSongs,
-} from "./api";
+import { getAlbums, getHomePagePlaylist, getPlaylists, getSongs } from "./api";
 
 const SearchQueryKey = {
   all: ["search"] as const,
@@ -83,13 +76,6 @@ export const useHomePagePlaylistQuery = (query: string) => {
     queryKey: ["home", "playlist", query],
     queryFn: () => getHomePagePlaylist(query),
     // staleTime: 0,
-  });
-};
-
-export const useGetAlbumPlaylistSongQuery = (id: string, isAlbum: boolean) => {
-  return useQuery({
-    queryKey: ["search", isAlbum ? "singleAlbum" : "singlePlaylist", id],
-    queryFn: () => (isAlbum ? getAblumSongById(id) : getPlaylistSongById(id)),
   });
 };
 

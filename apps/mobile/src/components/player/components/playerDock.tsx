@@ -17,7 +17,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { moderateScale } from "react-native-size-matters";
+import { moderateScale } from "react-native-fluid-styles";
 
 import { SongSmallCard } from "@/components/songs/songSmalCard";
 import { usePlayerProgressStore } from "@/store/player.progress.store";

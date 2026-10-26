@@ -1,6 +1,6 @@
 import { DEFAULT_FONT } from "@/constants";
 import { StyleSheet } from "react-native";
-// import { scale } from "react-native-size-matters";
+
 import { moderateScale, scale } from "react-native-fluid-styles";
 
 import {

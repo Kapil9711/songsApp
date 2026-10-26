@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 import { useCallback, useEffect, useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { moderateScale } from "react-native-size-matters";
+import { moderateScale } from "react-native-fluid-styles";
 
 import { usePlayerProgressStore } from "@/store/player.progress.store";
 import { usePlayerStore } from "@/store/player.store";

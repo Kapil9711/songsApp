@@ -3,7 +3,7 @@ import { useTheme } from "@/themes/theme.context";
 import { Music2, UserRound } from "lucide-react-native";
 import { Text, View } from "react-native";
 import { useResponsiveStyles } from "react-native-fluid-styles";
-import { moderateScale } from "react-native-size-matters";
+import { moderateScale } from "react-native-fluid-styles";
 
 export default function DrawerUserProfile() {
   const user = useAuthStore((state) => state.user);

@@ -25,7 +25,7 @@ const HomeLayout = () => {
         options={{
           title: "Song",
         }}
-        name="playlistAlbumSong"
+        name="dynamicSong"
       />
     </Stack>
   );

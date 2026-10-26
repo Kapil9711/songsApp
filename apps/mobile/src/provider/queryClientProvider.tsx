@@ -11,7 +11,7 @@ const EXCLUDED_CACHE_URLS: string[] = [
   "/stream",
 ];
 
-const CACHE_TIME = 1000 * 60 * 60 * 24; // 24 hours
+const CACHE_TIME = 1000 * 60 * 60 * 48; // 24 hours
 
 const shouldPersistQuery = (query: {
   queryKey: readonly unknown[];
@@ -30,7 +30,7 @@ const client = new QueryClient({
   defaultOptions: {
     queries: {
       gcTime: CACHE_TIME,
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      staleTime: 1000 * 60 * 10, // 10 minutes
       retry: 1,
     },
   },

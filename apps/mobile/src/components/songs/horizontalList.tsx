@@ -5,7 +5,7 @@ import {
   StyleSheet,
   type ListRenderItem,
 } from "react-native";
-import { moderateScale } from "react-native-size-matters";
+import { moderateScale } from "react-native-fluid-styles";
 
 import { usePlayerStore } from "@/store/player.store";
 import { handleSongPlay } from "@/utils/handleSongPlay";
@@ -32,7 +32,7 @@ const HorizontalList = ({ data, type = "song" }: HorizontalListProps) => {
       }
       if (type === "playlist") {
         router.push({
-          pathname: "/(drawer)/(tabs)/home/playlistAlbumSong",
+          pathname: "/(drawer)/(tabs)/home/dynamicSong",
           params: {
             id,
             isAlbum: 0,
