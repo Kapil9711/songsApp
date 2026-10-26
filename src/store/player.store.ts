@@ -1,7 +1,9 @@
-import { create } from "zustand";
 import type { MediaItem } from "@rntp/player";
+import { create } from "zustand";
 
 export type PlayerStatus = "idle" | "loading" | "ready" | "error";
+
+export type RepeatMode = "off" | "track" | "queue";
 
 interface PlayerState {
   status: PlayerStatus;
@@ -14,11 +16,19 @@ interface PlayerState {
   isPlaying: boolean;
   playbackState: string;
 
+  isShuffled: boolean;
+  repeatMode: RepeatMode;
+
   setStatus: (status: PlayerStatus) => void;
   setError: (error: string | null) => void;
+
   setQueue: (queue: MediaItem[]) => void;
   setActiveTrack: (track: MediaItem | null, index: number) => void;
+
   setPlayback: (playing: boolean, state?: string) => void;
+
+  setShuffled: (isShuffled: boolean) => void;
+  setRepeatMode: (repeatMode: RepeatMode) => void;
 }
 
 export const usePlayerStore = create<PlayerState>((set) => ({
@@ -31,6 +41,10 @@ export const usePlayerStore = create<PlayerState>((set) => ({
 
   isPlaying: false,
   playbackState: "unknown",
+
+  // Native player settings
+  isShuffled: false,
+  repeatMode: "off",
 
   setStatus: (status) => set({ status }),
 
@@ -46,4 +60,8 @@ export const usePlayerStore = create<PlayerState>((set) => ({
       isPlaying,
       playbackState: playbackState ?? state.playbackState,
     })),
+
+  setShuffled: (isShuffled) => set({ isShuffled }),
+
+  setRepeatMode: (repeatMode) => set({ repeatMode }),
 }));

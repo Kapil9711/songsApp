@@ -16,10 +16,16 @@ const HomeLayout = () => {
       <Stack.Screen name="index" />
       <Stack.Screen
         options={{
-          headerShown: true,
           title: "Song",
         }}
         name="song"
+      />
+
+      <Stack.Screen
+        options={{
+          title: "Song",
+        }}
+        name="playlistAlbumSong"
       />
     </Stack>
   );

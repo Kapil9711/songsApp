@@ -10,5 +10,7 @@ export const endpoints = {
     songs: "/api/search/songs",
     albums: "/api/search/albums",
     playlist: "/api/search/playlists",
+    albumsSongs: "/api/albums",
+    playlistSongs: "/api/playlists",
   },
 };

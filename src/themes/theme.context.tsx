@@ -1,7 +1,9 @@
-import { createContext, useContext, useState, useEffect } from "react";
-import { ColorSchemes, ThemeType } from "./theme.types";
-import useStore from "../store/store";
 import { COLOR_SCHEME, DEFAULT_COLOR_SCHEME } from "@/constants";
+import { createContext, useContext, useEffect, useState } from "react";
+import { useColorScheme } from "react-native";
+
+import useStore from "../store/store";
+import type { ColorSchemes, ThemeType } from "./theme.types";
 import { Themes } from "./themes";
 
 type ThemeContextType = {
@@ -13,57 +15,80 @@ const ThemeContext = createContext<ThemeContextType | null>(null);
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const themeName = useStore((state) => state.app.system.theme);
+
   const setTheme = useStore((state) => state.app.setTheme);
+
   const colorScheme = useStore((state) => state.app.system.colorScheme);
-  const [Theme, _setTheme] = useState<ThemeType>();
 
-  // Load The Selected Theme
+  const systemColorScheme = useColorScheme();
+
+  const [Theme, setThemeState] = useState<ThemeType>();
+
+  const scheme: ColorSchemes =
+    COLOR_SCHEME === "system"
+      ? (colorScheme ?? systemColorScheme ?? DEFAULT_COLOR_SCHEME)
+      : (COLOR_SCHEME as ColorSchemes);
+
   useEffect(() => {
-    loadTheme(themeName, colorScheme || DEFAULT_COLOR_SCHEME).then((result) => {
-      if (result) {
-        _currentTheme = result;
-        _setTheme(result);
-      }
-    });
-  }, [themeName, colorScheme]);
+    let cancelled = false;
 
-  const loadTheme = async (
-    name: string,
-    scheme: ColorSchemes,
-  ): Promise<ThemeType | null> => {
-    scheme = COLOR_SCHEME === "system" ? scheme : COLOR_SCHEME;
-    const themeKey = `${name}.${scheme}`;
-
+    const themeKey = `${themeName}.${scheme}`;
     const importer = Themes[themeKey];
+
     if (!importer) {
       console.warn(`No theme registered under key: ${themeKey}`);
-      return null;
+      return;
     }
 
-    try {
-      const module = await importer();
-      return module.Theme;
-    } catch (error) {
-      console.error(`Error loading theme "${themeKey}":`, error);
-      return null;
-    }
-  };
+    const loadTheme = async () => {
+      try {
+        const module = await importer();
 
-  if (!Theme) return null;
+        if (cancelled) return;
+
+        // Update the active theme and notify all context consumers.
+        _currentTheme = module.Theme;
+        setThemeState(module.Theme);
+      } catch (error) {
+        if (!cancelled) {
+          console.error(`Error loading theme "${themeKey}":`, error);
+        }
+      }
+    };
+
+    void loadTheme();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [themeName, scheme]);
+
+  if (!Theme) {
+    return null;
+  }
 
   return (
-    <ThemeContext.Provider value={{ Theme, setTheme }}>
+    <ThemeContext.Provider
+      value={{
+        Theme,
+        setTheme,
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   );
 };
 
 export const useTheme = () => {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error("useTheme must be used within ThemeProvider");
-  return ctx;
+  const context = useContext(ThemeContext);
+
+  if (!context) {
+    throw new Error("useTheme must be used within ThemeProvider");
+  }
+
+  return context;
 };
 
 let _currentTheme: ThemeType;
-// Globally Accessible
+
 export const Theme = () => _currentTheme;

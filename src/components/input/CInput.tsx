@@ -1,6 +1,6 @@
 import { Theme } from "@/themes/theme.context";
 import React, { ReactElement, ReactNode } from "react";
-import { Controller } from "react-hook-form";
+import { Controller, FieldValues, UseControllerProps } from "react-hook-form";
 import {
   StyleProp,
   Text,
@@ -11,17 +11,24 @@ import {
   ViewStyle,
 } from "react-native";
 
-interface InputProps<C extends React.ElementType> {
+interface InputStyles {
+  container?: StyleProp<ViewStyle>;
+  input?: StyleProp<ViewStyle>;
+  textInput?: StyleProp<TextStyle>;
+  error?: StyleProp<TextStyle>;
+}
+
+interface InputProps<
+  C extends React.ElementType = typeof TextInput,
+> extends Omit<TextInputProps, "defaultValue" | "onChangeText"> {
   name: string;
   control: any;
-  rules?: object;
-  styles?: {
-    container?: StyleProp<ViewStyle>;
-    input?: StyleProp<ViewStyle>;
-    error?: StyleProp<TextStyle>;
-  };
+  rules?: UseControllerProps<FieldValues>["rules"];
+  styles?: InputStyles;
   rightItem?: ReactNode;
   children?: ReactElement<React.ComponentProps<C>>;
+  defaultValue?: string;
+  onChangeText?: (text: string) => void;
 }
 
 const Input = <C extends React.ElementType = typeof TextInput>({
@@ -34,7 +41,9 @@ const Input = <C extends React.ElementType = typeof TextInput>({
   onChangeText,
   children,
   ...restProps
-}: InputProps<C> & React.ComponentProps<C>) => {
+}: InputProps<C>) => {
+  const theme = Theme();
+
   return (
     <Controller
       control={control}
@@ -45,12 +54,15 @@ const Input = <C extends React.ElementType = typeof TextInput>({
         field: { onChange, onBlur, value },
         fieldState: { error },
       }) => (
-        <View style={[Theme().styles.mb4, styles?.container]}>
+        <View style={[theme.styles.mb4, styles.container]}>
           <View
             style={[
-              Theme().styles.row,
-              Theme().styles.TextInput,
-              styles?.input,
+              theme.styles.row,
+              theme.styles.TextInput,
+              styles.input,
+              error && {
+                borderColor: theme.colors.danger,
+              },
               { position: "relative" },
             ]}
           >
@@ -66,12 +78,17 @@ const Input = <C extends React.ElementType = typeof TextInput>({
               } as React.ComponentProps<C>)
             ) : (
               <TextInput
-                {...(restProps as TextInputProps)}
+                {...restProps}
                 style={[
-                  Theme().styles.col.grow,
-                  Theme().styles.p0,
+                  theme.styles.col.grow,
+                  theme.styles.p0,
+                  {
+                    color: theme.colors.text,
+                  },
+                  styles.textInput,
                   restProps.style,
                 ]}
+                placeholderTextColor={theme.colors.neutral300}
                 value={value}
                 onBlur={onBlur}
                 onChangeText={(text) => {
@@ -82,12 +99,13 @@ const Input = <C extends React.ElementType = typeof TextInput>({
             )}
             {rightItem}
           </View>
+
           {error && (
             <Text
               style={[
-                Theme().styles.text.danger,
-                Theme().styles.mt2,
-                Theme().styles.mx2,
+                theme.styles.text.danger,
+                theme.styles.mt2,
+                theme.styles.mx2,
                 styles.error,
               ]}
             >

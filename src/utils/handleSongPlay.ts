@@ -6,8 +6,15 @@ export const handleSongPlay = async (
   songs: any[],
   needConvertion?: boolean,
 ) => {
-  if (needConvertion) {
-    songs = convertSongListToPlayerList(songs);
+  try {
+    const playerSongs = needConvertion
+      ? convertSongListToPlayerList(songs)
+      : songs;
+
+    const selectedIndex = index >= 0 ? index : 0;
+
+    await PlayerService.playQueue(playerSongs, selectedIndex);
+  } catch (error) {
+    console.error("[handleSongPlay] Failed to play song:", error);
   }
-  await PlayerService.playQueue(songs, index >= 0 ? index : 0);
 };

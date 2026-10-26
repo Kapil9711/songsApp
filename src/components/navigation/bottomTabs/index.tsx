@@ -36,9 +36,9 @@ const TAB_ROUTES = [
     activeIcon: "library",
   },
   {
-    name: "profile",
-    path: "/profile",
-    label: "Profile",
+    name: "users",
+    path: "/users",
+    label: "Live Users",
     icon: "person-outline",
     activeIcon: "person",
   },
@@ -52,6 +52,8 @@ export default function CustomTabBar() {
   return (
     <>
       <PlayerDock />
+      {/* <NowPlayingBackground /> */}
+
       <View
         style={[
           styles.container,
