@@ -1,4 +1,5 @@
 import CustomDrawer from "@/components/navigation/customDrawer";
+import NowPlayingBackground from "@/components/nowPlayingBackground";
 import { useTheme } from "@/themes/theme.context";
 import { Drawer } from "expo-router/drawer";
 import { useWindowDimensions } from "react-native";
@@ -15,7 +16,7 @@ export default function DrawerLayout() {
         drawerPosition: "left",
         drawerType: "slide",
         swipeEnabled: true,
-        swipeEdgeWidth: Math.min(width * 0.1, 100),
+        swipeEdgeWidth: Math.min(width * 0.2, 90),
         drawerStyle: {
           backgroundColor: Theme.colors.background,
           width: Math.min(width * 0.8, 450),

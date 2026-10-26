@@ -9,6 +9,7 @@ import { moderateScale } from "react-native-size-matters";
 
 import { usePlayerStore } from "@/store/player.store";
 import { handleSongPlay } from "@/utils/handleSongPlay";
+import { useRouter } from "expo-router";
 import SongBigCard from "./songBigCard";
 
 type HorizontalListProps = {
@@ -22,11 +23,21 @@ const keyExtractor = (item: any, index: number) =>
 
 const HorizontalList = ({ data, type = "song" }: HorizontalListProps) => {
   const activeMediaId = usePlayerStore((state) => state.activeTrack?.mediaId);
+  const router = useRouter();
 
   const handlePress = useCallback(
-    (index: number) => {
+    (index: number, id?: string) => {
       if (type === "song") {
         handleSongPlay(index, data, true);
+      }
+      if (type === "playlist") {
+        router.push({
+          pathname: "/(drawer)/(tabs)/home/playlistAlbumSong",
+          params: {
+            id,
+            isAlbum: 0,
+          },
+        });
       }
     },
     [data, type],
@@ -38,7 +49,7 @@ const HorizontalList = ({ data, type = "song" }: HorizontalListProps) => {
         item={item}
         type={type}
         isPlaying={activeMediaId === item?.id}
-        onPress={() => handlePress(index)}
+        onPress={() => handlePress(index, item?.id)}
       />
     ),
     [activeMediaId, handlePress, type],
