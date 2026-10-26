@@ -2,7 +2,8 @@
 
 import { io, Socket } from "socket.io-client";
 
-const SOCKET_URL = "http://10.95.249.59:5001";
+// const SOCKET_URL = "http://10.95.249.59:5001";
+const SOCKET_URL = "https://socketserver-1-c5zy.onrender.com";
 
 // --------------------------------------------------
 // TYPES
