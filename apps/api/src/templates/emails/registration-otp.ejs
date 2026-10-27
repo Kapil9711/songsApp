@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
+
+    <title>Verify your email | Riffly</title>
+  </head>
+
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background-color: #f4f5f9;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #171725;
+    "
+  >
+    <!-- Preheader: shown beside the subject in many email clients -->
+    <div
+      style="
+        display: none;
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        color: transparent;
+      "
+    >
+      Your Riffly verification code is ready. It expires in
+      <%= expiresInMinutes %> minutes.
+    </div>
+
+    <table
+      role="presentation"
+      width="100%"
+      cellspacing="0"
+      cellpadding="0"
+      border="0"
+      style="background-color: #f4f5f9;"
+    >
+      <tr>
+        <td align="center" style="padding: 36px 12px;">
+          <table
+            role="presentation"
+            width="100%"
+            cellspacing="0"
+            cellpadding="0"
+            border="0"
+            style="
+              max-width: 560px;
+              background-color: #ffffff;
+              border-radius: 20px;
+              overflow: hidden;
+            "
+          >
+            <!-- Header -->
+            <tr>
+              <td
+                align="center"
+                style="
+                  background-color: #171725;
+                  padding: 30px 24px;
+                "
+              >
+                <div
+                  style="
+                    font-size: 30px;
+                    font-weight: 800;
+                    letter-spacing: -1px;
+                    color: #ffffff;
+                  "
+                >
+                  Riffly<span style="color: #8b7bff;">.</span>
+                </div>
+
+                <p
+                  style="
+                    margin: 8px 0 0;
+                    font-size: 13px;
+                    color: #c5c5d6;
+                  "
+                >
+                  Your music. Your vibe.
+                </p>
+              </td>
+            </tr>
+
+            <!-- Main content -->
+            <tr>
+              <td style="padding: 36px 28px 24px;">
+                <div
+                  style="
+                    display: inline-block;
+                    padding: 8px 12px;
+                    border-radius: 30px;
+                    background-color: #f0edff;
+                    color: #6350d9;
+                    font-size: 12px;
+                    font-weight: 700;
+                    letter-spacing: 0.5px;
+                  "
+                >
+                  EMAIL VERIFICATION
+                </div>
+
+                <h1
+                  style="
+                    margin: 22px 0 12px;
+                    font-size: 28px;
+                    line-height: 1.3;
+                    font-weight: 700;
+                    color: #171725;
+                  "
+                >
+                  Welcome to Riffly<% if (name) { %>, <%= name %><% } %>!
+                </h1>
+
+                <p
+                  style="
+                    margin: 0;
+                    font-size: 15px;
+                    line-height: 1.8;
+                    color: #646477;
+                  "
+                >
+                  We're excited to have you here. Before you start discovering
+                  your next favorite song, please verify your email address
+                  using the code below.
+                </p>
+              </td>
+            </tr>
+
+            <!-- OTP card -->
+            <tr>
+              <td style="padding: 0 28px 24px;">
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                  style="
+                    background-color: #f7f6ff;
+                    border: 1px solid #e8e4ff;
+                    border-radius: 16px;
+                  "
+                >
+                  <tr>
+                    <td align="center" style="padding: 26px 16px;">
+                      <p
+                        style="
+                          margin: 0 0 14px;
+                          color: #646477;
+                          font-size: 13px;
+                          font-weight: 600;
+                        "
+                      >
+                        YOUR VERIFICATION CODE
+                      </p>
+
+                      <div
+                        style="
+                          color: #6350d9;
+                          font-size: 36px;
+                          line-height: 1.4;
+                          font-weight: 800;
+                          letter-spacing: 8px;
+                          padding-left: 8px;
+                        "
+                      >
+                        <%= otp %>
+                      </div>
+
+                      <p
+                        style="
+                          margin: 16px 0 0;
+                          color: #77778b;
+                          font-size: 12px;
+                        "
+                      >
+                        Expires in <strong><%= expiresInMinutes %> minutes</strong>
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Security notice -->
+            <tr>
+              <td style="padding: 0 28px 32px;">
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                >
+                  <tr>
+                    <td
+                      width="28"
+                      valign="top"
+                      style="font-size: 18px; padding-top: 2px;"
+                    >
+                      🔒
+                    </td>
+
+                    <td
+                      style="
+                        color: #646477;
+                        font-size: 13px;
+                        line-height: 1.8;
+                      "
+                    >
+                      <strong style="color: #29293b;">
+                        Keep your code safe.
+                      </strong>
+                      Never share this code with anyone. Riffly will never ask
+                      you to disclose your verification code over the phone
+                      or in a message.
+                    </td>
+                  </tr>
+                </table>
+
+                <p
+                  style="
+                    margin: 24px 0 0;
+                    font-size: 13px;
+                    line-height: 1.8;
+                    color: #77778b;
+                  "
+                >
+                  If you didn't create a Riffly account, you can safely ignore
+                  this email.
+                </p>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td
+                align="center"
+                style="
+                  padding: 24px;
+                  background-color: #fafaff;
+                  border-top: 1px solid #eeeeF5;
+                "
+              >
+                <p
+                  style="
+                    margin: 0;
+                    color: #77778b;
+                    font-size: 12px;
+                    line-height: 1.8;
+                  "
+                >
+                  Made for the love of music.
+                  <br />
+                  &copy; <%= year %> Riffly. All rights reserved.
+                </p>
+              </td>
+            </tr>
+          </table>
+
+          <p
+            style="
+              margin: 18px 0 0;
+              color: #9999a9;
+              font-size: 11px;
+              text-align: center;
+            "
+          >
+            This is an automated email. Please do not reply.
+          </p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
