@@ -16,7 +16,7 @@ function hashOtp(userId: string, purpose: OtpPurpose, otp: string) {
   const secret = process.env.OTP_SECRET;
 
   if (!secret) {
-    throw new Error("OTP_SECRET is not configured");
+    throw new AppError(400, "OTP_SECRET is not configured");
   }
 
   return createHash("sha256")
@@ -31,7 +31,7 @@ function generateOtp(): string {
 function createAccessToken(userId: string): string {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
-    throw new Error("JWT_SECRET is not configured");
+    throw new AppError(400, "JWT_SECRET is not configured");
   }
   const expireTime: any = process.env.JWT_EXPIRES_TIME || "30d";
   return jwt.sign({ sub: userId }, secret, {
@@ -158,7 +158,7 @@ export async function verifyRegistrationOtp(input: {
       },
     );
 
-    throw new Error("Invalid OTP");
+    throw new AppError(400, "Invalid OTP");
   }
   // Atomically claim the OTP so it cannot be reused concurrently.
   const claimedOtp = await OtpModel.findOneAndUpdate(
@@ -174,7 +174,7 @@ export async function verifyRegistrationOtp(input: {
     { new: true },
   );
   if (!claimedOtp) {
-    throw new Error("OTP is invalid, expired, or already used");
+    throw new AppError(400, "OTP is invalid, expired, or already used");
   }
   const user = await UserModel.findOneAndUpdate(
     {
@@ -222,11 +222,11 @@ export async function loginUser(input: { email: string; password: string }) {
   const user = await UserModel.findOne({ email }).select("+password");
 
   if (!user || !(await argon2.verify(user.password, input.password))) {
-    throw new Error("Invalid email or password");
+    throw new AppError(400, "Invalid email or password");
   }
 
   if (!user.isVerified) {
-    throw new Error("Please verify your email before logging in");
+    throw new AppError(400, "Please verify your email before logging in");
   }
 
   const accessToken = createAccessToken(user._id.toString());
@@ -248,11 +248,11 @@ export async function getUserById(userId: string) {
   const user = await UserModel.findById(userId).lean();
 
   if (!user) {
-    throw new Error("User not found");
+    throw new AppError(400, "User not found");
   }
 
   if (!user.isVerified) {
-    throw new Error("Email verification required");
+    throw new AppError(400, "Email verification required");
   }
 
   return {
@@ -289,7 +289,7 @@ export async function updateUser(userId: string, input: UpdateUserInput) {
   }
 
   if (Object.keys(updates).length === 0) {
-    throw new Error("At least one field must be provided");
+    throw new AppError(400, "At least one field must be provided");
   }
 
   const user = await UserModel.findOneAndUpdate(
@@ -307,7 +307,7 @@ export async function updateUser(userId: string, input: UpdateUserInput) {
   );
 
   if (!user) {
-    throw new Error("User not found");
+    throw new AppError(400, "User not found");
   }
 
   return {
@@ -334,7 +334,7 @@ export async function changeUserPassword(
   }).select("+password");
 
   if (!user) {
-    throw new Error("User not found");
+    throw new AppError(400, "User not found");
   }
 
   const isCurrentPasswordValid = await argon2.verify(
@@ -343,11 +343,14 @@ export async function changeUserPassword(
   );
 
   if (!isCurrentPasswordValid) {
-    throw new Error("Current password is incorrect");
+    throw new AppError(400, "Current password is incorrect");
   }
 
   if (input.currentPassword === input.newPassword) {
-    throw new Error("New password must be different from the current password");
+    throw new AppError(
+      400,
+      "New password must be different from the current password",
+    );
   }
 
   user.password = await argon2.hash(input.newPassword);
@@ -365,7 +368,7 @@ export async function deleteUser(userId: string) {
   });
 
   if (!user) {
-    throw new Error("User not found");
+    throw new AppError(400, "User not found");
   }
 
   // Remove outstanding OTPs associated with the deleted user.
