@@ -232,7 +232,7 @@ export async function loginUser(input: { email: string; password: string }) {
   const accessToken = createAccessToken(user._id.toString());
 
   return {
-    accessToken,
+    token: accessToken,
     user: {
       id: user._id.toString(),
       name: user.name,

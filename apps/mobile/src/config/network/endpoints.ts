@@ -1,7 +1,7 @@
 export const endpoints = {
   api: {
-    login: "/user/login",
-    register: "/user",
+    login: "/users/login",
+    register: "/users/register",
     homePage: "/song/home-page",
     favorite: "/favorite",
     friend: "/friend",

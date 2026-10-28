@@ -40,9 +40,9 @@ function createApiConfig(baseUrl: string | undefined) {
       const token = useAuthStore.getState().token;
 
       if (token) {
-        api.defaults.headers.common.Authorization = `Bearer ${token}`;
+        api.defaults.headers.common.authorization = `Bearer ${token}`;
       } else {
-        delete api.defaults.headers.common.Authorization;
+        delete api.defaults.headers.common.authorization;
       }
     } catch (error: unknown) {
       console.error("[AUTH] Failed to retrieve token", error);
@@ -146,5 +146,5 @@ function createApiConfig(baseUrl: string | undefined) {
   return api;
 }
 
-export const api = createApiConfig(API_BASE_URL);
+export const api = createApiConfig("http://192.168.1.6:5002/api/v1");
 export const jioApi = createApiConfig(JIO_API_BASE_URL);
