@@ -62,3 +62,40 @@ export const getPlaylists = async (query: string) => {
     all: [...hindi, ...haryanvi, ...punjabi, ...english],
   };
 };
+
+export interface ExploreUser {
+  id: string;
+  name: string;
+  image: string | null;
+}
+
+export interface UsersPage {
+  users: ExploreUser[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    hasMore: boolean;
+    nextPage: number | null;
+  };
+}
+
+interface GetUsersResponse {
+  success: boolean;
+  data: UsersPage;
+}
+
+export async function getUsers(params: {
+  page: number;
+  limit?: number;
+}): Promise<UsersPage> {
+  const response = await api.get<GetUsersResponse>(endpoints.api.users.list, {
+    params: {
+      page: params.page,
+      limit: params.limit ?? 20,
+    },
+  });
+
+  // Assumes `api` returns the normal Axios response.
+  return response.data.data;
+}

@@ -4,8 +4,8 @@ import KeyboardViewWithScroll from "@/components/keyboardView/keyboardViewWithSc
 import { useTheme } from "@/themes/theme.context";
 
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
 import { ResponsiveAPI, useResponsiveStyles } from "react-native-fluid-styles";
@@ -40,9 +40,9 @@ const SignIn = () => {
   const { Theme } = useTheme();
   const styles = useStyles();
   const router = useRouter();
-
+  const params = useLocalSearchParams();
   const [showPassword, setShowPassword] = useState(false);
-  const { control, handleSubmit } = useForm();
+  const { control, handleSubmit, setValue } = useForm();
   const { mutate, isPending } = useLoginUserMutation();
 
   const handleLogin = async (data: any) => {
@@ -73,8 +73,17 @@ const SignIn = () => {
   };
 
   const onSubmit = (data: any) => {
+    console.log(data, "onsubmit");
     handleLogin(data);
   };
+
+  useEffect(() => {
+    if (params.email && params.password) {
+      setValue("userId", params.email);
+      setValue("password", params.password);
+      onSubmit({ userId: params.email, password: params.password });
+    }
+  }, [params.email, params.password]);
 
   return (
     <View style={styles.screen}>

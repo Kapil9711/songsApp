@@ -24,8 +24,12 @@ import { usePlayerProgressStore } from "@/store/player.progress.store";
 import { usePlayerStore } from "@/store/player.store";
 import { useTheme } from "@/themes/theme.context";
 import { convertPlayerListToNormalSongList } from "@/utils/convertSongListToPlayerList";
-import { handleSongPlay } from "@/utils/handleSongPlay";
+import {
+  convertPlayerSongToSocket,
+  handleSongPlay,
+} from "@/utils/handleSongPlay";
 import { PlayerService } from "../player.service";
+import { playerSyncService } from "@/screens/connections/player-sync.service";
 
 type SongItem = {
   id?: string | number;
@@ -403,9 +407,12 @@ export default function PlayerDock({
   const seek = useCallback(async (value: number) => {
     setSeeking(false);
     setSeekValue(value);
-
+    const activTrack = usePlayerStore.getState().activeTrack;
     try {
       await PlayerService.seekTo(value);
+      await playerSyncService.emit(
+        convertPlayerSongToSocket(activTrack, true, value, "seek"),
+      );
     } catch (error) {
       console.error("Failed to seek:", error);
     }
@@ -413,7 +420,18 @@ export default function PlayerDock({
 
   const handleTogglePlay = useCallback(async () => {
     try {
+      const activTrack = usePlayerStore.getState().activeTrack;
+      const isPlaying = usePlayerStore.getState().isPlaying;
+      const seekValue = usePlayerProgressStore.getState().position;
       await PlayerService.togglePlay();
+      await playerSyncService.emit(
+        convertPlayerSongToSocket(
+          activTrack,
+          !isPlaying,
+          seekValue,
+          "play-pause",
+        ),
+      );
     } catch (error) {
       console.error("Failed to toggle playback:", error);
     }
@@ -457,6 +475,14 @@ export default function PlayerDock({
     },
     [songListForPlayer],
   );
+
+  useEffect(() => {
+    if (activeTrack) {
+      playerSyncService.emit(
+        convertPlayerSongToSocket(activeTrack, true, 0, "initial"),
+      );
+    }
+  }, [activeTrack]);
 
   const track: any = activeTrack as SongItem | null;
   const artwork = getSongImage(track);

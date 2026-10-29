@@ -144,3 +144,42 @@ export async function deleteMe(
     next(error);
   }
 }
+
+export async function getUsers(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    assertAuthenticated(req);
+
+    const page = Number(req.query.page ?? 1);
+    const limit = Number(req.query.limit ?? 20);
+
+    if (
+      !Number.isInteger(page) ||
+      page < 1 ||
+      !Number.isInteger(limit) ||
+      limit < 1 ||
+      limit > 50
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Page must be positive and limit must be between 1 and 50",
+      });
+    }
+
+    const result = await userService.getUsers({
+      userId: req.userId,
+      page,
+      limit,
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+}

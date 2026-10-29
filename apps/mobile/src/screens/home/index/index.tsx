@@ -6,15 +6,11 @@ import { useTheme } from "@/themes/theme.context";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useResponsive } from "react-native-fluid-styles";
 import { MemoizedShowHorizontalPlaylist } from "./components/showHorizontalPlaylist";
-import { MemoizedShowTrendingSongs } from "./components/showTrendingSong";
 import { useMemo } from "react";
-import Loading from "@/components/loading";
-import { useTrendingSongsQuery } from "@/shared/api/api.queries";
-import { MemoizedRifflyHero } from "./components/heroSection";
 
 export default function HomeScreen() {
   const styles = useStyles();
-  const { isLoading } = useTrendingSongsQuery();
+  // const { isLoading } = useTrendingSongsQuery();
   const insetSyles = useMemo(() => {
     return { ...SafeSide, left: false, right: false };
   }, [SafeSide]);
@@ -23,24 +19,22 @@ export default function HomeScreen() {
     <View style={[styles.container]}>
       <FadeTop />
       <NowPlayingBackground />
-      <Loading loading={isLoading} />
+      {/* <Loading loading={isLoading} /> */}
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
         <Container style={styles.maxContainer} insetStyle={insetSyles}>
-          <MemoizedRifflyHero
+          {/* <MemoizedRifflyHero
             onMoodSelect={(mood) => {
               console.log("Selected mood:", mood);
-              // TODO: Load songs for this mood.
             }}
             onGlobalRadioPress={() => {
               console.log("Global Radio pressed");
-              // TODO: Start Global Radio playback.
             }}
-          />
+          /> */}
 
-          <MemoizedShowTrendingSongs />
+          {/* <MemoizedShowTrendingSongs /> */}
 
           {/* charts */}
 

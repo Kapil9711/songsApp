@@ -9,12 +9,14 @@ const AuthLayout = () => {
       <Stack
         screenOptions={{
           headerShown: false,
+
           animation: "slide_from_right",
           animationDuration: 200,
           gestureEnabled: true,
           contentStyle: [{ flex: 1 }, Theme.styles.Bg],
         }}
       >
+        <Stack.Screen name="verify-otp" />
         <Stack.Screen name="sign-in" />
         <Stack.Screen name="sign-up" />
       </Stack>

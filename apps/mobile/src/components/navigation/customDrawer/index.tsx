@@ -130,6 +130,7 @@ export default function CustomDrawer() {
         text: "Logout",
         style: "destructive",
         onPress: () => {
+          queryClient.clear();
           clearSession();
           router.replace("/");
         },

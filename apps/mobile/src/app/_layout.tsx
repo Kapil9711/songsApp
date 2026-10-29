@@ -1,9 +1,12 @@
+import CustomAlert from "@/components/alert/customAlert";
 import PlayerBootstrap from "@/components/player/player.bootstrap";
 import { PlayerForegroundSync } from "@/components/player/player.foregroundSync";
 import SplashScreen from "@/components/splashScreen";
 import { PlaybackSyncBootstrap } from "@/config/socket/SyncPlaybackBootstrap";
 import { SyncSocketInitializer } from "@/config/socket/SyncSocketInitializer";
 import { CQueryClientProvider } from "@/provider/queryClientProvider";
+import { GroupSocketInitializer } from "../screens/connections/components/groupSocketInitializer";
+
 import { ThemeProvider, useTheme } from "@/themes/theme.context";
 import { Stack, useRootNavigationState } from "expo-router";
 import { useEffect, useState } from "react";
@@ -17,6 +20,8 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <CQueryClientProvider>
           <ThemeProvider>
+            <CustomAlert />
+            <GroupSocketInitializer />
             <RootStack />
           </ThemeProvider>
         </CQueryClientProvider>

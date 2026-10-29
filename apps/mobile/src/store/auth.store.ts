@@ -1,3 +1,4 @@
+import { disconnectGroupSocket } from "@/screens/connections/socket.service";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
@@ -14,7 +15,8 @@ interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   isInitializing: boolean;
-
+  lastSocketUser: string;
+  setLastSocketUser: (id: string) => void;
   setSession: (token: string, user: AuthUser) => void;
   clearSession: () => void;
   setInitializing: (value: boolean) => void;
@@ -24,9 +26,14 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
+      lastSocketUser: "",
       token: null,
       isAuthenticated: false,
       isInitializing: true,
+
+      setLastSocketUser: (id) => {
+        set({ lastSocketUser: id });
+      },
 
       setSession: (token, user) =>
         set({
@@ -35,13 +42,14 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: true,
         }),
 
-      clearSession: () =>
+      clearSession: () => {
+        disconnectGroupSocket();
         set({
           token: null,
           user: null,
           isAuthenticated: false,
-        }),
-
+        });
+      },
       setInitializing: (value) => set({ isInitializing: value }),
     }),
     {

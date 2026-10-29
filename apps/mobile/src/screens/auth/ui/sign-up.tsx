@@ -11,6 +11,7 @@ import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
 import { useResponsiveStyles } from "react-native-fluid-styles";
 
 import { useRegisterUserMutation } from "../api/api.queries";
+import { useAlertStore } from "@/store/alert.store";
 
 const withOpacity = (color: string, opacity: number) => {
   if (color.startsWith("#")) {
@@ -39,10 +40,10 @@ const SignUp = () => {
   const { Theme } = useTheme();
   const router = useRouter();
   const styles = useStyles();
-
   const [showPassword, setShowPassword] = useState(false);
   const { control, handleSubmit } = useForm();
   const { mutate, isPending } = useRegisterUserMutation();
+  const success = useAlertStore((state) => state.success);
 
   const handleRegister = (data: any) => {
     const { password, name, email } = data;
@@ -59,10 +60,27 @@ const SignUp = () => {
       return;
     }
 
-    mutate({
+    const payload = {
       password: password.trim(),
       name: name.trim(),
       email: email.trim(),
+    };
+
+    mutate(payload, {
+      onSuccess: ({ data }) => {
+        if (data.success) {
+          const bodyData = data?.data;
+          router.push({
+            pathname: "/(auth)/verfiy-otp",
+            params: {
+              userId: bodyData?.userId,
+              email: payload.email,
+              password: payload.password,
+            },
+          });
+          success("Registration Successfull", bodyData.message);
+        }
+      },
     });
   };
 

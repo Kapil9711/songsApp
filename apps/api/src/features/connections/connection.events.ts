@@ -56,6 +56,7 @@ export interface SocketResponse<T = unknown> {
 }
 
 export interface PlayerSyncPayload {
+  songName: string;
   songId: string;
   seekPosition: number;
   songUrl: string;
@@ -63,4 +64,5 @@ export interface PlayerSyncPayload {
   artist: string;
   userId: string;
   isPlaying: boolean;
+  type: string;
 }

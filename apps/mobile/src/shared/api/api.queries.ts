@@ -33,3 +33,29 @@ export const useGetPlaylistQuery = (query: string) => {
     staleTime: 1000 * 60 * 60 * 24,
   });
 };
+
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { getUsers } from "./api";
+
+export const UserQueryKeys = {
+  all: ["users"] as const,
+  explore: () => [...UserQueryKeys.all, "explore"] as const,
+};
+
+export function useExploreUsersQuery() {
+  return useInfiniteQuery({
+    queryKey: UserQueryKeys.explore(),
+
+    queryFn: ({ pageParam }) =>
+      getUsers({
+        page: pageParam,
+        limit: 20,
+      }),
+
+    initialPageParam: 1,
+
+    getNextPageParam: (lastPage) => lastPage.pagination.nextPage ?? undefined,
+
+    staleTime: 30_000,
+  });
+}

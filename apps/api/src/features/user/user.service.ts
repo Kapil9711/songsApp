@@ -7,6 +7,7 @@ import { OtpModel, OtpPurpose } from "../otp/otp.model.js";
 import { UserModel } from "./user.model.js";
 import { sendRegistrationOtpEmail } from "../../services/otp-email.service.js";
 import { AppError } from "../../helper/app-error.js";
+import { Types } from "mongoose";
 
 const OTP_EXPIRY_MS = 5 * 60 * 1000;
 const OTP_RESEND_COOLDOWN_MS = 60 * 1000;
@@ -378,5 +379,52 @@ export async function deleteUser(userId: string) {
 
   return {
     message: "Account deleted successfully",
+  };
+}
+
+interface GetUsersInput {
+  userId: string;
+  page: number;
+  limit: number;
+}
+
+export async function getUsers({ userId, page, limit }: GetUsersInput) {
+  const currentPage = Math.max(1, Math.floor(page));
+  const pageSize = Math.min(50, Math.max(1, Math.floor(limit)));
+  const skip = (currentPage - 1) * pageSize;
+
+  const filter = {
+    isVerified: true,
+    _id: {
+      $ne: new Types.ObjectId(userId),
+    },
+  };
+
+  const [users, total] = await Promise.all([
+    UserModel.find(filter)
+      .select("_id name image")
+      .sort({ createdAt: -1, _id: -1 })
+      .skip(skip)
+      .limit(pageSize)
+      .lean(),
+
+    UserModel.countDocuments(filter),
+  ]);
+
+  const hasMore = skip + users.length < total;
+
+  return {
+    users: users.map((user) => ({
+      id: user._id.toString(),
+      name: user.name,
+      image: user.image ?? null,
+    })),
+    pagination: {
+      page: currentPage,
+      limit: pageSize,
+      total,
+      hasMore,
+      nextPage: hasMore ? currentPage + 1 : null,
+    },
   };
 }

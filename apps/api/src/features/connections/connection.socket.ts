@@ -401,6 +401,8 @@ export function registerConnectionSockets(io: Server): void {
         // 2. Validate the payload.
         if (
           !payload ||
+          typeof payload.songName !== "string" ||
+          typeof payload.type !== "string" ||
           typeof payload.songId !== "string" ||
           typeof payload.songUrl !== "string" ||
           typeof payload.songImage !== "string" ||
@@ -438,12 +440,14 @@ export function registerConnectionSockets(io: Server): void {
         // 5. Broadcast to other group members, excluding every socket
         //    belonging to the user who initiated the event.
         const playerSync = {
+          songName: payload.songName,
           songId: payload.songId,
           seekPosition: payload.seekPosition,
           songUrl: payload.songUrl,
           songImage: payload.songImage,
           artist: payload.artist,
           isPlaying: payload.isPlaying,
+          type: payload.type,
           userId,
         };
 

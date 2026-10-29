@@ -5,10 +5,6 @@ import { authenticate } from "../../middleware/auth.middleware.js";
 import { userIdExist } from "../../middleware/userIdExist.middleware.js";
 import { validateBody } from "../../middleware/validate.middleware.js";
 import { registerUserSchema } from "./user.validation.js";
-import {
-  resendOtpEmailLimiter,
-  resendOtpIpLimiter,
-} from "../../middleware/rateLimiter.middleware.js";
 
 const router = Router();
 
@@ -28,6 +24,7 @@ router.post(
 router.post("/login", userController.login);
 
 // Protected routes
+router.get("/", authenticate, userController.getUsers);
 router.get("/me", authenticate, userIdExist, userController.getMe);
 router.patch("/me", authenticate, userIdExist, userController.updateMe);
 router.patch(

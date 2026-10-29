@@ -28,19 +28,28 @@ const TAB_ROUTES = [
     icon: "heart-outline",
     activeIcon: "heart",
   },
+
   {
-    name: "library",
-    path: "/library",
-    label: "Library",
-    icon: "library-outline",
-    activeIcon: "library",
+    name: "friends",
+    path: "/friends",
+    label: "Friends",
+    icon: "person-outline",
+    activeIcon: "person",
   },
+
   {
     name: "users",
     path: "/users",
     label: "Live Users",
     icon: "person-outline",
     activeIcon: "person",
+  },
+  {
+    name: "library",
+    path: "/library",
+    label: "Library",
+    icon: "library-outline",
+    activeIcon: "library",
   },
 ] as const;
 

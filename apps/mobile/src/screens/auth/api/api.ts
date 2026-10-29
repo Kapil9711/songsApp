@@ -16,3 +16,16 @@ export const createUser = async (payload: any): Promise<any> => {
   let response = await api.post(endpoints.api.register, payload);
   return response;
 };
+
+export const verifyOtp = async (payload: {
+  userId: string;
+  otp: string;
+}): Promise<any> => {
+  let response = await api.post(endpoints.api.verfiyOtp, payload);
+  return response;
+};
+
+export const resendOtp = async (payload: { userId: string }): Promise<any> => {
+  let response = await api.post(endpoints.api.resendOtp, payload);
+  return response;
+};

@@ -24,14 +24,12 @@ export default function TabsLayout() {
       }}
     >
       <TopTabs.Screen name="home" options={{ title: "Home" }} />
-
       <TopTabs.Screen name="search" options={{ title: "Search" }} />
-
       <TopTabs.Screen name="favorite" options={{ title: "Favorite" }} />
-
       {/* Uncomment when these routes are ready */}
-      <TopTabs.Screen name="library" options={{ title: "Library" }} />
+      <TopTabs.Screen name="friends" options={{ title: "Friends" }} />
       <TopTabs.Screen name="users" options={{ title: "Live Users" }} />
+      <TopTabs.Screen name="library" options={{ title: "Library" }} />
     </TopTabs>
   );
 }

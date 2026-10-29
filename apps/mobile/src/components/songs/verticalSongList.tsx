@@ -66,7 +66,7 @@ const VerticalSongList = ({
             </View>
 
             <Text style={[Theme.styles.text.muted, styles.subtitle]}>
-              {listToRender.length} songs
+              {listToRender?.length} songs
             </Text>
           </View>
 
@@ -86,7 +86,7 @@ const VerticalSongList = ({
             </Text>
 
             <View style={styles.countBadge}>
-              <Text style={styles.countText}>{listToRender.length}</Text>
+              <Text style={styles.countText}>{listToRender?.length}</Text>
             </View>
           </View>
 
@@ -108,7 +108,7 @@ const VerticalSongList = ({
         </View>
       </View>
     ),
-    [Theme, styles, listToRender.length, r],
+    [Theme, styles, listToRender?.length, r],
   );
 
   return (
