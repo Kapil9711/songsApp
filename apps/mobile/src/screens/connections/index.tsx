@@ -11,15 +11,20 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { moderateScale } from "react-native-size-matters";
+import { Ionicons } from "@expo/vector-icons";
+import { useResponsive } from "react-native-fluid-styles";
 
+import { Container } from "@/components/container";
+import NowPlayingBackground from "@/components/nowPlayingBackground";
+import { SafeSide } from "@/hooks/useInsetStyle";
 import { useAuthStore } from "@/store/auth.store";
-import { groupService } from "./group.service";
+import { useTheme } from "@/themes/theme.context";
 
+import { groupService } from "./group.service";
 import { useGroupStore } from "./group.store";
 import { useGetFriendsQuery } from "../friends/api/api.queries";
 
-import type { Group, GroupInvitation, GroupMember } from "./group.types";
+import type { GroupInvitation, GroupMember } from "./group.types";
 
 type ActionName =
   | "create"
@@ -31,24 +36,37 @@ type ActionName =
   | "discard"
   | "refresh";
 
+type Styles = ReturnType<typeof useStyles>;
+
+type Friend = {
+  id?: string;
+  _id?: string;
+  name?: string;
+  image?: string;
+};
+
 export default function GroupScreen() {
+  const { Theme } = useTheme();
+  const styles = useStyles();
+
   const user = useAuthStore((state) => state.user);
   const group = useGroupStore((state) => state.group);
   const invitations = useGroupStore((state) => state.invitations);
   const friendIds = useGroupStore((state) => state.friendIds);
   const error = useGroupStore((state) => state.error);
+  const setError = useGroupStore((state) => state.setError);
+
   const { data: friendsResponse } = useGetFriendsQuery();
   const friends = friendsResponse?.data ?? [];
+
   const friendsById = useMemo(() => {
-    return new Map(
+    return new Map<string, Friend>(
       friends.map((item: any) => [
-        item.friend._id || item.friend.id,
+        item.friend?._id || item.friend?.id,
         item.friend,
       ]),
     );
   }, [friends]);
-
-  const setError = useGroupStore((state) => state.setError);
 
   const [friendId, setFriendId] = useState("");
   const [busyAction, setBusyAction] = useState<ActionName | null>(null);
@@ -56,6 +74,7 @@ export default function GroupScreen() {
   const [initialized, setInitialized] = useState(false);
 
   const currentUserId = user?.id;
+
   const isOwner = Boolean(
     group && currentUserId && group.ownerId === currentUserId,
   );
@@ -80,10 +99,10 @@ export default function GroupScreen() {
 
       try {
         return await callback();
-      } catch (error: unknown) {
+      } catch (actionError: unknown) {
         const message =
-          error instanceof Error
-            ? error.message
+          actionError instanceof Error
+            ? actionError.message
             : "Something went wrong. Please try again.";
 
         setError(message);
@@ -99,6 +118,7 @@ export default function GroupScreen() {
 
   const refreshGroupData = useCallback(async () => {
     if (!currentUserId) {
+      setInitialized(true);
       return;
     }
 
@@ -124,16 +144,15 @@ export default function GroupScreen() {
         );
       }
 
-      // Friends are only available to a group member who has
-      // permission to invite. A user without a group cannot
-      // fetch this list through the current backend handler.
-      const latestGroup: any =
+      const latestGroup =
         results[0].status === "fulfilled" ? results[0].value : null;
 
       const member = latestGroup?.members.find(
-        (item: any) => item.userId === currentUserId,
+        (item: GroupMember) => item.userId === currentUserId,
       );
 
+      // The backend only returns eligible friends to members who
+      // have permission to invite.
       if (latestGroup && member?.canInvite) {
         try {
           await groupService.getEligibleFriends();
@@ -223,7 +242,7 @@ export default function GroupScreen() {
     }
 
     Alert.alert(
-      "Leave group",
+      isOwner ? "End group" : "Leave group",
       isOwner
         ? "You are the owner. Leaving will destroy the group for all members."
         : "Are you sure you want to leave this group?",
@@ -267,363 +286,444 @@ export default function GroupScreen() {
 
   if (!currentUserId) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.mutedText}>Sign in to use group listening.</Text>
+      <View
+        style={[styles.container, { backgroundColor: Theme.colors.background }]}
+      >
+        <NowPlayingBackground />
+
+        <View style={styles.centered}>
+          <Ionicons
+            name="person-circle-outline"
+            size={styles.iconSize.width}
+            color={Theme.colors.primary}
+          />
+          <Text style={styles.mutedText}>Sign in to use group listening.</Text>
+        </View>
       </View>
     );
   }
 
   if (!initialized && !group && invitations.length === 0) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" />
-        <Text style={styles.loadingText}>Loading your groups...</Text>
+      <View
+        style={[styles.container, { backgroundColor: Theme.colors.background }]}
+      >
+        <NowPlayingBackground />
+
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={Theme.colors.primary} />
+          <Text style={styles.loadingText}>Loading your groups...</Text>
+        </View>
       </View>
     );
   }
 
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={styles.content}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={refreshGroupData} />
-      }
-      keyboardShouldPersistTaps="handled"
+    <Container
+      style={{ ...styles.container, backgroundColor: Theme.colors.background }}
+      insetStyle={{ ...SafeSide, bottom: false }}
     >
-      <View style={styles.header}>
-        <Text style={styles.title}>Group Listening</Text>
-        <Text style={styles.subtitle}>Listen together with your friends.</Text>
-      </View>
+      <NowPlayingBackground />
 
-      {error ? (
-        <View style={styles.errorBox}>
-          <Text style={styles.errorText}>{error}</Text>
-          <Pressable onPress={() => setError(null)}>
-            <Text style={styles.dismissText}>Dismiss</Text>
-          </Pressable>
-        </View>
-      ) : null}
-
-      {/* Incoming invitations */}
-
-      <Section title="Invitations">
-        {invitations.length === 0 ? (
-          <EmptyState text="You don't have any pending invitations." />
-        ) : (
-          invitations.map((invitation) => {
-            const inviter: any = friendsById.get(invitation.invitedBy);
-            console.log({
-              currentUserId: user?._id,
-              currentUserName: user?.name,
-              invitedBy: invitation.invitedBy,
-              friends: friends.map((item: any) => ({
-                id: item.friend._id,
-                name: item.friend.name,
-              })),
-            });
-
-            return (
-              <View key={invitation.id} style={styles.card}>
-                <View style={styles.friendRow}>
-                  {inviter?.image ? (
-                    <Image
-                      source={{ uri: inviter.image }}
-                      style={styles.friendAvatar}
-                    />
-                  ) : (
-                    <View style={styles.friendAvatarFallback}>
-                      <Text style={styles.avatarInitial}>
-                        {(inviter?.name || "U").charAt(0).toUpperCase()}
-                      </Text>
-                    </View>
-                  )}
-
-                  <View style={styles.flex}>
-                    <Text style={styles.cardTitle}>
-                      {inviter?.name ||
-                        `User ${invitation.invitedBy.slice(-6)}`}
-                    </Text>
-
-                    <Text style={styles.bodyText}>
-                      invited you to join a group
-                    </Text>
-                  </View>
-                </View>
-
-                <Text style={styles.mutedText}>
-                  Group ID: {invitation.groupId}
-                </Text>
-
-                <View style={styles.row}>
-                  <ActionButton
-                    label="Accept"
-                    disabled={Boolean(busyAction)}
-                    loading={busyAction === "accept"}
-                    onPress={() => handleAcceptInvitation(invitation)}
-                  />
-
-                  <ActionButton
-                    label="Reject"
-                    variant="secondary"
-                    disabled={Boolean(busyAction)}
-                    loading={busyAction === "reject"}
-                    onPress={() => handleRejectInvitation(invitation)}
-                  />
-                </View>
-              </View>
-            );
-          })
-        )}
-      </Section>
-
-      {/* No current group */}
-
-      {!group ? (
-        <Section title="Your group">
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Start listening together</Text>
-
-            <Text style={styles.bodyText}>
-              Create a group, invite your friends, and listen together.
-            </Text>
-
-            <ActionButton
-              label="Create group"
-              loading={busyAction === "create"}
-              disabled={Boolean(busyAction)}
-              onPress={handleCreateGroup}
-            />
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={refreshGroupData}
+            tintColor={Theme.colors.primary}
+            colors={[Theme.colors.primary]}
+          />
+        }
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Page heading */}
+        <View style={styles.header}>
+          <View style={styles.headingRow}>
+            <Text style={styles.title}>Group Listening</Text>
+            <View style={styles.titleDot} />
           </View>
-        </Section>
-      ) : (
-        <>
-          {/* Current group */}
 
-          <Section title="Current group">
-            <View style={styles.card}>
-              <View style={styles.groupHeader}>
-                <View style={styles.flex}>
-                  <Text style={styles.cardTitle}>Listening group</Text>
-                  <Text style={styles.mutedText}>Group ID: {group.id}</Text>
-                </View>
+          <Text style={styles.subtitle}>
+            Listen together with your friends.
+          </Text>
+        </View>
 
-                <View
-                  style={[
-                    styles.badge,
-                    isOwner ? styles.ownerBadge : styles.memberBadge,
-                  ]}
-                >
-                  <Text style={styles.badgeText}>
-                    {isOwner ? "Owner" : "Member"}
-                  </Text>
-                </View>
-              </View>
+        {/* Error message */}
+        {error ? (
+          <View style={styles.errorBox}>
+            <View style={styles.errorContent}>
+              <Ionicons
+                name="alert-circle-outline"
+                size={styles.smallIcon.width}
+                color={"#E45B65"}
+              />
 
-              <Text style={styles.bodyText}>
-                {group.members.length}{" "}
-                {group.members.length === 1 ? "member" : "members"}
-              </Text>
-
-              <Text style={styles.mutedText}>
-                You {canInvite ? "can" : "cannot"} invite friends.
-              </Text>
+              <Text style={styles.errorText}>{error}</Text>
             </View>
-          </Section>
 
-          {/* Members */}
+            <Pressable onPress={() => setError(null)} hitSlop={8}>
+              <Text style={styles.dismissText}>Dismiss</Text>
+            </Pressable>
+          </View>
+        ) : null}
 
-          <Section title="Members">
-            {group.members.map((member) => {
-              const memberIsOwner = member.userId === group.ownerId;
-              const isCurrentUser = member.userId === currentUserId;
-
-              const friend: any = friendsById.get(member.userId);
-
-              const displayName = isCurrentUser
-                ? `${user?.name || "You"} (You)`
-                : friend?.name || `Member ${member.userId.slice(-6)}`;
-
-              console.log(displayName, friend);
+        {/* Invitations */}
+        <Section title="Invitations" styles={styles}>
+          {invitations.length === 0 ? (
+            <EmptyState
+              text="You don't have any pending invitations."
+              styles={styles}
+            />
+          ) : (
+            invitations.map((invitation) => {
+              const inviter = friendsById.get(invitation.invitedBy);
 
               return (
-                <View key={member.userId} style={styles.memberCard}>
-                  <View style={styles.memberAvatar}>
-                    {friend?.image ? (
-                      <Image
-                        source={{ uri: friend.image }}
-                        style={styles.memberAvatarImage}
-                      />
-                    ) : (
-                      <Text style={styles.avatarText}>
-                        {(isCurrentUser ? user?.name : friend?.name || "M")
-                          ?.charAt(0)
-                          .toUpperCase() || "M"}
+                <View key={invitation.id} style={styles.card}>
+                  <View style={styles.friendRow}>
+                    <FriendAvatar
+                      image={inviter?.image}
+                      name={inviter?.name}
+                      styles={styles}
+                    />
+
+                    <View style={styles.flex}>
+                      <Text style={styles.cardTitle}>
+                        {inviter?.name ||
+                          `User ${invitation.invitedBy.slice(-6)}`}
                       </Text>
-                    )}
+
+                      <Text style={styles.bodyText}>
+                        Invited you to join a group
+                      </Text>
+                    </View>
                   </View>
 
-                  <View style={styles.flex}>
-                    <Text style={styles.memberName}>{displayName}</Text>
-
-                    <Text style={styles.mutedText}>
-                      {memberIsOwner
-                        ? "Group owner"
-                        : member.canInvite
-                          ? "Can invite friends"
-                          : "Member"}
-                    </Text>
-                  </View>
-
-                  {isOwner && !memberIsOwner && (
-                    <Pressable
-                      disabled={Boolean(busyAction)}
-                      style={[
-                        styles.permissionButton,
-                        member.canInvite && styles.permissionEnabled,
-                      ]}
-                      onPress={() =>
-                        handlePermissionChange(member, !member.canInvite)
-                      }
-                    >
-                      {busyAction === "permission" ? (
-                        <ActivityIndicator size="small" />
-                      ) : (
-                        <Text style={styles.permissionText}>
-                          {member.canInvite ? "Revoke" : "Allow invites"}
-                        </Text>
-                      )}
-                    </Pressable>
-                  )}
-                </View>
-              );
-            })}
-          </Section>
-
-          {/* Invite friends */}
-
-          {canInvite ? (
-            <Section title="Invite friends">
-              <View style={styles.card}>
-                <Text style={styles.bodyText}>
-                  Select an eligible friend or enter their user ID.
-                </Text>
-
-                {friendIds.length > 0 ? (
-                  <View style={styles.friendList}>
-                    {friendIds.map((id) => {
-                      const friend: any = friendsById.get(id);
-
-                      return (
-                        <View key={id} style={styles.friendRow}>
-                          {friend?.image ? (
-                            <Image
-                              source={{ uri: friend.image }}
-                              style={styles.friendAvatar}
-                            />
-                          ) : (
-                            <View style={styles.friendAvatarFallback}>
-                              <Text style={styles.avatarInitial}>
-                                {(friend?.name || "U").charAt(0).toUpperCase()}
-                              </Text>
-                            </View>
-                          )}
-
-                          <View style={styles.flex}>
-                            <Text style={styles.memberName}>
-                              {friend?.name || `Member ${id.slice(-6)}`}
-                            </Text>
-
-                            <Text style={styles.mutedText} numberOfLines={1}>
-                              {id}
-                            </Text>
-                          </View>
-
-                          <ActionButton
-                            label="Invite"
-                            disabled={Boolean(busyAction)}
-                            loading={busyAction === "invite"}
-                            onPress={() => handleInvite(id)}
-                          />
-                        </View>
-                      );
-                    })}
-                  </View>
-                ) : (
-                  <EmptyState text="No eligible friends were returned by the server." />
-                )}
-
-                <Text style={styles.inputLabel}>Friend user ID</Text>
-
-                <TextInput
-                  value={friendId}
-                  onChangeText={setFriendId}
-                  placeholder="Enter friend user ID"
-                  placeholderTextColor="#888"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  style={styles.input}
-                />
-
-                <ActionButton
-                  label="Send invitation"
-                  disabled={Boolean(busyAction) || !friendId.trim()}
-                  loading={busyAction === "invite"}
-                  onPress={() => handleInvite(friendId)}
-                />
-              </View>
-            </Section>
-          ) : null}
-
-          {/* Group actions */}
-
-          <Section title="Group settings">
-            <View style={styles.card}>
-              {isOwner ? (
-                <>
-                  <Text style={styles.bodyText}>
-                    As the owner, you can end the group for everyone.
+                  <Text style={styles.mutedText}>
+                    Group ID: {invitation.groupId}
                   </Text>
 
-                  <ActionButton
-                    label="End group for everyone"
-                    variant="danger"
-                    disabled={Boolean(busyAction)}
-                    onPress={handleDiscardGroup}
-                  />
-                </>
-              ) : null}
+                  <View style={styles.row}>
+                    <ActionButton
+                      label="Accept"
+                      loading={busyAction === "accept"}
+                      disabled={Boolean(busyAction)}
+                      onPress={() => void handleAcceptInvitation(invitation)}
+                      styles={styles}
+                    />
+
+                    <ActionButton
+                      label="Reject"
+                      variant="secondary"
+                      loading={busyAction === "reject"}
+                      disabled={Boolean(busyAction)}
+                      onPress={() => void handleRejectInvitation(invitation)}
+                      styles={styles}
+                    />
+                  </View>
+                </View>
+              );
+            })
+          )}
+        </Section>
+
+        {/* No group */}
+        {!group ? (
+          <Section title="Your group" styles={styles}>
+            <View style={styles.heroCard}>
+              <View style={styles.heroIcon}>
+                <Ionicons
+                  name="headset-outline"
+                  size={styles.heroIconSize.width}
+                  color={Theme.colors.primary}
+                />
+              </View>
+
+              <Text style={styles.cardTitle}>Start listening together</Text>
+
+              <Text style={styles.bodyText}>
+                Create a group, invite your friends, and listen together.
+              </Text>
 
               <ActionButton
-                label={isOwner ? "Leave and end group" : "Leave group"}
-                variant="secondary"
+                label="Create group"
+                loading={busyAction === "create"}
                 disabled={Boolean(busyAction)}
-                onPress={handleLeaveGroup}
+                onPress={() => void handleCreateGroup()}
+                styles={styles}
               />
             </View>
           </Section>
-        </>
-      )}
+        ) : (
+          <>
+            {/* Current group */}
+            <Section title="Current group" styles={styles}>
+              <View style={styles.heroCard}>
+                <View style={styles.groupHeader}>
+                  <View style={styles.groupIcon}>
+                    <Ionicons
+                      name="people-outline"
+                      size={styles.heroIconSize.width}
+                      color={Theme.colors.primary}
+                    />
+                  </View>
 
-      <Pressable
-        onPress={() => void refreshGroupData()}
-        disabled={refreshing || Boolean(busyAction)}
-        style={styles.refreshButton}
-      >
-        <Text style={styles.refreshText}>
-          {refreshing ? "Refreshing..." : "Refresh group data"}
-        </Text>
-      </Pressable>
-    </ScrollView>
+                  <View style={styles.flex}>
+                    <Text style={styles.cardTitle}>Listening group</Text>
+
+                    <Text style={styles.mutedText}>Group ID: {group.id}</Text>
+                  </View>
+
+                  <View
+                    style={[
+                      styles.badge,
+                      isOwner ? styles.ownerBadge : styles.memberBadge,
+                    ]}
+                  >
+                    <Text style={styles.badgeText}>
+                      {isOwner ? "Owner" : "Member"}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.statsRow}>
+                  <View style={styles.statItem}>
+                    <Ionicons
+                      name="people-outline"
+                      size={styles.smallIcon.width}
+                      color={Theme.colors.primary}
+                    />
+
+                    <Text style={styles.statText}>
+                      {group.members.length}{" "}
+                      {group.members.length === 1 ? "member" : "members"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.statItem}>
+                    <Ionicons
+                      name={
+                        canInvite
+                          ? "checkmark-circle-outline"
+                          : "lock-closed-outline"
+                      }
+                      size={styles.smallIcon.width}
+                      color={Theme.colors.primary}
+                    />
+
+                    <Text style={styles.statText}>
+                      {canInvite ? "Can invite" : "Invite restricted"}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </Section>
+
+            {/* Members */}
+            <Section title="Members" styles={styles}>
+              {group.members.map((member) => {
+                const memberIsOwner = member.userId === group.ownerId;
+                const isCurrentUser = member.userId === currentUserId;
+                const friend = friendsById.get(member.userId);
+
+                const displayName = isCurrentUser
+                  ? `${user?.name || "You"} (You)`
+                  : friend?.name || `Member ${member.userId.slice(-6)}`;
+
+                return (
+                  <View key={member.userId} style={styles.memberCard}>
+                    <FriendAvatar
+                      image={
+                        isCurrentUser ? (user as any)?.image : friend?.image
+                      }
+                      name={isCurrentUser ? user?.name : friend?.name}
+                      styles={styles}
+                      large
+                    />
+
+                    <View style={styles.flex}>
+                      <Text style={styles.memberName}>{displayName}</Text>
+
+                      <Text style={styles.mutedText}>
+                        {memberIsOwner
+                          ? "Group owner"
+                          : member.canInvite
+                            ? "Can invite friends"
+                            : "Member"}
+                      </Text>
+                    </View>
+
+                    {isOwner && !memberIsOwner ? (
+                      <Pressable
+                        disabled={Boolean(busyAction)}
+                        style={[
+                          styles.permissionButton,
+                          member.canInvite && styles.permissionEnabled,
+                        ]}
+                        onPress={() =>
+                          void handlePermissionChange(member, !member.canInvite)
+                        }
+                      >
+                        {busyAction === "permission" ? (
+                          <ActivityIndicator
+                            size="small"
+                            color={Theme.colors.primary}
+                          />
+                        ) : (
+                          <Text style={styles.permissionText}>
+                            {member.canInvite ? "Revoke" : "Allow invites"}
+                          </Text>
+                        )}
+                      </Pressable>
+                    ) : null}
+                  </View>
+                );
+              })}
+            </Section>
+
+            {/* Invite friends */}
+            {canInvite ? (
+              <Section title="Invite friends" styles={styles}>
+                <View style={styles.card}>
+                  <Text style={styles.bodyText}>
+                    Select an eligible friend or enter their user ID.
+                  </Text>
+
+                  {friendIds.length > 0 ? (
+                    <View style={styles.friendList}>
+                      {friendIds.map((id) => {
+                        const friend = friendsById.get(id);
+
+                        return (
+                          <View key={id} style={styles.friendRow}>
+                            <FriendAvatar
+                              image={friend?.image}
+                              name={friend?.name}
+                              styles={styles}
+                            />
+
+                            <View style={styles.flex}>
+                              <Text style={styles.memberName}>
+                                {friend?.name || `Member ${id.slice(-6)}`}
+                              </Text>
+
+                              <Text style={styles.mutedText} numberOfLines={1}>
+                                {id}
+                              </Text>
+                            </View>
+
+                            <ActionButton
+                              label="Invite"
+                              loading={busyAction === "invite"}
+                              disabled={Boolean(busyAction)}
+                              onPress={() => void handleInvite(id)}
+                              styles={styles}
+                            />
+                          </View>
+                        );
+                      })}
+                    </View>
+                  ) : (
+                    <EmptyState
+                      text="No eligible friends were returned by the server."
+                      styles={styles}
+                    />
+                  )}
+
+                  <Text style={styles.inputLabel}>Friend user ID</Text>
+
+                  <TextInput
+                    value={friendId}
+                    onChangeText={setFriendId}
+                    placeholder="Enter friend user ID"
+                    placeholderTextColor={Theme.colors.text}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    style={styles.input}
+                  />
+
+                  <ActionButton
+                    label="Send invitation"
+                    disabled={Boolean(busyAction) || !friendId.trim()}
+                    loading={busyAction === "invite"}
+                    onPress={() => void handleInvite(friendId)}
+                    styles={styles}
+                  />
+                </View>
+              </Section>
+            ) : null}
+
+            {/* Group settings */}
+            <Section title="Group settings" styles={styles}>
+              <View style={styles.card}>
+                {isOwner ? (
+                  <>
+                    <Text style={styles.bodyText}>
+                      As the owner, you can end the group for everyone.
+                    </Text>
+
+                    <ActionButton
+                      label="End group for everyone"
+                      variant="danger"
+                      disabled={Boolean(busyAction)}
+                      onPress={handleDiscardGroup}
+                      styles={styles}
+                    />
+                  </>
+                ) : null}
+
+                <ActionButton
+                  label={isOwner ? "Leave and end group" : "Leave group"}
+                  variant="secondary"
+                  disabled={Boolean(busyAction)}
+                  onPress={handleLeaveGroup}
+                  styles={styles}
+                />
+              </View>
+            </Section>
+          </>
+        )}
+
+        {/* Manual refresh */}
+        <Pressable
+          onPress={() => void refreshGroupData()}
+          disabled={refreshing || Boolean(busyAction)}
+          style={styles.refreshButton}
+        >
+          {refreshing ? (
+            <ActivityIndicator size="small" color={Theme.colors.primary} />
+          ) : (
+            <Ionicons
+              name="refresh-outline"
+              size={styles.smallIcon.width}
+              color={Theme.colors.primary}
+            />
+          )}
+
+          <Text style={styles.refreshText}>
+            {refreshing ? "Refreshing..." : "Refresh group data"}
+          </Text>
+        </Pressable>
+      </ScrollView>
+    </Container>
   );
 }
+
+/* -------------------------------------------------------------------------- */
+/* Reusable UI components                                                     */
+/* -------------------------------------------------------------------------- */
 
 function Section({
   title,
   children,
+  styles,
 }: {
   title: string;
   children: React.ReactNode;
+  styles: Styles;
 }) {
   return (
     <View style={styles.section}>
@@ -633,10 +733,47 @@ function Section({
   );
 }
 
-function EmptyState({ text }: { text: string }) {
+function EmptyState({ text, styles }: { text: string; styles: Styles }) {
   return (
     <View style={styles.emptyState}>
-      <Text style={styles.mutedText}>{text}</Text>
+      <Ionicons
+        name="information-circle-outline"
+        size={styles.smallIcon.width}
+        color={styles.iconColor.color}
+      />
+
+      <Text style={styles.emptyStateText}>{text}</Text>
+    </View>
+  );
+}
+
+function FriendAvatar({
+  image,
+  name,
+  styles,
+  large = false,
+}: {
+  image?: string | null;
+  name?: string | null;
+  styles: Styles;
+  large?: boolean;
+}) {
+  const initial = name?.trim().charAt(0).toUpperCase() || "U";
+
+  if (image) {
+    return (
+      <Image
+        source={{ uri: image }}
+        style={large ? styles.memberAvatarImage : styles.friendAvatar}
+      />
+    );
+  }
+
+  return (
+    <View
+      style={[styles.friendAvatarFallback, large && styles.memberAvatarLarge]}
+    >
+      <Text style={styles.avatarInitial}>{initial}</Text>
     </View>
   );
 }
@@ -647,13 +784,19 @@ function ActionButton({
   disabled = false,
   loading = false,
   variant = "primary",
+  styles,
 }: {
   label: string;
   onPress: () => void;
   disabled?: boolean;
   loading?: boolean;
   variant?: "primary" | "secondary" | "danger";
+  styles: Styles;
 }) {
+  const { Theme } = useTheme();
+
+  const isSecondary = variant === "secondary";
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -665,20 +808,17 @@ function ActionButton({
         variant === "secondary" && styles.secondaryButton,
         variant === "danger" && styles.dangerButton,
         (disabled || loading) && styles.disabledButton,
-        pressed && !disabled && styles.pressedButton,
+        pressed && !disabled && !loading && styles.pressedButton,
       ]}
     >
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={variant === "secondary" ? "#222" : "#fff"}
+          color={isSecondary ? Theme.colors.text : "#FFFFFF"}
         />
       ) : (
         <Text
-          style={[
-            styles.buttonText,
-            variant === "secondary" && styles.secondaryButtonText,
-          ]}
+          style={[styles.buttonText, isSecondary && styles.secondaryButtonText]}
         >
           {label}
         </Text>
@@ -687,262 +827,461 @@ function ActionButton({
   );
 }
 
-const styles = StyleSheet.create({
-  memberAvatarImage: {
-    width: "100%",
-    height: "100%",
-    borderRadius: moderateScale(20),
-  },
-  friendAvatar: {
-    width: moderateScale(40),
-    height: moderateScale(40),
-    borderRadius: moderateScale(20),
-  },
+/* -------------------------------------------------------------------------- */
+/* Theme-based responsive styles                                              */
+/* -------------------------------------------------------------------------- */
 
-  friendAvatarFallback: {
-    width: moderateScale(40),
-    height: moderateScale(40),
-    borderRadius: moderateScale(20),
-    backgroundColor: "#292929",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+const useStyles = () => {
+  const { Theme } = useTheme();
+  const r = useResponsive();
 
-  avatarInitial: {
-    fontSize: moderateScale(16),
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-  screen: {
-    flex: 1,
-    backgroundColor: "#0D0D0F",
-  },
-  content: {
-    padding: moderateScale(16),
-    paddingBottom: moderateScale(36),
-  },
-  centered: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#0D0D0F",
-    padding: moderateScale(20),
-  },
-  header: {
-    marginBottom: moderateScale(20),
-  },
-  title: {
-    fontSize: moderateScale(24),
-    fontWeight: "700",
-    color: "#FFFFFF",
-  },
-  subtitle: {
-    fontSize: moderateScale(12),
-    color: "#A4A4AA",
-    marginTop: moderateScale(5),
-  },
-  section: {
-    marginBottom: moderateScale(20),
-  },
-  sectionTitle: {
-    fontSize: moderateScale(16),
-    fontWeight: "700",
-    color: "#FFFFFF",
-    marginBottom: moderateScale(10),
-  },
-  card: {
-    backgroundColor: "#19191E",
-    borderRadius: moderateScale(12),
-    padding: moderateScale(14),
-    marginBottom: moderateScale(8),
-    borderWidth: 1,
-    borderColor: "#29292F",
-  },
-  groupHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: moderateScale(12),
-  },
-  flex: {
-    flex: 1,
-  },
-  cardTitle: {
-    color: "#FFFFFF",
-    fontSize: moderateScale(14),
-    fontWeight: "700",
-    marginBottom: moderateScale(6),
-  },
-  bodyText: {
-    color: "#D0D0D5",
-    fontSize: moderateScale(12),
-    lineHeight: moderateScale(18),
-    marginBottom: moderateScale(8),
-  },
-  mutedText: {
-    color: "#A4A4AA",
-    fontSize: moderateScale(11),
-    lineHeight: moderateScale(16),
-  },
-  loadingText: {
-    color: "#FFFFFF",
-    marginTop: moderateScale(12),
-    fontSize: moderateScale(12),
-  },
-  badge: {
-    paddingHorizontal: moderateScale(9),
-    paddingVertical: moderateScale(5),
-    borderRadius: moderateScale(20),
-    marginLeft: moderateScale(8),
-  },
-  ownerBadge: {
-    backgroundColor: "#493717",
-  },
-  memberBadge: {
-    backgroundColor: "#263B52",
-  },
-  badgeText: {
-    color: "#FFFFFF",
-    fontSize: moderateScale(10),
-    fontWeight: "600",
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: moderateScale(8),
-    marginTop: moderateScale(8),
-  },
-  button: {
-    minHeight: moderateScale(38),
-    paddingHorizontal: moderateScale(12),
-    paddingVertical: moderateScale(9),
-    borderRadius: moderateScale(8),
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: moderateScale(8),
-  },
-  primaryButton: {
-    backgroundColor: "#7C4DFF",
-  },
-  secondaryButton: {
-    backgroundColor: "#E8E8EC",
-  },
-  dangerButton: {
-    backgroundColor: "#B83232",
-  },
-  disabledButton: {
-    opacity: 0.5,
-  },
-  pressedButton: {
-    opacity: 0.8,
-  },
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: moderateScale(12),
-    fontWeight: "700",
-  },
-  secondaryButtonText: {
-    color: "#222222",
-  },
-  memberCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#19191E",
-    padding: moderateScale(10),
-    borderRadius: moderateScale(10),
-    marginBottom: moderateScale(8),
-    gap: moderateScale(10),
-  },
-  memberAvatar: {
-    width: moderateScale(36),
-    height: moderateScale(36),
-    borderRadius: moderateScale(18),
-    backgroundColor: "#353044",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: {
-    color: "#FFFFFF",
-    fontWeight: "700",
-    fontSize: moderateScale(14),
-  },
-  memberName: {
-    color: "#FFFFFF",
-    fontSize: moderateScale(12),
-    fontWeight: "600",
-    marginBottom: moderateScale(3),
-  },
-  permissionButton: {
-    backgroundColor: "#303036",
-    paddingHorizontal: moderateScale(8),
-    paddingVertical: moderateScale(7),
-    borderRadius: moderateScale(6),
-  },
-  permissionEnabled: {
-    backgroundColor: "#28513D",
-  },
-  permissionText: {
-    color: "#FFFFFF",
-    fontSize: moderateScale(10),
-    fontWeight: "600",
-  },
-  friendList: {
-    marginVertical: moderateScale(8),
-  },
-  friendRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: moderateScale(8),
-    paddingVertical: moderateScale(8),
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#36363C",
-  },
-  inputLabel: {
-    color: "#D0D0D5",
-    fontSize: moderateScale(12),
-    fontWeight: "600",
-    marginTop: moderateScale(12),
-    marginBottom: moderateScale(6),
-  },
-  input: {
-    minHeight: moderateScale(42),
-    backgroundColor: "#101014",
-    color: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#393940",
-    borderRadius: moderateScale(8),
-    paddingHorizontal: moderateScale(10),
-    fontSize: moderateScale(12),
-  },
-  emptyState: {
-    backgroundColor: "#19191E",
-    borderRadius: moderateScale(10),
-    padding: moderateScale(14),
-  },
-  errorBox: {
-    backgroundColor: "#421F23",
-    borderColor: "#78363D",
-    borderWidth: 1,
-    borderRadius: moderateScale(8),
-    padding: moderateScale(12),
-    marginBottom: moderateScale(16),
-  },
-  errorText: {
-    color: "#FFC6CB",
-    fontSize: moderateScale(12),
-  },
-  dismissText: {
-    color: "#FFFFFF",
-    fontSize: moderateScale(11),
-    fontWeight: "600",
-    marginTop: moderateScale(8),
-  },
-  refreshButton: {
-    alignSelf: "center",
-    padding: moderateScale(10),
-  },
-  refreshText: {
-    color: "#BBA7FF",
-    fontSize: moderateScale(12),
-    fontWeight: "600",
-  },
-});
+  const primary = Theme.colors.primary;
+  const background = Theme.colors.background;
+  const text = Theme.colors.text;
+  const border = Theme.styles.Card.borderColor;
+  const cardBackground = Theme.styles.Card.backgroundColor;
+
+  const primarySurface = `${primary}15`;
+  const primaryBorder = `${primary}30`;
+
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      maxWidth: "100%",
+    },
+
+    screen: {
+      flex: 1,
+      backgroundColor: "transparent",
+    },
+
+    content: {
+      paddingHorizontal: r.ms(6),
+      paddingTop: r.ms(8),
+      paddingBottom: r.ms(32),
+    },
+
+    centered: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      padding: r.ms(20),
+      gap: r.ms(10),
+    },
+
+    header: {
+      paddingBottom: r.ms(18),
+    },
+
+    headingRow: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+
+    title: {
+      fontSize: r.ms(27),
+      lineHeight: r.ms(33),
+      fontWeight: "800",
+      letterSpacing: -0.7,
+      color: text,
+    },
+
+    titleDot: {
+      width: r.ms(6),
+      height: r.ms(6),
+      borderRadius: r.ms(3),
+      backgroundColor: primary,
+      marginLeft: r.ms(5),
+      marginTop: r.ms(12),
+    },
+
+    subtitle: {
+      marginTop: r.ms(4),
+      fontSize: r.ms(11),
+      lineHeight: r.ms(16),
+      color: text,
+      opacity: 0.7,
+    },
+
+    section: {
+      marginBottom: r.ms(16),
+    },
+
+    sectionTitle: {
+      color: text,
+      fontSize: r.ms(15),
+      fontWeight: "700",
+      marginBottom: r.ms(9),
+    },
+
+    card: {
+      backgroundColor: cardBackground,
+      borderRadius: r.ms(12),
+      padding: r.ms(12),
+      marginBottom: r.ms(8),
+      borderWidth: 1,
+      borderColor: border,
+    },
+
+    heroCard: {
+      backgroundColor: cardBackground,
+      borderRadius: r.ms(14),
+      padding: r.ms(14),
+      borderWidth: 1,
+      borderColor: border,
+    },
+
+    heroIcon: {
+      width: r.ms(42),
+      height: r.ms(42),
+      borderRadius: r.ms(12),
+      backgroundColor: primarySurface,
+      borderWidth: 1,
+      borderColor: primaryBorder,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: r.ms(12),
+    },
+
+    groupIcon: {
+      width: r.ms(40),
+      height: r.ms(40),
+      borderRadius: r.ms(12),
+      backgroundColor: primarySurface,
+      borderWidth: 1,
+      borderColor: primaryBorder,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+
+    groupHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: r.ms(9),
+      marginBottom: r.ms(12),
+    },
+
+    flex: {
+      flex: 1,
+      minWidth: 0,
+    },
+
+    cardTitle: {
+      color: text,
+      fontSize: r.ms(14),
+      fontWeight: "700",
+      marginBottom: r.ms(5),
+    },
+
+    bodyText: {
+      color: text,
+      opacity: 0.8,
+      fontSize: r.ms(12),
+      lineHeight: r.ms(18),
+      marginBottom: r.ms(8),
+    },
+
+    mutedText: {
+      color: text,
+      opacity: 0.65,
+      fontSize: r.ms(10),
+      lineHeight: r.ms(15),
+    },
+
+    loadingText: {
+      color: text,
+      marginTop: r.ms(10),
+      fontSize: r.ms(12),
+    },
+
+    badge: {
+      paddingHorizontal: r.ms(9),
+      paddingVertical: r.ms(5),
+      borderRadius: r.ms(20),
+      borderWidth: 1,
+    },
+
+    ownerBadge: {
+      backgroundColor: primarySurface,
+      borderColor: primaryBorder,
+    },
+
+    memberBadge: {
+      backgroundColor: cardBackground,
+      borderColor: border,
+    },
+
+    badgeText: {
+      color: text,
+      fontSize: r.ms(9),
+      fontWeight: "700",
+    },
+
+    statsRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: r.ms(8),
+      paddingTop: r.ms(10),
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: border,
+    },
+
+    statItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: r.ms(5),
+      paddingHorizontal: r.ms(8),
+      paddingVertical: r.ms(6),
+      borderRadius: r.ms(8),
+      backgroundColor: primarySurface,
+    },
+
+    statText: {
+      color: text,
+      fontSize: r.ms(10),
+      fontWeight: "600",
+    },
+
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      flexWrap: "wrap",
+      gap: r.ms(8),
+      marginTop: r.ms(8),
+    },
+
+    button: {
+      minHeight: r.ms(36),
+      paddingHorizontal: r.ms(12),
+      paddingVertical: r.ms(8),
+      borderRadius: r.ms(8),
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: r.ms(7),
+    },
+
+    primaryButton: {
+      backgroundColor: primary,
+    },
+
+    secondaryButton: {
+      backgroundColor: cardBackground,
+      borderWidth: 1,
+      borderColor: border,
+    },
+
+    dangerButton: {
+      backgroundColor: "#B83240",
+    },
+
+    disabledButton: {
+      opacity: 0.45,
+    },
+
+    pressedButton: {
+      opacity: 0.75,
+    },
+
+    buttonText: {
+      color: "#FFFFFF",
+      fontSize: r.ms(11),
+      fontWeight: "700",
+    },
+
+    secondaryButtonText: {
+      color: text,
+    },
+
+    memberCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: cardBackground,
+      padding: r.ms(10),
+      borderRadius: r.ms(11),
+      marginBottom: r.ms(8),
+      gap: r.ms(9),
+      borderWidth: 1,
+      borderColor: border,
+    },
+
+    memberAvatarImage: {
+      width: r.ms(38),
+      height: r.ms(38),
+      borderRadius: r.ms(19),
+      backgroundColor: primarySurface,
+    },
+
+    memberAvatarLarge: {
+      width: r.ms(38),
+      height: r.ms(38),
+      borderRadius: r.ms(19),
+    },
+
+    avatarInitial: {
+      fontSize: r.ms(14),
+      fontWeight: "700",
+      color: text,
+    },
+
+    memberName: {
+      color: text,
+      fontSize: r.ms(12),
+      fontWeight: "600",
+      marginBottom: r.ms(3),
+    },
+
+    permissionButton: {
+      backgroundColor: cardBackground,
+      borderWidth: 1,
+      borderColor: border,
+      paddingHorizontal: r.ms(8),
+      paddingVertical: r.ms(7),
+      borderRadius: r.ms(7),
+    },
+
+    permissionEnabled: {
+      backgroundColor: primarySurface,
+      borderColor: primaryBorder,
+    },
+
+    permissionText: {
+      color: text,
+      fontSize: r.ms(9),
+      fontWeight: "700",
+    },
+
+    friendList: {
+      marginVertical: r.ms(8),
+    },
+
+    friendRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: r.ms(9),
+      paddingVertical: r.ms(8),
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: border,
+    },
+
+    friendAvatar: {
+      width: r.ms(38),
+      height: r.ms(38),
+      borderRadius: r.ms(19),
+      backgroundColor: primarySurface,
+    },
+
+    friendAvatarFallback: {
+      width: r.ms(38),
+      height: r.ms(38),
+      borderRadius: r.ms(19),
+      backgroundColor: primarySurface,
+      borderWidth: 1,
+      borderColor: primaryBorder,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+
+    inputLabel: {
+      color: text,
+      fontSize: r.ms(11),
+      fontWeight: "600",
+      marginTop: r.ms(12),
+      marginBottom: r.ms(6),
+    },
+
+    input: {
+      minHeight: r.ms(42),
+      backgroundColor: background,
+      color: text,
+      borderWidth: 1,
+      borderColor: border,
+      borderRadius: r.ms(8),
+      paddingHorizontal: r.ms(10),
+      fontSize: r.ms(12),
+    },
+
+    emptyState: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: r.ms(8),
+      backgroundColor: cardBackground,
+      borderRadius: r.ms(10),
+      padding: r.ms(12),
+      borderWidth: 1,
+      borderColor: border,
+    },
+
+    emptyStateText: {
+      flex: 1,
+      color: text,
+      opacity: 0.7,
+      fontSize: r.ms(11),
+      lineHeight: r.ms(16),
+    },
+
+    errorBox: {
+      backgroundColor: "#421F23",
+      borderColor: "#78363D",
+      borderWidth: 1,
+      borderRadius: r.ms(9),
+      padding: r.ms(12),
+      marginBottom: r.ms(16),
+    },
+
+    errorContent: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: r.ms(7),
+    },
+
+    errorText: {
+      flex: 1,
+      color: "#FFC6CB",
+      fontSize: r.ms(11),
+      lineHeight: r.ms(16),
+    },
+
+    dismissText: {
+      color: "#FFFFFF",
+      fontSize: r.ms(10),
+      fontWeight: "600",
+      marginTop: r.ms(8),
+      alignSelf: "flex-end",
+    },
+
+    refreshButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      alignSelf: "center",
+      gap: r.ms(7),
+      padding: r.ms(10),
+      marginTop: r.ms(2),
+    },
+
+    refreshText: {
+      color: primary,
+      fontSize: r.ms(11),
+      fontWeight: "700",
+    },
+
+    iconSize: {
+      width: r.ms(30),
+      height: r.ms(30),
+    },
+
+    heroIconSize: {
+      width: r.ms(21),
+      height: r.ms(21),
+    },
+
+    smallIcon: {
+      width: r.ms(15),
+      height: r.ms(15),
+    },
+
+    iconColor: {
+      color: primary,
+    },
+  });
+};

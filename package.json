@@ -5,6 +5,7 @@
     "apps/*",
     "packages/*"
   ],
+  "packageManager": "yarn@4.18.1",
   "scripts": {
     "dev:mobile": "yarn workspace @riffly/mobile start",
     "dev:api": "yarn workspace @riffly/api dev",
