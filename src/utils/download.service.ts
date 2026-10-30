@@ -107,6 +107,8 @@ class DownloadService {
     const quality = useSettingsStore?.getState().downloadSongQuality;
     const index = getIndexFromSoundQuality(quality);
 
+    console.log(song, "download", quality, index);
+
     const downloadUrl = song?.downloadUrl?.[index]?.url;
 
     try {

@@ -27,16 +27,17 @@ export const convertPlayerListToNormalSongList = (songs: any) => {
       id: item.mediaId,
       name: item.title,
       downloadUrl: [
-        { url: item?.url },
-        { url: item?.url },
-        { url: item?.url },
-        { url: item?.url },
+        { url: item?.url, quality: "320kbps" },
+        { url: item?.url, quality: "320kbps" },
+        { url: item?.url, quality: "320kbps" },
+        { url: item?.url, quality: "320kbps" },
+        { url: item?.url, quality: "320kbps" },
       ],
-      artist: item.artist,
+      artists: item.artist,
       image: [
-        { url: item?.artworkUrl },
-        { url: item?.artworkUrl },
-        { url: item?.artworkUrl },
+        { url: item?.artworkUrl, quality: "high" },
+        { url: item?.artworkUrl, quality: "high" },
+        { url: item?.artworkUrl, quality: "high" },
       ],
     };
   });
@@ -45,14 +46,14 @@ export const convertPlayerListToNormalSongList = (songs: any) => {
 export const getIndexFromSoundQuality = (soundQuality: SoundQuality) => {
   switch (soundQuality) {
     case "low":
-      return 0;
-    case "mid":
       return 1;
-    case "high":
+    case "mid":
       return 2;
+    case "high":
+      return 3;
     case "hd":
-      return 3;
+      return 4;
     default:
-      return 3;
+      return 4;
   }
 };
