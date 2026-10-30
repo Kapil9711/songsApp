@@ -95,6 +95,7 @@ export default function DownloadedSongsScreen() {
    * If it always selects a streaming URL, update the converter to support
    * local downloads explicitly.
    */
+
   const playableSongs = useMemo(
     () =>
       songs.map((song) => ({
@@ -104,12 +105,13 @@ export default function DownloadedSongsScreen() {
 
         // Adapt the local file to the URL structure expected by your app.
         downloadUrl: [
-          { url: song.localUri },
-          { url: song.localUri },
-          { url: song.localUri },
-          { url: song.localUri },
+          { url: song.localUri, quality: "320kbps" },
+          { url: song.localUri, quality: "320kbps" },
+          { url: song.localUri, quality: "320kbps" },
+          { url: song.localUri, quality: "320kbps" },
           {
             url: song.localUri,
+            quality: "320kbps",
           },
         ],
 
