@@ -10,6 +10,20 @@ export class FavoriteService {
     }
 
     try {
+      const isExist = await FavoriteModel.findOne({
+        userId,
+        songId: data?.songId,
+      });
+
+      if (isExist) {
+        await FavoriteModel.findOneAndDelete({
+          userId,
+          songId: data?.songId,
+        });
+
+        return [];
+      }
+
       return await FavoriteModel.create({
         userId,
         ...data,
