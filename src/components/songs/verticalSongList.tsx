@@ -1,5 +1,6 @@
 import { Container } from "@/components/container";
 import { BackHeader } from "@/components/header/backHeader";
+import NowPlayingBackground from "@/components/nowPlayingBackground";
 import { SongSmallCard } from "@/components/songs/songSmalCard";
 import { SafeSide } from "@/hooks/useInsetStyle";
 import { usePlayerStore } from "@/store/player.store";
@@ -18,7 +19,6 @@ import {
   View,
 } from "react-native";
 import { useResponsive } from "react-native-fluid-styles";
-import NowPlayingBackground from "@/components/nowPlayingBackground";
 const INITIAL_RENDER = 10;
 const BATCH_SIZE = 8;
 const WINDOW_SIZE = 5;

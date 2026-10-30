@@ -5,7 +5,7 @@ export const endpoints = {
     verfiyOtp: "/users/verify-otp",
     resendOtp: "/users/resend-otp",
     homePage: "/song/home-page",
-    favorite: "/favorite",
+    favorite: "/favorites",
     friend: "/friend",
     friends: {
       requests: "/friends/requests",

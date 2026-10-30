@@ -2,8 +2,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import type { ReactNode } from "react";
 import axios from "axios";
+import type { ReactNode } from "react";
 
 import { useAlertStore } from "@/store/alert.store";
 
@@ -56,12 +56,12 @@ const getErrorMessage = (error: unknown): string => {
 const showGlobalError = (error: unknown) => {
   const message = getErrorMessage(error);
 
-  if (__DEV__) {
-    console.error("[API ERROR]", {
-      message,
-      error,
-    });
-  }
+  // if (__DEV__) {
+  //   console.error("[API ERROR]", {
+  //     message,
+  //     error,
+  //   });
+  // }
 
   useAlertStore.getState().error("Request Failed", message);
 };

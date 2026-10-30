@@ -1,6 +1,6 @@
-import { playerSyncService } from "../player-sync.service";
-import { usePlayerStore } from "@/store/player.store";
 import { PlayerService } from "@/components/player/player.service";
+import { usePlayerStore } from "@/store/player.store";
+import { playerSyncService } from "../player-sync.service";
 
 export function registerPlayerSyncListener() {
   playerSyncService.initialize();
@@ -33,6 +33,9 @@ export function registerPlayerSyncListener() {
         }
       } else {
         await PlayerService.playQueue(songs, 0);
+        // useAuthStore.setState({
+        //   lastSocketUser: payload.userId,
+        // });
       }
       console.log("[PlayerSync] Remote playback applied successfully");
     } catch (error) {

@@ -22,7 +22,7 @@ export const useTrendingSongsQuery = () => {
   return useQuery({
     queryKey: QueryKeys.trending,
     queryFn: getTrendingSongs,
-    staleTime: 1000 * 60 * 60 * 24,
+    staleTime: 0,
   });
 };
 

@@ -30,7 +30,9 @@ const ShowData = ({
     if (type === "song") {
       router.push({
         pathname: "/(drawer)/(tabs)/home/song",
-        params: { heading: heading?.toLocaleLowerCase?.(), list: renderData },
+        params: {
+          heading: heading?.toLocaleLowerCase?.(),
+        },
       });
     }
   };

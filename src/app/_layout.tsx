@@ -2,8 +2,7 @@ import CustomAlert from "@/components/alert/customAlert";
 import PlayerBootstrap from "@/components/player/player.bootstrap";
 import { PlayerForegroundSync } from "@/components/player/player.foregroundSync";
 import SplashScreen from "@/components/splashScreen";
-import { PlaybackSyncBootstrap } from "@/config/socket/SyncPlaybackBootstrap";
-import { SyncSocketInitializer } from "@/config/socket/SyncSocketInitializer";
+
 import { CQueryClientProvider } from "@/provider/queryClientProvider";
 import { GroupSocketInitializer } from "../screens/connections/components/groupSocketInitializer";
 
@@ -51,9 +50,6 @@ const RootStack = () => {
     <View style={[Theme.styles.Bg, { flex: 1 }]}>
       <PlayerBootstrap />
       <PlayerForegroundSync />
-      <PlaybackSyncBootstrap />
-
-      <SyncSocketInitializer />
 
       <StatusBar
         barStyle={

@@ -13,13 +13,15 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
+import { moderateScale } from "react-native-fluid-styles";
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { moderateScale } from "react-native-fluid-styles";
 
 import { SongSmallCard } from "@/components/songs/songSmalCard";
+import { playerSyncService } from "@/screens/connections/player-sync.service";
+import { useAuthStore } from "@/store/auth.store";
 import { usePlayerProgressStore } from "@/store/player.progress.store";
 import { usePlayerStore } from "@/store/player.store";
 import { useTheme } from "@/themes/theme.context";
@@ -29,7 +31,6 @@ import {
   handleSongPlay,
 } from "@/utils/handleSongPlay";
 import { PlayerService } from "../player.service";
-import { playerSyncService } from "@/screens/connections/player-sync.service";
 
 type SongItem = {
   id?: string | number;
@@ -105,6 +106,8 @@ export default function PlayerDock({
     const source = (suppliedSongList ?? storedQueue ?? []) as SongItem[];
     return convertPlayerListToNormalSongList(source);
   }, [suppliedSongList, storedQueue]);
+
+  const lastSocketUser = useAuthStore((state) => state.lastSocketUser);
 
   const styles = StyleSheet.create({
     root: {

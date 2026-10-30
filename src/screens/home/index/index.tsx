@@ -7,10 +7,13 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { useResponsive } from "react-native-fluid-styles";
 import { MemoizedShowHorizontalPlaylist } from "./components/showHorizontalPlaylist";
 import { useMemo } from "react";
+import { useTrendingSongsQuery } from "@/shared/api/api.queries";
+import Loading from "@/components/loading";
+import { MemoizedShowTrendingSongs } from "./components/showTrendingSong";
 
 export default function HomeScreen() {
   const styles = useStyles();
-  // const { isLoading } = useTrendingSongsQuery();
+  const { isLoading } = useTrendingSongsQuery();
   const insetSyles = useMemo(() => {
     return { ...SafeSide, left: false, right: false };
   }, [SafeSide]);
@@ -19,7 +22,7 @@ export default function HomeScreen() {
     <View style={[styles.container]}>
       <FadeTop />
       <NowPlayingBackground />
-      {/* <Loading loading={isLoading} /> */}
+      <Loading loading={isLoading} />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -34,7 +37,7 @@ export default function HomeScreen() {
             }}
           /> */}
 
-          {/* <MemoizedShowTrendingSongs /> */}
+          <MemoizedShowTrendingSongs />
 
           {/* charts */}
 

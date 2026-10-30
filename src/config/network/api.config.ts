@@ -70,6 +70,13 @@ function createApiConfig(baseUrl: string | undefined) {
 
       const params = config.params;
       const body = sanitizeBody(config.data);
+      const token = useAuthStore.getState().token;
+
+      if (token) {
+        config.headers.set("authorization", `Bearer ${token}`);
+      } else {
+        config.headers.delete("authorization");
+      }
 
       // Optional monitoring integration.
       vh.network.req({
@@ -102,13 +109,6 @@ function createApiConfig(baseUrl: string | undefined) {
       const url = api.getUri(config);
       const headers = getHeaders(config.headers);
       const body = sanitizeBody(response.data);
-      const token = useAuthStore.getState().token;
-
-      if (token) {
-        config.headers.set("authoriztion", `Bearer ${token}`);
-      } else {
-        config.headers.set("authoriztion");
-      }
 
       // Optional monitoring integration.
       vh.network.res({

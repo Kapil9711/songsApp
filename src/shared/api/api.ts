@@ -37,6 +37,7 @@ export const getTrendingSongs = async () => {
       punjabi: data.punjabi,
     };
   }
+
   return { haryanvi: [], hindi: [], punjabi: [] };
 };
 
