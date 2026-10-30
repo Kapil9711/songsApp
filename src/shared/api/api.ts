@@ -1,5 +1,6 @@
 import { api, jioApi } from "@/config/network/api.config";
 import { endpoints } from "@/config/network/endpoints";
+import axios from "axios";
 
 export const getAblumSongById = async (id: string) => {
   const { data } = await jioApi.get(endpoints.jioApi.albumsSongs, {
@@ -26,7 +27,9 @@ export const getPlaylistSongById = async (id: string) => {
 };
 
 export const getTrendingSongs = async () => {
-  const { data } = await api.get(endpoints.api.homePage);
+  const { data } = await axios.get(
+    "https://song-backend-two.vercel.app" + endpoints.api.homePage,
+  );
   if (data.success) {
     return {
       haryanvi: data.haryanvi,

@@ -9,9 +9,13 @@ export const convertSongListToPlayerList = (data: any[]) => {
       url: item.downloadUrl?.[getIndexFromSoundQuality(soundQuality)]?.url,
       title: item.name,
       artist:
-        item?.artists && Array.isArray(item?.artists?.primary)
-          ? item.artists?.primary?.map((artist: any) => artist.name).join(", ")
-          : "unknown",
+        typeof item?.artists == "string"
+          ? item?.artists
+          : item?.artists && Array.isArray(item?.artists?.primary)
+            ? item.artists?.primary
+                ?.map((artist: any) => artist.name)
+                .join(", ")
+            : "unknown",
       artworkUrl: item.image?.[2]?.url,
     };
   });

@@ -102,6 +102,13 @@ function createApiConfig(baseUrl: string | undefined) {
       const url = api.getUri(config);
       const headers = getHeaders(config.headers);
       const body = sanitizeBody(response.data);
+      const token = useAuthStore.getState().token;
+
+      if (token) {
+        config.headers.set("authoriztion", `Bearer ${token}`);
+      } else {
+        config.headers.set("authoriztion");
+      }
 
       // Optional monitoring integration.
       vh.network.res({
@@ -146,5 +153,5 @@ function createApiConfig(baseUrl: string | undefined) {
   return api;
 }
 
-export const api = createApiConfig("http://192.168.1.6:5002/api/v1");
+export const api = createApiConfig(API_BASE_URL);
 export const jioApi = createApiConfig(JIO_API_BASE_URL);

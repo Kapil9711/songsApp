@@ -12,14 +12,7 @@ import { handleSongPlay } from "@/utils/handleSongPlay";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
-import {
-  FlatList,
-  Pressable,
-  SectionList,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, SectionList, StyleSheet, Text, View } from "react-native";
 import { useResponsive } from "react-native-fluid-styles";
 
 export default function HomeScreen() {
@@ -32,19 +25,20 @@ export default function HomeScreen() {
   const { data: favoriteData, isLoading: isLoadingFavorite } =
     useFavoriteQuery();
 
-  const { data: friends, isLoading: isLoadingFriends } = useFriendQuery();
+  // const { data: friends, isLoading: isLoadingFriends } = useFriendQuery();
 
   const favorites = favoriteData?.favorite ?? [];
+  const finalData = favorites;
 
-  const finalData = useMemo(() => {
-    if (active === "my") {
-      return favorites;
-    }
+  // const finalData = useMemo(() => {
+  //   if (active === "my") {
+  //     return favorites;
+  //   }
 
-    const friend = friends?.find((item: any) => item?.user?.name === active);
+  //   const friend = friends?.find((item: any) => item?.user?.name === active);
 
-    return friend?.user?.favorite ?? [];
-  }, [active, favorites, friends]);
+  //   return friend?.user?.favorite ?? [];
+  // }, [active, favorites, friends]);
 
   const playerList = useMemo(
     () => convertSongListToPlayerList(finalData),
@@ -78,19 +72,19 @@ export default function HomeScreen() {
     [activeMediaId, playerList, styles],
   );
 
-  const filterItems = useMemo(
-    () => [
-      { id: "my", name: "My Favorites", isMine: true },
-      ...(friends ?? [])
-        .filter((friend: any) => friend?.user?.name)
-        .map((friend: any) => ({
-          id: String(friend?._id ?? friend.user.name),
-          name: friend.user.name,
-          isMine: false,
-        })),
-    ],
-    [friends],
-  );
+  // const filterItems = useMemo(
+  //   () => [
+  //     { id: "my", name: "My Favorites", isMine: true },
+  //     ...(friends ?? [])
+  //       .filter((friend: any) => friend?.user?.name)
+  //       .map((friend: any) => ({
+  //         id: String(friend?._id ?? friend.user.name),
+  //         name: friend.user.name,
+  //         isMine: false,
+  //       })),
+  //   ],
+  //   [friends],
+  // );
 
   const renderStickyFilters = useCallback(
     () => (
@@ -107,12 +101,12 @@ export default function HomeScreen() {
               <Text style={styles.filterTitle}>FAVORITES FROM</Text>
             </View>
 
-            <Text style={styles.filterCount}>
-              {friends?.length ?? 0} friends
-            </Text>
+            {/* <Text style={styles.filterCount}>/ */}
+            {/* {friends?.length ?? 0} friends */}
+            {/* </Text> */}
           </View>
 
-          <FlatList
+          {/* <FlatList
             horizontal
             data={filterItems}
             keyExtractor={(item) => item.id}
@@ -183,13 +177,13 @@ export default function HomeScreen() {
                 </Pressable>
               );
             }}
-          />
+          /> */}
         </View>
 
         <View style={styles.divider} />
       </View>
     ),
-    [active, filterItems, friends, styles, r, Theme],
+    [active, styles, r, Theme],
   );
 
   const renderPageHeader = useCallback(
@@ -232,7 +226,7 @@ export default function HomeScreen() {
       insetStyle={{ ...SafeSide, bottom: false }}
     >
       <NowPlayingBackground />
-      <Loading loading={isLoadingFavorite || isLoadingFriends} />
+      <Loading loading={isLoadingFavorite} />
 
       <View style={styles.container}>
         <SectionList
@@ -485,23 +479,28 @@ export const useFavoriteQuery = () => {
   return useQuery({
     queryKey: ["favorite"],
     queryFn: async () => {
-      const { data } = await api.get(endpoints.api.favorite);
+      const { data } = await api.get(endpoints.api.favorite, {
+        params: { page: 1, pageSize: 100 },
+      });
 
-      if (!data?.success || !Array.isArray(data.favorite)) {
+      if (!data?.success || !Array.isArray(data.data)) {
         return { favorite: [], songListForPlayer: [] };
       }
 
-      const songListForPlayer: any[] = convertSongListToPlayerList(
-        data.favorite,
-      );
+      const formatedFavorite = data?.data?.map((item: any) => {
+        return { ...item, id: item?.songId, artists: item?.artist };
+      });
+
+      const songListForPlayer: any[] =
+        convertSongListToPlayerList(formatedFavorite);
 
       const favoriteIdMap: any = {};
-      data?.favorite?.forEach((item: any) => {
+      formatedFavorite?.forEach((item: any) => {
         favoriteIdMap[item.id] = true;
       });
 
       return {
-        favorite: data.favorite,
+        favorite: formatedFavorite,
         songListForPlayer,
         favoriteIdMap,
       };
@@ -517,9 +516,10 @@ export const useAddFavoriteMutation = () => {
 
     mutationFn: async (payload: {
       name: string;
-      id: string;
+      songId: string;
       downloadUrl: any[];
       image: any[];
+      artist: any;
     }) => {
       const { data } = await api.post(endpoints.api.favorite, payload);
 
@@ -545,7 +545,7 @@ export const useAddFavoriteMutation = () => {
         }
 
         const alreadyExists = favorites.some(
-          (item: any) => item.id === newFavorite.id,
+          (item: any) => item.songId === newFavorite.songId,
         );
 
         let updatedFavorites: any[];
@@ -553,7 +553,7 @@ export const useAddFavoriteMutation = () => {
         if (alreadyExists) {
           // Remove the existing favorite.
           updatedFavorites = favorites.filter(
-            (item: any) => item.id !== newFavorite.id,
+            (item: any) => item.songId !== newFavorite.songId,
           );
         } else {
           // Add the new favorite.
@@ -565,7 +565,7 @@ export const useAddFavoriteMutation = () => {
 
         const favoriteIdMap = updatedFavorites.reduce(
           (map: Record<string, boolean>, item: any) => {
-            map[item.id] = true;
+            map[item.songId] = true;
             return map;
           },
           {},

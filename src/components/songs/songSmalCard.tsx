@@ -45,9 +45,17 @@ const SongsSmollCard = ({
   const handleAddFavorite = (song: any) => {
     const payload = {
       name: song?.name,
-      id: song?.id,
+      songId: song?.id,
       downloadUrl: song?.downloadUrl,
       image: song?.image,
+      artist:
+        typeof song?.artists == "string"
+          ? song?.artists
+          : song?.artists && Array.isArray(song?.artists?.primary)
+            ? song.artists?.primary
+                ?.map((artist: any) => artist.name)
+                .join(", ")
+            : "unknown",
     };
     mutate(payload);
   };
@@ -76,6 +84,13 @@ const SongsSmollCard = ({
   const handleDeleteSong = () => {
     downloadService.deleteSong(song?.id);
   };
+
+  const artist =
+    typeof song?.artists == "string"
+      ? song?.artists
+      : song?.artists && Array.isArray(song?.artists?.primary)
+        ? song.artists?.primary?.map((artist: any) => artist.name).join(", ")
+        : "unknown";
 
   return (
     <Pressable
@@ -158,11 +173,7 @@ const SongsSmollCard = ({
 
           <View style={styles.meta}>
             <Text numberOfLines={1} ellipsizeMode="tail" style={styles.artist}>
-              {song?.artists && Array.isArray(song?.artists?.primary)
-                ? song.artists?.primary
-                    ?.map((artist: any) => artist.name)
-                    .join(", ")
-                : "unknown"}
+              {artist}
             </Text>
 
             {isActive && (

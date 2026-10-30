@@ -10,6 +10,6 @@ export const DEFAULT_FONT = "Ubuntu";
 
 // env variables
 export const API_BASE_URL =
-  process.env.EXPO_API_BASE_URL || "https://song-backend-two.vercel.app";
+  process.env.EXPO_API_BASE_URL || "https://song-api.kapil.store/api/v1";
 export const JIO_API_BASE_URL =
   process.env.EXPO_API_BASE_URL || "https://saavn-api-mocha.vercel.app";
