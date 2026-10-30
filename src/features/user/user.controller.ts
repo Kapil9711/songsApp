@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import * as userService from "./user.service.js";
 import { assertAuthenticated } from "../../helper/assertAuthenticated.js";
+import { UserModel } from "./user.model.js";
 
 export async function register(
   req: Request,
@@ -178,6 +179,24 @@ export async function getUsers(
     return res.status(200).json({
       success: true,
       data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getUserById(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    assertAuthenticated(req);
+    const { userId } = req.params;
+    const user = await UserModel.findById(userId);
+    return res.status(200).json({
+      success: true,
+      data: user,
     });
   } catch (error) {
     next(error);

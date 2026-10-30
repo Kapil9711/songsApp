@@ -34,5 +34,6 @@ router.patch(
   userController.changePassword,
 );
 router.delete("/me", authenticate, userIdExist, userController.deleteMe);
+router.get("/:userId", authenticate, userController.getUserById);
 
 export default router;
