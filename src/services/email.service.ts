@@ -1,4 +1,4 @@
-import { transporter, emailConfig } from "../config/email.js";
+import { resend, emailConfig } from "../config/email.js";
 
 interface SendEmailOptions {
   to: string;
@@ -17,16 +17,31 @@ export async function sendEmail({
     throw new Error("Email must contain text or HTML content");
   }
 
-  const info = await transporter.sendMail({
+  const emailBase = {
     from: emailConfig.from,
-    to,
+    to: [to],
     subject,
-    text,
-    html,
-  });
+  };
+
+  const result = html
+    ? await resend.emails.send({
+        ...emailBase,
+        html,
+        ...(text ? { text } : {}),
+      })
+    : await resend.emails.send({
+        ...emailBase,
+        text: text!,
+      });
+
+  if (result.error) {
+    console.error("Resend email failed:", result.error);
+
+    throw new Error(`Failed to send email: ${result.error.message}`);
+  }
 
   console.info("Email sent successfully", {
-    messageId: info.messageId,
+    messageId: result.data?.id,
     recipient: to,
   });
 }

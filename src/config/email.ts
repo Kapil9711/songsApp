@@ -1,35 +1,13 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
-const {
-  SMTP_HOST,
-  SMTP_PORT,
-  SMTP_USER,
-  SMTP_PASSWORD,
-  SMTP_FROM_NAME,
-  SMTP_FROM_EMAIL,
-} = process.env;
+const { RESEND_API_KEY, SMTP_FROM_NAME } = process.env;
 
-if (
-  !SMTP_HOST ||
-  !SMTP_PORT ||
-  !SMTP_USER ||
-  !SMTP_PASSWORD ||
-  !SMTP_FROM_NAME ||
-  !SMTP_FROM_EMAIL
-) {
-  throw new Error("Missing required SMTP environment variables");
+if (!RESEND_API_KEY) {
+  throw new Error("Missing RESEND_API_KEY environment variable");
 }
 
-export const emailConfig = {
-  from: `"${SMTP_FROM_NAME}" <${SMTP_FROM_EMAIL}>`,
-};
+export const resend = new Resend(RESEND_API_KEY);
 
-export const transporter = nodemailer.createTransport({
-  host: SMTP_HOST,
-  port: Number(SMTP_PORT),
-  secure: Number(SMTP_PORT) === 465,
-  auth: {
-    user: SMTP_USER,
-    pass: SMTP_PASSWORD,
-  },
-});
+export const emailConfig = {
+  from: `${process.env.SMTP_FROM_NAME || "Riffly"} <noreply@kapil.store>`,
+};
