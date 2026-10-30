@@ -108,8 +108,6 @@ export default function PlayerDock({
     return convertPlayerListToNormalSongList(source);
   }, [suppliedSongList, storedQueue]);
 
-  const lastSocketUser = useAuthStore((state) => state.lastSocketUser);
-
   const styles = StyleSheet.create({
     root: {
       position: "relative",
