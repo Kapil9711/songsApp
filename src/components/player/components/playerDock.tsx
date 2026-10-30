@@ -21,6 +21,7 @@ import {
 
 import { SongSmallCard } from "@/components/songs/songSmalCard";
 import { playerSyncService } from "@/screens/connections/player-sync.service";
+import { useGetUserByIdQuery } from "@/shared/api/api.queries";
 import { useAuthStore } from "@/store/auth.store";
 import { usePlayerProgressStore } from "@/store/player.progress.store";
 import { usePlayerStore } from "@/store/player.store";
@@ -724,6 +725,8 @@ export default function PlayerDock({
                 )}
               </View>
 
+              <PlayedBy />
+
               {/* Track information */}
               <View style={styles.trackHeader}>
                 <View style={styles.trackInfo}>
@@ -920,3 +923,99 @@ export default function PlayerDock({
     </View>
   );
 }
+
+const PlayedBy = () => {
+  const lastSocketUser = useAuthStore((state) => state.lastSocketUser);
+  const id: any = useAuthStore((state) => state.user?.id);
+  const { data } = useGetUserByIdQuery(lastSocketUser || id);
+  const { Theme } = useTheme();
+
+  const styles = StyleSheet.create({
+    container: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: moderateScale(8),
+      marginVertical: moderateScale(8),
+      borderRadius: moderateScale(16),
+      backgroundColor: Theme.colors.background,
+      borderWidth: 1,
+      borderColor: Theme.colors.primary,
+      gap: moderateScale(12),
+    },
+    avatar: {
+      width: moderateScale(46),
+      height: moderateScale(46),
+      borderRadius: moderateScale(23),
+      backgroundColor: Theme.colors.background,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 1,
+      borderColor: Theme.colors.primary,
+    },
+    content: {
+      flex: 1,
+      gap: moderateScale(4),
+    },
+    eyebrow: {
+      fontSize: moderateScale(10),
+      fontWeight: "600",
+      letterSpacing: 1,
+      color: Theme.colors.text,
+      textTransform: "uppercase",
+    },
+    name: {
+      fontSize: moderateScale(14),
+      fontWeight: "700",
+      color: Theme.colors.text,
+    },
+    subtitle: {
+      fontSize: moderateScale(11),
+      color: Theme.colors.text,
+    },
+    status: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: moderateScale(5),
+      paddingHorizontal: moderateScale(8),
+      paddingVertical: moderateScale(5),
+      borderRadius: moderateScale(20),
+      backgroundColor: Theme.colors.background,
+    },
+    statusText: {
+      fontSize: moderateScale(10),
+      fontWeight: "600",
+      color: Theme.colors.primary,
+    },
+  });
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.avatar}>
+        <Ionicons
+          name="musical-notes"
+          size={moderateScale(22)}
+          color={Theme.colors.primary}
+        />
+      </View>
+
+      <View style={styles.content}>
+        <Text style={styles.eyebrow}>Played by</Text>
+
+        <Text style={styles.name} numberOfLines={1}>
+          {data?.name || "Unknown User"}
+        </Text>
+
+        {/* <Text style={styles.subtitle}>Last played by this listener</Text> */}
+      </View>
+
+      <View style={styles.status}>
+        <Ionicons
+          name="headset-outline"
+          size={moderateScale(13)}
+          color={Theme.colors.primary}
+        />
+        <Text style={styles.statusText}>Listener</Text>
+      </View>
+    </View>
+  );
+};

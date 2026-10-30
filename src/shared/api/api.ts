@@ -67,6 +67,14 @@ export const getPlaylists = async (query: string) => {
   };
 };
 
+export const getUserById = async (userId: string) => {
+  const { data } = await api.get(endpoints.api.users.list + `/${userId}`);
+  if (data.success) {
+    return data.data;
+  }
+  return null;
+};
+
 export interface ExploreUser {
   id: string;
   name: string;

@@ -1,7 +1,10 @@
 import PlayerDock from "@/components/player/components/playerDock";
+import { useGroupStore } from "@/screens/connections/group.store";
+import { useGetReceivedFriendRequestsQuery } from "@/screens/friends/api/api.queries";
 import { useTheme } from "@/themes/theme.context";
 import { Ionicons } from "@expo/vector-icons";
 import { router, usePathname } from "expo-router";
+import { useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { moderateScale } from "react-native-fluid-styles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -53,10 +56,58 @@ const TAB_ROUTES = [
   },
 ] as const;
 
+type User = {
+  _id?: string;
+  id?: string;
+  name?: string;
+  image?: string | null;
+};
+
+type FriendRequest = {
+  _id: string;
+  senderId: User | string;
+  receiverId: User | string;
+  status?: "pending" | "accepted" | "rejected";
+  createdAt?: string;
+};
+
+type ApiList<T> = {
+  success?: boolean;
+  data?: T[];
+};
+
+function getList<T>(response: unknown): T[] {
+  if (!response || typeof response !== "object") return [];
+
+  const result = response as ApiList<T> & {
+    data?: T[] | ApiList<T>;
+  };
+
+  if (Array.isArray(result.data)) {
+    return result.data as T[];
+  }
+
+  if (
+    result.data &&
+    typeof result.data === "object" &&
+    Array.isArray((result.data as ApiList<T>).data)
+  ) {
+    return (result.data as ApiList<T>).data ?? [];
+  }
+
+  return [];
+}
+
 export default function CustomTabBar() {
   const { Theme } = useTheme();
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
+  const invitations = useGroupStore((state) => state.invitations);
+  const receivedQuery = useGetReceivedFriendRequestsQuery();
+  const receivedRequests = useMemo(
+    () => getList<FriendRequest>(receivedQuery.data),
+    [receivedQuery.data],
+  );
 
   return (
     <>
@@ -77,6 +128,10 @@ export default function CustomTabBar() {
         {TAB_ROUTES.map((tab) => {
           const focused =
             pathname === tab.path || pathname.startsWith(`${tab.path}/`);
+
+          const showIcon =
+            (tab.path == "/users" && invitations?.length) ||
+            (tab.path == "/friends" && receivedRequests?.length);
 
           return (
             <Pressable
@@ -107,6 +162,20 @@ export default function CustomTabBar() {
               >
                 {tab.label}
               </Text>
+
+              {showIcon && (
+                <View
+                  style={{
+                    width: 8,
+                    height: 8,
+                    backgroundColor: Theme.colors.primary,
+                    borderRadius: 10,
+                    position: "absolute",
+                    top: 0,
+                    right: moderateScale(14),
+                  }}
+                ></View>
+              )}
             </Pressable>
           );
         })}

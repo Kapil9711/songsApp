@@ -18,6 +18,9 @@ import { Container } from "@/components/container";
 import { SafeSide } from "@/hooks/useInsetStyle";
 import { useTheme } from "@/themes/theme.context";
 
+import NowPlayingBackground from "@/components/nowPlayingBackground";
+import { useExploreUsersQuery } from "@/shared/api/api.queries";
+import { useAlertStore } from "@/store/alert.store";
 import {
   useAcceptFriendRequestMutation,
   useCancelFriendRequestMutation,
@@ -28,8 +31,6 @@ import {
   useRemoveFriendMutation,
   useSendFriendRequestMutation,
 } from "./api/api.queries";
-import { useExploreUsersQuery } from "@/shared/api/api.queries";
-import { useAlertStore } from "@/store/alert.store";
 
 type TabKey = "explore" | "friends" | "received" | "sent";
 
@@ -504,10 +505,11 @@ export default function FriendsScreen() {
       style={{
         flex: 1,
         maxWidth: "100%",
-        backgroundColor: Theme.colors.background,
+        // backgroundColor: Theme.colors.background,
       }}
       insetStyle={{ ...SafeSide, bottom: false }}
     >
+      <NowPlayingBackground />
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}

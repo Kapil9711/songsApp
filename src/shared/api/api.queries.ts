@@ -4,6 +4,7 @@ import {
   getPlaylists,
   getPlaylistSongById,
   getTrendingSongs,
+  getUserById,
 } from "./api";
 
 const QueryKeys = {
@@ -22,7 +23,7 @@ export const useTrendingSongsQuery = () => {
   return useQuery({
     queryKey: QueryKeys.trending,
     queryFn: getTrendingSongs,
-    staleTime: 0,
+    staleTime: 1000 * 60 * 60 * 48,
   });
 };
 
@@ -35,6 +36,7 @@ export const useGetPlaylistQuery = (query: string) => {
 };
 
 import { useInfiniteQuery } from "@tanstack/react-query";
+
 import { getUsers } from "./api";
 
 export const UserQueryKeys = {
@@ -57,5 +59,12 @@ export function useExploreUsersQuery() {
     getNextPageParam: (lastPage) => lastPage.pagination.nextPage ?? undefined,
 
     staleTime: 30_000,
+  });
+}
+
+export function useGetUserByIdQuery(userId: string) {
+  return useQuery({
+    queryKey: ["user", userId],
+    queryFn: () => getUserById(userId),
   });
 }
