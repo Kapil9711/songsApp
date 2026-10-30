@@ -6,12 +6,13 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
+    "build": "tsc && copyfiles -u 1 \"src/templates/**/*.ejs\" dist",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "argon2": "^0.45.1",
+    "copyfiles": "^2.4.1",
     "cors": "^2.8.6",
     "dotenv": "^18.0.8",
     "ejs": "^7.0.2",
